@@ -14,6 +14,7 @@ import Link from "next/link"
 import Image from "next/image"
 import { ArrowLeft, Search, Clock, FileText, ArrowRight, CheckCircle2, XCircle, Info, Smartphone } from "lucide-react"
 import { PublicHeader } from "@/components/public/public-header"
+import { useLang } from "@/lib/language-context"
 
 interface Application {
   id: string
@@ -26,6 +27,7 @@ interface Application {
 }
 
 export default function StatusPage() {
+  const { t } = useLang()
   const [scrolled, setScrolled] = useState(false)
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [phoneNumber, setPhoneNumber] = useState("")
@@ -140,10 +142,10 @@ export default function StatusPage() {
   const StatusBadge = ({ status }: { status: string }) => {
     console.log("[v0] StatusBadge received status:", status, typeof status)
     const configs: Record<string, { label: string; color: string; bg: string; border: string }> = {
-      pending: { label: "승인대기", color: "text-amber-500", bg: "bg-amber-500/10", border: "border-amber-500/20" },
-      approved: { label: "승인완료", color: "text-emerald-500", bg: "bg-emerald-500/10", border: "border-emerald-500/20" },
-      rejected: { label: "신청반려", color: "text-red-500", bg: "bg-red-500/10", border: "border-red-500/20" },
-      cancelled: { label: "신청취소", color: "text-gray-500", bg: "bg-gray-500/10", border: "border-gray-500/20" }
+      pending: { label: t("승인대기", "Pending"), color: "text-amber-500", bg: "bg-amber-500/10", border: "border-amber-500/20" },
+      approved: { label: t("승인완료", "Approved"), color: "text-emerald-500", bg: "bg-emerald-500/10", border: "border-emerald-500/20" },
+      rejected: { label: t("신청반려", "Rejected"), color: "text-red-500", bg: "bg-red-500/10", border: "border-red-500/20" },
+      cancelled: { label: t("신청취소", "Cancelled"), color: "text-gray-500", bg: "bg-gray-500/10", border: "border-gray-500/20" }
     }
     const config = configs[status?.toLowerCase()?.trim()] || configs.pending
     console.log("[v0] StatusBadge using config:", config.label)
@@ -203,8 +205,8 @@ export default function StatusPage() {
             <span className="text-sm font-bold tracking-widest uppercase">Go Back</span>
           </Link>
 
-          <h2 className="text-4xl md:text-5xl font-black mb-2 text-white">신청 현황 조회</h2>
-          <p className="text-white/40 text-sm mb-12">방문 신청 현황을 조회하세요</p>
+          <h2 className="text-4xl md:text-5xl font-black mb-2 text-white">{t("신청 현황 조회", "Application Status")}</h2>
+          <p className="text-white/40 text-sm mb-12">{t("방문 신청 현황을 조회하세요", "Check the status of your visit application")}</p>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* 조회 입력 영역 */}
@@ -215,13 +217,13 @@ export default function StatusPage() {
                 </div>
                 
                 <div className="relative z-10">
-                  <SectionHeader title="휴대전화번호 조회" sub="Lookup by Mobile" />
-                  <p className="text-white/40 text-sm mb-10 leading-relaxed max-w-md">신청 시 사용한 휴대전화번호를 입력하시면 현재 처리 상태 및 상세 내역을 확인할 수 있습니다.</p>
+                  <SectionHeader title={t("휴대전화번호 조회", "Mobile Lookup")} sub="Lookup by Mobile" />
+                  <p className="text-white/40 text-sm mb-10 leading-relaxed max-w-md">{t("신청 시 사용한 휴대전화번호를 입력하시면 현재 처리 상태 및 상세 내역을 확인할 수 있습니다.", "Enter the mobile number used during application to check the current status and details.")}</p>
                   
                   <div className="flex flex-col md:flex-row gap-4">
                     <div className="flex-1 space-y-2">
                       <Label htmlFor="phone" className="text-sm font-bold text-white/80">
-                        휴대전화번호 <span className="text-red-400">*</span>
+                        {t("휴대전화번호", "Mobile Number")} <span className="text-red-400">*</span>
                       </Label>
                       <Input 
                         id="phone"
@@ -239,7 +241,7 @@ export default function StatusPage() {
                       className="px-10 py-4 bg-amber-500 text-black font-black rounded-xl hover:scale-105 active:scale-95 transition-all shadow-[0_15px_30px_rgba(245,158,11,0.25)] flex items-center justify-center gap-2 disabled:opacity-50 self-end h-14"
                     >
                       {isSearching ? <Clock className="animate-spin" size={20} /> : <Search size={20} strokeWidth={3} />}
-                      <span>{isSearching ? "조회중..." : "현황 조회"}</span>
+                      <span>{isSearching ? t("조회중...", "Searching...") : t("현황 조회", "Search")}</span>
                     </button>
                   </div>
                 </div>
@@ -277,7 +279,7 @@ export default function StatusPage() {
                         </div>
                         
                         <button className="flex items-center gap-2 bg-white/5 hover:bg-white/10 px-6 py-3 rounded-xl text-sm font-black transition-all border border-white/5">
-                          상세보기 <ArrowRight size={16} />
+                          {t("상세보기", "View Details")} <ArrowRight size={16} />
                         </button>
                       </div>
                     ))}
@@ -299,29 +301,29 @@ export default function StatusPage() {
                     icon={<Clock size={18} />} 
                     color="text-amber-500" 
                     bg="bg-amber-500/10" 
-                    title="승인 대기 (Pending)" 
-                    desc="신청서가 접수되어 담당자가 보안 및 방문 목적을 검토 중입니다." 
+                    title={t("승인 대기 (Pending)", "Pending Approval")}
+                    desc={t("신청서가 접수되어 담당자가 보안 및 방문 목적을 검토 중입니다.", "Your application has been received and is being reviewed by the person in charge.")} 
                   />
                   <StatusGuideItem 
                     icon={<CheckCircle2 size={18} />} 
                     color="text-emerald-500" 
                     bg="bg-emerald-500/10" 
-                    title="승인 완료 (Approved)" 
-                    desc="방문이 승인되었습니다. 등록된 번호로 출입증 정보가 발송됩니다." 
+                    title={t("승인 완료 (Approved)", "Approved")}
+                    desc={t("방문이 승인되었습니다. 등록된 번호로 출입증 정보가 발송됩니다.", "Your visit has been approved. Access pass information will be sent to your registered number.")} 
                   />
                   <StatusGuideItem 
                     icon={<XCircle size={18} />} 
                     color="text-red-500" 
                     bg="bg-red-500/10" 
-                    title="신청 반려 (Rejected)" 
-                    desc="입력 정보 미비 또는 보안 규정 사유로 신청이 거절되었습니다." 
+                    title={t("신청 반려 (Rejected)", "Rejected")}
+                    desc={t("입력 정보 미비 또는 보안 규정 사유로 신청이 거절되었습니다.", "Your application was rejected due to incomplete information or security policy reasons.")} 
                   />
                   <StatusGuideItem 
                     icon={<XCircle size={18} />} 
                     color="text-gray-500" 
                     bg="bg-gray-500/10" 
-                    title="신청 취소 (Cancelled)" 
-                    desc="신청자 또는 관리자에 의해 방문 신청이 취소되었습니다." 
+                    title={t("신청 취소 (Cancelled)", "Cancelled")}
+                    desc={t("신청자 또는 관리자에 의해 방문 신청이 취소되었습니다.", "The visit application was cancelled by the applicant or administrator.")} 
                   />
                 </div>
 
@@ -330,7 +332,7 @@ export default function StatusPage() {
                     <Info size={12} /> Notice
                   </p>
                   <p className="text-[11px] text-white/30 leading-relaxed font-medium">
-                    승인 완료된 방문 건은 현장에서 본인 확인 후 출입이 가능합니다. 문의사항은 관리부서(041-939-1114)로 연락 바랍니다.
+                    {t("승인 완료된 방문 건은 현장에서 본인 확인 후 출입이 가능합니다. 문의사항은 관리부서(041-939-1114)로 연락 바랍니다.", "Approved visits are allowed on-site after identity verification. For inquiries, please contact the management office at 041-939-1114.")}
                   </p>
                 </div>
               </section>

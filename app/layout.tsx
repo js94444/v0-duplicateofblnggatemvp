@@ -4,6 +4,7 @@ import { Inter } from "next/font/google"
 import { ThemeProvider } from "@/components/theme-provider"
 import { Toaster } from "@/components/ui/toaster"
 import { Suspense } from "react"
+import { LanguageProvider } from "@/lib/language-context"
 import "./globals.css"
 
 const inter = Inter({
@@ -26,10 +27,12 @@ export default function RootLayout({
     <html lang="ko" suppressHydrationWarning>
       <body className={`font-sans ${inter.variable}`}>
         <Suspense fallback={null}>
-          <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
-            {children}
-            <Toaster />
-          </ThemeProvider>
+          <LanguageProvider>
+            <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
+              {children}
+              <Toaster />
+            </ThemeProvider>
+          </LanguageProvider>
         </Suspense>
       </body>
     </html>

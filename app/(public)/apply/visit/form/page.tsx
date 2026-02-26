@@ -26,6 +26,7 @@ import { Label } from "@/components/ui/label"
 import { ContactSelector } from "@/components/contact-selector"
 import { ArrowLeft, Plus, Trash2 } from "lucide-react"
 import { PublicHeader } from "@/components/public/public-header"
+import { useLang } from "@/lib/language-context"
 
 interface ElectronicDevice {
   item_name: string
@@ -93,6 +94,7 @@ interface CompanionErrors {
 }
 
 export default function VisitFormPage() {
+  const { t } = useLang()
   const [scrolled, setScrolled] = useState(false)
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -612,8 +614,8 @@ export default function VisitFormPage() {
             <span className="text-sm font-bold tracking-widest uppercase">Go Back</span>
           </Link>
 
-          <h2 className="text-4xl md:text-5xl font-black mb-2 text-white">방문 신청서 작성</h2>
-          <p className="text-white/40 text-sm mb-12">방문 정보를 입력해주세요</p>
+          <h2 className="text-4xl md:text-5xl font-black mb-2 text-white">{t("방문 신청서 작성", "Visit Application Form")}</h2>
+          <p className="text-white/40 text-sm mb-12">{t("방문 정보를 입력해주세요", "Please fill in your visit information")}</p>
 
         <form onSubmit={onSubmit} className="space-y-8">
           <Card className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-[32px] hover:border-white/20 transition-all">

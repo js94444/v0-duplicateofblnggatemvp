@@ -21,6 +21,7 @@ import {
 } from "lucide-react"
 import { PublicHeader } from "@/components/public/public-header"
 import { StatusTimeline } from "@/components/common/status-timeline"
+import { useLang } from "@/lib/language-context"
 import {
   type Application,
   type ApplicationStatus,
@@ -37,6 +38,7 @@ const bgStyle = {
 }
 
 export default function StatusDetailPage() {
+  const { t } = useLang()
   const params = useParams()
   const router = useRouter()
   const receipt = params.receipt as string
@@ -119,10 +121,10 @@ export default function StatusDetailPage() {
 
   const StatusBadge = ({ status }: { status: string }) => {
     const configs: Record<string, { label: string; color: string; bg: string; border: string }> = {
-      pending: { label: "승인대기", color: "text-amber-500", bg: "bg-amber-500/10", border: "border-amber-500/20" },
-      approved: { label: "승인완료", color: "text-emerald-500", bg: "bg-emerald-500/10", border: "border-emerald-500/20" },
-      rejected: { label: "신청반려", color: "text-red-500", bg: "bg-red-500/10", border: "border-red-500/20" },
-      cancelled: { label: "신청취소", color: "text-gray-500", bg: "bg-gray-500/10", border: "border-gray-500/20" }
+      pending: { label: t("승인대기", "Pending"), color: "text-amber-500", bg: "bg-amber-500/10", border: "border-amber-500/20" },
+      approved: { label: t("승인완료", "Approved"), color: "text-emerald-500", bg: "bg-emerald-500/10", border: "border-emerald-500/20" },
+      rejected: { label: t("신청반려", "Rejected"), color: "text-red-500", bg: "bg-red-500/10", border: "border-red-500/20" },
+      cancelled: { label: t("신청취소", "Cancelled"), color: "text-gray-500", bg: "bg-gray-500/10", border: "border-gray-500/20" }
     }
     const config = configs[status?.toLowerCase()?.trim()] || configs.pending
     return (

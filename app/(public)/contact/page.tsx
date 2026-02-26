@@ -6,6 +6,7 @@ import Link from "next/link"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { useState, useEffect, useRef } from "react"
+import { useLang } from "@/lib/language-context"
 
 const office = {
   label: "보령본사",
@@ -96,6 +97,7 @@ function LeafletMap({ lat, lng }: { lat: number; lng: number }) {
 }
 
 export default function ContactPage() {
+  const { t } = useLang()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
 
@@ -142,8 +144,8 @@ export default function ContactPage() {
               <div className="w-12 h-[2px] bg-amber-500 shadow-[0_0_10px_rgba(245,158,11,0.5)]" />
               <span className="text-amber-500 text-sm font-black tracking-[0.4em] uppercase">Contact Us</span>
             </div>
-            <h1 className="text-4xl md:text-5xl font-black tracking-tight text-white mb-2">오시는 길</h1>
-            <p className="text-white/40 text-sm">보령LNG터미널 본사 위치 안내</p>
+            <h1 className="text-4xl md:text-5xl font-black tracking-tight text-white mb-2">{t("오시는 길", "How to Get Here")}</h1>
+            <p className="text-white/40 text-sm">{t("보령LNG터미널 본사 위치 안내", "Location guide for Boryeong LNG Terminal Head Office")}</p>
           </div>
 
           {/* Info Card */}

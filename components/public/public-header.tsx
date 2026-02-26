@@ -5,6 +5,7 @@ import Link from "next/link"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { UserCircle, Menu, X, Globe } from "lucide-react"
+import { useLang } from "@/lib/language-context"
 
 interface PublicHeaderProps {
   initialScrolled?: boolean
@@ -13,7 +14,7 @@ interface PublicHeaderProps {
 export function PublicHeader({ initialScrolled = false }: PublicHeaderProps) {
   const [scrolled, setScrolled] = useState(initialScrolled)
   const [isMenuOpen, setIsMenuOpen] = useState(false)
-  const [lang, setLang] = useState<"ko" | "en">("ko")
+  const { lang, setLang } = useLang()
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 20)
