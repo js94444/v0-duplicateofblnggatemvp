@@ -152,7 +152,7 @@ export default function VisitAgreementPage() {
                   <ul className="list-disc pl-5 space-y-1">
                     <li>시설 내 촬영, 녹음, 녹화 금지</li>
                     <li>허가되지 않은 구역 출입 금지</li>
-                    <li>업무상 취득한 정보의 외부 유출 금지</li>
+                    <li>업무상 ��득한 정보의 외부 유출 금지</li>
                     <li>방문 목적 외 활동 금지</li>
                   </ul>
                 </div>
@@ -212,21 +212,7 @@ export default function VisitAgreementPage() {
         </div>
       </footer>
 
-      {/* Mobile Full Screen Menu */}
-      {isMenuOpen && (
-        <div className="fixed inset-0 bg-black/95 backdrop-blur-2xl z-[100] p-12 flex flex-col justify-center gap-12 animate-in fade-in duration-300">
-          <button type="button" className="absolute top-8 right-8 text-white/50 hover:text-white" onClick={() => setIsMenuOpen(false)}>
-            <X size={40} />
-          </button>
-          <div className="flex flex-col gap-8 text-4xl font-black">
-            <Link href="/apply/visit" className="hover:text-amber-500">방문신청</Link>
-            <Link href="/status" className="hover:text-amber-500">예약조회</Link>
-            <Link href="/guidelines" className="hover:text-amber-500">안전수칙</Link>
-            <Link href="/admin/login" className="hover:text-amber-500">시스템관리</Link>
-          </div>
-          <PremiumLogo />
-        </div>
-      )}
+
     </div>
   )
 }
