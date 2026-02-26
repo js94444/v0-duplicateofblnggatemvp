@@ -6,8 +6,10 @@ import Link from "next/link"
 import Image from "next/image"
 import { ArrowLeft, Download } from "lucide-react"
 import { PublicHeader } from "@/components/public/public-header"
+import { useLang } from "@/lib/language-context"
 
 export default function GuidelinesPage() {
+  const { t } = useLang()
   const [scrolled, setScrolled] = useState(false)
   const [isMenuOpen, setIsMenuOpen] = useState(false)
 
@@ -75,7 +77,7 @@ export default function GuidelinesPage() {
 
           <div className="text-center mb-12">
             <h2 className="text-4xl md:text-5xl font-black mb-3 text-white">SHE Flyer</h2>
-            <p className="text-white/40 text-sm uppercase tracking-widest font-bold">안전보건환경 준수사항 안내</p>
+            <p className="text-white/40 text-sm uppercase tracking-widest font-bold">{t("안전보건환경 준수사항 안내", "Safety, Health & Environment Guidelines")}</p>
           </div>
 
           <div className="flex justify-center gap-4 mb-12 flex-wrap">
@@ -84,14 +86,14 @@ export default function GuidelinesPage() {
               className="bg-amber-500 hover:bg-amber-600 text-black font-bold px-6 py-3 rounded-xl hover:scale-105 transition-all shadow-[0_0_20px_rgba(245,158,11,0.3)]"
             >
               <Download className="w-4 h-4 mr-2" />
-              페이지 1 다운로드
+              {t("페이지 1 다운로드", "Download Page 1")}
             </Button>
             <Button
               onClick={() => handleDownload("/images/she-flyer-page2.png", "보령LNG터미널_SHE_Flyer_페이지2.png")}
               className="bg-amber-500 hover:bg-amber-600 text-black font-bold px-6 py-3 rounded-xl hover:scale-105 transition-all shadow-[0_0_20px_rgba(245,158,11,0.3)]"
             >
               <Download className="w-4 h-4 mr-2" />
-              페이지 2 다운로드
+              {t("페이지 2 다운로드", "Download Page 2")}
             </Button>
           </div>
 

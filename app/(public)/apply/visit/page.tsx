@@ -6,9 +6,11 @@ import { Button } from "@/components/ui/button"
 import { ArrowLeft, ArrowRight, ClipboardCheck, Bell, UserCheck, MapPin, Info, Check } from "lucide-react"
 import Link from "next/link"
 import { PublicHeader } from "@/components/public/public-header"
+import { useLang } from "@/lib/language-context"
 
 export default function VisitAgreementPage() {
   const router = useRouter()
+  const { t } = useLang()
   const [agreements, setAgreements] = useState({
     privacy: false,
     security: false,
@@ -17,10 +19,10 @@ export default function VisitAgreementPage() {
   })
 
   const visitSteps = [
-    { label: "방문신청", icon: <ClipboardCheck size={16} /> },
-    { label: "담당자통보", icon: <Bell size={16} /> },
-    { label: "내부승인", icon: <UserCheck size={16} /> },
-    { label: "방문", icon: <MapPin size={16} /> },
+    { label: t("방문신청", "Apply"), icon: <ClipboardCheck size={16} /> },
+    { label: t("담당자통보", "Notify"), icon: <Bell size={16} /> },
+    { label: t("내부승인", "Approve"), icon: <UserCheck size={16} /> },
+    { label: t("방문", "Visit"), icon: <MapPin size={16} /> },
   ]
 
   const handleAllAgree = () => {
@@ -94,8 +96,8 @@ export default function VisitAgreementPage() {
             <span className="text-sm font-bold tracking-widest uppercase">Go Back</span>
           </Link>
 
-          <h2 className="text-4xl md:text-5xl font-black mb-2 text-white">방문 신청</h2>
-          <p className="text-white/40 text-sm mb-12">방문 신청을 위해 아래 동의 사항을 확인하고 동의해주세요.</p>
+          <h2 className="text-4xl md:text-5xl font-black mb-2 text-white">{t("방문 신청", "Visit Application")}</h2>
+          <p className="text-white/40 text-sm mb-12">{t("방문 신청을 위해 아래 동의 사항을 확인하고 동의해주세요.", "Please review and agree to the following terms to proceed with your visit application.")}</p>
 
           {/* Visit Steps Indicator */}
           <div className="relative bg-white/5 backdrop-blur-xl border border-white/10 rounded-[40px] px-12 py-8 mb-16">
@@ -130,47 +132,47 @@ export default function VisitAgreementPage() {
           {/* Agreement Sections */}
           <div className="space-y-6">
             <AgreementCard 
-              title="개인정보 수집·이용 동의" 
+              title={t("개인정보 수집·이용 동의", "Privacy Policy Agreement")}
               checked={agreements.privacy} 
               onToggle={() => toggleAgree('privacy')}
               content={
                 <div className="space-y-4">
-                  <p><strong>1. 개인정보의 수집 및 이용 목적</strong><br />보령LNG터미널 시설 방문 신청 및 출입 관리</p>
-                  <p><strong>2. 수집하는 개인정보의 항목</strong><br />성명, 생년월일, 휴대전화번호, 이메일, 직책, 소속, 주소, 차량번호, 차종, 방문목적 등</p>
-                  <p><strong>3. 개인정보의 보유 및 이용 기간</strong><br />방문 종료 후 1년 (���안 지침에 따라 연장될 수 있음)</p>
+                  <p><strong>{t("1. 개인정보의 수집 및 이용 목적", "1. Purpose of Collection")}</strong><br />{t("보령LNG터미널 시설 방문 신청 및 출입 관리", "Boryeong LNG Terminal facility visit application and access management")}</p>
+                  <p><strong>{t("2. 수집하는 개인정보의 항목", "2. Items Collected")}</strong><br />{t("성명, 생년월일, 휴대전화번호, 이메일, 직책, 소속, 주소, 차량번호, 차종, 방문목적 등", "Name, date of birth, phone number, email, position, organization, address, vehicle number, vehicle type, visit purpose, etc.")}</p>
+                  <p><strong>{t("3. 개인정보의 보유 및 이용 기간", "3. Retention Period")}</strong><br />{t("방문 종료 후 1년 (보안 지침에 따라 연장될 수 있음)", "1 year after visit (may be extended per security policy)")}</p>
                 </div>
               }
             />
 
             <AgreementCard 
-              title="보안 서약" 
+              title={t("보안 서약", "Security Pledge")}
               checked={agreements.security} 
               onToggle={() => toggleAgree('security')}
               content={
                 <div className="space-y-2">
-                  <p>본인은 보령LNG터미널 방문 시 다음 사항을 준수할 것을 서약합니다:</p>
+                  <p>{t("본인은 보령LNG터미널 방문 시 다음 사항을 준수할 것을 서약합니다:", "I pledge to comply with the following during my visit to Boryeong LNG Terminal:")}</p>
                   <ul className="list-disc pl-5 space-y-1">
-                    <li>시설 내 촬영, 녹음, 녹화 금지</li>
-                    <li>허가되지 않은 구역 출입 금지</li>
-                    <li>업무상 ���득한 정보의 외부 유출 금지</li>
-                    <li>방문 목적 외 활동 금지</li>
+                    <li>{t("시설 내 촬영, 녹음, 녹화 금지", "No photography, recording, or filming inside the facility")}</li>
+                    <li>{t("허가되지 않은 구역 출입 금지", "No entry to unauthorized areas")}</li>
+                    <li>{t("업무상 취득한 정보의 외부 유출 금지", "No disclosure of information obtained during the visit")}</li>
+                    <li>{t("방문 목적 외 활동 금지", "No activities outside the stated visit purpose")}</li>
                   </ul>
                 </div>
               }
             />
 
             <AgreementCard 
-              title="안전준수 서약" 
+              title={t("안전준수 서약", "Safety Compliance Pledge")}
               checked={agreements.safety} 
               onToggle={() => toggleAgree('safety')}
               content={
                 <div className="space-y-2">
-                  <p>본인은 보령LNG터미널 방문 시 다음 안전수칙을 준수할 것을 서약합니다:</p>
+                  <p>{t("본인은 보령LNG터미널 방문 시 다음 안전수칙을 준수할 것을 서약합니다:", "I pledge to comply with the following safety rules during my visit to Boryeong LNG Terminal:")}</p>
                   <ul className="list-disc pl-5 space-y-1">
-                    <li>안전모, 안전화 등 개인보호구 착용</li>
-                    <li>지정된 통로로 이동 및 안전표지 준수</li>
-                    <li>흡연구역 외 흡연 금지</li>
-                    <li>화기 취급 및 인화물질 반입 금지</li>
+                    <li>{t("안전모, 안전화 등 개인보호구 착용", "Wear personal protective equipment such as hard hat and safety shoes")}</li>
+                    <li>{t("지정된 통로로 이동 및 안전표지 준수", "Use designated walkways and follow safety signs")}</li>
+                    <li>{t("흡연구역 외 흡연 금지", "No smoking outside designated smoking areas")}</li>
+                    <li>{t("화기 취급 및 인화물질 반입 금지", "No handling of fire or bringing flammable materials")}</li>
                   </ul>
                 </div>
               }
@@ -183,7 +185,7 @@ export default function VisitAgreementPage() {
                   {agreements.all && <Check size={18} className="text-black" strokeWidth={4} />}
                 </div>
                 <input type="checkbox" className="hidden" checked={agreements.all} onChange={handleAllAgree} />
-                <span className="text-lg font-black text-white">위 약관에 전체 동의합니다</span>
+                <span className="text-lg font-black text-white">{t("위 약관에 전체 동의합니다", "I agree to all of the above terms")}</span>
               </label>
 
               <button 
@@ -192,7 +194,7 @@ export default function VisitAgreementPage() {
                 disabled={!agreements.all}
                 className={`flex items-center gap-3 px-10 py-5 rounded-2xl font-black text-lg transition-all shadow-2xl ${agreements.all ? 'bg-amber-500 text-black hover:scale-105 active:scale-95' : 'bg-white/5 text-white/20 cursor-not-allowed'}`}
               >
-                신청서 작성
+                {t("신청서 작성", "Fill Application")}
                 <ArrowRight size={20} strokeWidth={3} />
               </button>
             </div>
