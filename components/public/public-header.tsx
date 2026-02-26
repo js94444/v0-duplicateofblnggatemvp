@@ -53,10 +53,11 @@ export function PublicHeader({ initialScrolled = false }: PublicHeaderProps) {
             <Link
               key={link.label}
               href={link.href}
-              className={`transition-all hover:text-amber-500 ${lang === "ko"
-                  ? "text-[16px] font-black tracking-tighter text-white" // 한글: 16px, 가장 두꺼운 900두께, 자간 더 좁게, 색상 완전 흰색
-                  : "text-[13px] font-bold tracking-[0.15em] text-white/70" // 영문: 기존 스타일 유지
+              className={`transition-all hover:text-amber-500 drop-shadow-sm ${lang === "ko"
+                  ? "text-[16px] font-[900] tracking-[0.05em] text-white"
+                  : "text-[13px] font-bold tracking-[0.15em] text-white/70"
                 }`}
+              style={lang === "ko" ? { textShadow: "0px 0px 1px rgba(255,255,255,0.8)" } : {}}
             >
               {link.label}
             </Link>
@@ -129,7 +130,7 @@ export function PublicHeader({ initialScrolled = false }: PublicHeaderProps) {
                 href={link.href}
                 onClick={() => setIsMenuOpen(false)}
                 className={`transition-colors hover:text-amber-500 ${lang === "ko"
-                    ? "text-4xl font-black tracking-tighter"
+                    ? "text-4xl font-[900] tracking-wider"
                     : "text-2xl font-bold tracking-widest"
                   }`}
               >
