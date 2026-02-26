@@ -998,7 +998,7 @@ export class AzureSqlDB {
 
     console.log('[v0] Updating full application:', { id, data })
 
-    const now = new Date()
+    const now = getKoreaTime()
 
     await dbPool
       .request()
@@ -1082,14 +1082,14 @@ export class AzureSqlDB {
       }
     })
 
-    // Monthly stats for the last 6 months
-    const now = new Date()
+    // Monthly stats for the last 6 months (한국시간 기준)
+    const now = getKoreaTime()
     const monthlyStats = []
 
     for (let i = 5; i >= 0; i--) {
-      const date = new Date(now.getFullYear(), now.getMonth() - i, 1)
-      const year = date.getFullYear()
-      const month = date.getMonth() + 1
+      const date = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - i, 1))
+      const year = date.getUTCFullYear()
+      const month = date.getUTCMonth() + 1
       const monthName = `${year}년 ${month}월`
 
       const monthResult = await dbPool
