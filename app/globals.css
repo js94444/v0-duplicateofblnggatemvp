@@ -83,13 +83,8 @@
   /* Updated font variables to use Inter instead of Geist */
   --font-sans: var(--font-inter);
 
-  /* Animation utilities for shadcn/ui components */
   --animate-accordion-down: accordion-down 0.2s ease-out;
   --animate-accordion-up: accordion-up 0.2s ease-out;
-  --animate-fade-in: fade-in 0.2s ease-out;
-  --animate-fade-out: fade-out 0.2s ease-in;
-  --animate-zoom-in: zoom-in 0.2s ease-out;
-  --animate-zoom-out: zoom-out 0.2s ease-in;
   --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Consolas, "Liberation Mono", Menlo, monospace;
   --color-background: var(--background);
   --color-foreground: var(--foreground);
