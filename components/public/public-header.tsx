@@ -48,30 +48,29 @@ export function PublicHeader({ initialScrolled = false }: PublicHeaderProps) {
         </Link>
 
         {/* Desktop Nav */}
-        <div className="hidden md:flex items-center gap-10 uppercase">
+        <div className="hidden md:flex items-center gap-8 uppercase text-white/70">
           {navLinks.map((link) => (
             <Link
               key={link.label}
               href={link.href}
-              className={`transition-all hover:text-amber-500 drop-shadow-sm ${lang === "ko"
-                  ? "text-[16px] font-[900] tracking-[0.05em] text-white"
-                  : "text-[13px] font-bold tracking-[0.15em] text-white/70"
+              className={`transition-colors hover:text-amber-500 ${lang === "ko"
+                  ? "text-[14px] font-extrabold tracking-wider" // 한글: 폰트 두께와 크기 동시 강화
+                  : "text-[13px] font-bold tracking-widest"
                 }`}
-              style={lang === "ko" ? { textShadow: "0px 0px 1px rgba(255,255,255,0.8)" } : {}}
             >
               {link.label}
             </Link>
           ))}
 
-          {/* 한영 전환 버튼 (KOR/ENG) */}
+          {/* 한영 전환 버튼 */}
           <button
             type="button"
             onClick={() => setLang((prev) => (prev === "ko" ? "en" : "ko"))}
-            className="flex items-center gap-1.5 text-white/60 hover:text-amber-500 transition-colors ml-2"
+            className="flex items-center gap-1.5 text-white/60 hover:text-amber-500 transition-colors"
             aria-label="언어 전환"
           >
             <Globe size={14} />
-            <span className="text-[12px] font-black tracking-[0.1em]">
+            <span className="text-[12px] font-extrabold tracking-[0.15em]">
               {lang === "ko" ? "ENG" : "KOR"}
             </span>
           </button>
@@ -85,7 +84,7 @@ export function PublicHeader({ initialScrolled = false }: PublicHeaderProps) {
           >
             <Link href="/admin/login">
               <UserCircle size={16} />
-              <span className="text-[13px] font-bold">Admin</span>
+              <span className="text-[13px] font-bold tracking-wider">Admin</span>
             </Link>
           </Button>
         </div>
@@ -123,15 +122,15 @@ export function PublicHeader({ initialScrolled = false }: PublicHeaderProps) {
               <X size={28} />
             </button>
           </div>
-          <nav className="flex flex-col gap-8 px-8 pt-12 uppercase text-white">
+          <nav className="flex flex-col gap-6 px-8 pt-8 uppercase text-white/80">
             {navLinks.map((link) => (
               <Link
                 key={link.label}
                 href={link.href}
                 onClick={() => setIsMenuOpen(false)}
                 className={`transition-colors hover:text-amber-500 ${lang === "ko"
-                    ? "text-4xl font-[900] tracking-wider"
-                    : "text-2xl font-bold tracking-widest"
+                    ? "text-2xl font-extrabold tracking-normal"
+                    : "text-xl font-bold tracking-widest"
                   }`}
               >
                 {link.label}
@@ -144,19 +143,19 @@ export function PublicHeader({ initialScrolled = false }: PublicHeaderProps) {
                 setLang((prev) => (prev === "ko" ? "en" : "ko"));
                 setIsMenuOpen(false);
               }}
-              className="flex items-center gap-2 text-white/50 hover:text-amber-500 transition-colors text-base mt-4 font-black"
+              className="flex items-center gap-2 text-white/60 hover:text-amber-500 transition-colors text-sm mt-2 font-bold"
             >
-              <Globe size={18} />
+              <Globe size={16} />
               {lang === "ko" ? "VIEW IN ENGLISH (ENG)" : "한국어로 보기 (KOR)"}
             </button>
 
             <Link
               href="/admin/login"
               onClick={() => setIsMenuOpen(false)}
-              className="flex items-center gap-2 text-white/50 hover:text-amber-500 transition-colors text-sm mt-4 font-bold"
+              className="flex items-center gap-2 text-white/60 hover:text-amber-500 transition-colors text-sm mt-4 font-bold"
             >
               <UserCircle size={16} />
-              ADMIN LOGIN
+              Admin
             </Link>
           </nav>
         </div>
