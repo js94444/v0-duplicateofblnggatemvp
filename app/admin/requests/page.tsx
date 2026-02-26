@@ -53,12 +53,12 @@ export default function AdminRequestsPage() {
       return raw.map((a: any) => ({ ...a, status: String(a.status ?? "").trim().toUpperCase() }))
     }), [])
 
-  const { data: applications = [], isLoading: loading, mutate: refreshApplications } = useSWR(
+  const { data: applications = [], isLoading: loading, isValidating, mutate: refreshApplications } = useSWR(
     '/api/admin/requests',
     fetcher,
     {
       revalidateOnFocus: false,
-      dedupingInterval: 30000, // 30초 내 중복 요청 방지
+      dedupingInterval: 0,
       onError: () => toast({ title: "데이터 로드 실패", description: "신청 목록을 불러오는 중 오류가 발생했습니다", variant: "destructive" }),
     }
   )
@@ -67,7 +67,7 @@ export default function AdminRequestsPage() {
     fetch('/data/contacts.json')
       .then(res => res.json())
       .then(data => setContacts(data))
-      .catch(() => {})
+      .catch(() => { })
   }, [])
 
   useEffect(() => {
@@ -118,12 +118,12 @@ export default function AdminRequestsPage() {
     if (dateTo) {
       filtered = filtered.filter((app) => new Date(app.created_at) <= new Date(dateTo + "T23:59:59"))
     }
-  
+
     // Sorting
     if (sortField) {
       filtered = [...filtered].sort((a, b) => {
         let aVal: any, bVal: any
-        
+
         switch (sortField) {
           case 'type':
             aVal = a.receipt.substring(0, 3)
@@ -144,13 +144,13 @@ export default function AdminRequestsPage() {
           default:
             return 0
         }
-        
+
         if (aVal < bVal) return sortDirection === 'asc' ? -1 : 1
         if (aVal > bVal) return sortDirection === 'asc' ? 1 : -1
         return 0
       })
     }
-    
+
     setFilteredApplications(filtered)
   }
 
@@ -231,7 +231,7 @@ export default function AdminRequestsPage() {
 
   const getStatusBadgeStyle = (status: ApplicationStatus) => {
     const normalizedStatus = typeof status === 'string' ? status.toUpperCase() : status
-    
+
     switch (normalizedStatus) {
       case "PENDING":
         return "bg-yellow-500/20 text-yellow-300 border-yellow-500/50"
@@ -293,11 +293,14 @@ export default function AdminRequestsPage() {
           </div>
           <Button
             onClick={() => refreshApplications()}
-            className="bg-white/10 hover:bg-white/20 border border-white/20 text-white font-bold px-5 py-2 rounded-xl transition-all"
-            disabled={loading}
+            disabled={loading || isValidating} // 로딩 중이거나 검증 중일 때 버튼 비활성화
+            className="bg-white/10 hover:bg-white/20 border border-white/20 text-white font-bold px-5 py-2 rounded-xl transition-all active:scale-95"
           >
-            <RefreshCw size={15} className={`mr-2 ${loading ? "animate-spin" : ""}`} />
-            새로고침
+            <RefreshCw
+              size={15}
+              className={`mr-2 ${(loading || isValidating) ? "animate-spin" : ""}`}
+            />
+            {isValidating ? "업데이트 중..." : "새로고침"}
           </Button>
         </div>
 
@@ -482,13 +485,13 @@ export default function AdminRequestsPage() {
                               const d = String(date.getDate()).padStart(2, '0')
                               return `${y}.${m}.${d}`
                             }
-                            
+
                             const formatDateShort = (date: Date) => {
                               const m = String(date.getMonth() + 1).padStart(2, '0')
                               const d = String(date.getDate()).padStart(2, '0')
                               return `${m}.${d}`
                             }
-                            
+
                             if ((app as any).visit_start_date && (app as any).visit_end_date) {
                               const startDate = new Date((app as any).visit_start_date)
                               const endDate = new Date((app as any).visit_end_date)
@@ -513,21 +516,21 @@ export default function AdminRequestsPage() {
 
                           const getContactInfo = (app: Application) => {
                             const contactName = app.contact_name || "-"
-                            
+
                             // contacts.json에서 담당자 정보 찾기
                             const contactDisplay = contactName.includes('>') ? contactName.split('>') : [contactName, '']
                             const name = contactDisplay[0]
                             const dept = contactDisplay[1] || ''
-                            
+
                             // contacts.json에서 mobile 찾기
                             const contact = contacts.find(c => c.name === name)
                             const mobile = contact?.mobile || "-"
-                            
+
                             return { name, dept: dept || contact?.department || '', mobile }
                           }
 
                           const contactInfo = getContactInfo(application)
-                          
+
                           console.log('[v0] Rendering row for:', {
                             receipt: application.receipt,
                             all_keys: Object.keys(application),
@@ -539,7 +542,7 @@ export default function AdminRequestsPage() {
                             contact_name: application.contact_name,
                             contact_info: contactInfo
                           })
-                          
+
                           return (
                             <TableRow key={application.id} className="border-white/5 hover:bg-white/5 transition-colors">
                               <TableCell className="text-white">
@@ -547,8 +550,8 @@ export default function AdminRequestsPage() {
                                   {getTypeIcon(application.type)}
                                   <span className="text-sm font-medium">
                                     {application.receipt.startsWith("GV-") ? "단체방문" :
-                                     application.receipt.startsWith("VR-") ? "개인방문" :
-                                     application.receipt.startsWith("PA-") ? "항만출입" : "-"}
+                                      application.receipt.startsWith("VR-") ? "개인방문" :
+                                        application.receipt.startsWith("PA-") ? "항만출입" : "-"}
                                   </span>
                                 </div>
                               </TableCell>
@@ -575,11 +578,11 @@ export default function AdminRequestsPage() {
                                 <span className={`inline-flex items-center px-3 py-1 rounded-lg text-xs font-bold border ${getStatusBadgeStyle(application.status)}`}>
                                   {(() => {
                                     const originalStatus = application.status;
-                                    const statusKey = (typeof originalStatus === 'string' 
-                                      ? originalStatus.trim().toUpperCase() 
+                                    const statusKey = (typeof originalStatus === 'string'
+                                      ? originalStatus.trim().toUpperCase()
                                       : String(originalStatus).trim().toUpperCase()) as ApplicationStatus;
                                     const label = APPLICATION_STATUS_LABELS[statusKey];
-                                    
+
                                     return label || originalStatus;
                                   })()}
                                 </span>

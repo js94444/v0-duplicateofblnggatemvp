@@ -68,6 +68,14 @@ interface DeviceErrors {
   }
 }
 
+interface UploadedFileData {
+  filename: string
+  fileKey: string
+  fileType: string
+  size?: number
+  url?: string
+}
+
 interface Companion {
   name: string
   phone: string
@@ -75,6 +83,7 @@ interface Companion {
   organization: string
   position: string
   electronic_devices: ElectronicDevice[]
+  port_cert_files: UploadedFileData[]
   privacy_consent: boolean
   security_pledge: boolean
   safety_pledge: boolean
@@ -136,7 +145,8 @@ export default function VisitFormPage() {
   const [deviceErrors, setDeviceErrors] = useState<DeviceErrors>({})
   const [companions, setCompanions] = useState<Companion[]>([])
   const [companionErrors, setCompanionErrors] = useState<CompanionErrors>({})
-  const [uploadedFiles, setUploadedFiles] = useState<{ filename: string; fileKey: string; fileType: string; size?: number }[]>([])
+  const [uploadedFiles, setUploadedFiles] = useState<UploadedFileData[]>([])
+  const [portCertFiles, setPortCertFiles] = useState<UploadedFileData[]>([])
   const { toast } = useToast()
   const router = useRouter()
 
@@ -357,9 +367,11 @@ export default function VisitFormPage() {
         companions: companions.map(c => ({
           ...c,
           phone: cleanPhoneNumber(c.phone),
-          electronic_devices: c.electronic_devices || []
+          electronic_devices: c.electronic_devices || [],
+          port_cert_files: c.port_cert_files || [],
         })),
         uploaded_files: uploadedFiles,
+        portCertFiles: portCertFiles,
       }
 
       console.log("[v0] Submitting visit application:", {
@@ -453,11 +465,20 @@ export default function VisitFormPage() {
         organization: "",
         position: "",
         electronic_devices: [],
+        port_cert_files: [],
         privacy_consent: false,
         security_pledge: false,
         safety_pledge: false,
       },
     ])
+  }
+
+  const updateCompanionPortCert = (index: number, files: UploadedFileData[]) => {
+    setCompanions((prev) => {
+      const updated = [...prev]
+      updated[index] = { ...updated[index], port_cert_files: files }
+      return updated
+    })
   }
 
   const updateCompanion = (index: number, field: keyof Companion, value: string) => {
@@ -686,6 +707,32 @@ export default function VisitFormPage() {
                 onChange={(e) => updateField("visitor_address", e.target.value)}
                 error={errors.visitor_address}
               />
+
+              {/* 항만이수증 첨부 (신청자 본인) */}
+              <div className="pt-2">
+                <div className="mb-3">
+                  <p className="text-sm font-bold text-white">
+                    {t("항만이수증 첨부", "Port Safety Certificate")}
+                    <span className="ml-2 text-xs font-normal text-white/40">{t("(항만 출입자 해당 시 필수)", "(Required for port access)")}</span>
+                  </p>
+                  <p className="text-xs text-white/40 mt-1">{t("항만안전교육 이수 후 발급된 이수증을 업로드해주세요.", "Please upload the certificate issued after completing port safety training.")}</p>
+                </div>
+                <FileUpload
+                  label={t("이수증 업로드", "Upload Certificate")}
+                  description={t("이미지(PNG, JPG) 또는 PDF", "Image (PNG, JPG) or PDF")}
+                  maxFiles={3}
+                  onFilesUploaded={(files) => {
+                    const fileData = files.map((file) => ({
+                      filename: file.filename,
+                      fileKey: file.url,
+                      fileType: file.mimeType,
+                      size: file.size,
+                      url: file.url,
+                    }))
+                    setPortCertFiles(fileData)
+                  }}
+                />
+              </div>
 
               {/* 차량 정보 */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -1080,6 +1127,32 @@ export default function VisitFormPage() {
                         />
                       </div>
                     ))}
+
+                    {/* 동행인 항만이수증 첨부 */}
+                    <div className="pt-4">
+                      <div className="mb-3">
+                        <p className="text-sm font-bold text-white">
+                          {t("항만이수증 첨부", "Port Safety Certificate")}
+                          <span className="ml-2 text-xs font-normal text-white/40">{t("(항만 출입자 해당 시 필수)", "(Required for port access)")}</span>
+                        </p>
+                        <p className="text-xs text-white/40 mt-1">{t("이 동행인의 항만안전교육 이수증을 업로드해주세요.", "Please upload the port safety certificate for this companion.")}</p>
+                      </div>
+                      <FileUpload
+                        label={t("이수증 업로드", "Upload Certificate")}
+                        description={t("이미지(PNG, JPG) 또는 PDF", "Image (PNG, JPG) or PDF")}
+                        maxFiles={3}
+                        onFilesUploaded={(files) => {
+                          const fileData = files.map((file) => ({
+                            filename: file.filename,
+                            fileKey: file.url,
+                            fileType: file.mimeType,
+                            size: file.size,
+                            url: file.url,
+                          }))
+                          updateCompanionPortCert(companionIndex, fileData)
+                        }}
+                      />
+                    </div>
 
                     {/* 동의 체크박스 */}
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-6 border-t">

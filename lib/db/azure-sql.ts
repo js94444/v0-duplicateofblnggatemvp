@@ -146,6 +146,13 @@ export class AzureSqlDB {
         serial_number: string
         reason: string
       }>
+      port_cert_files?: Array<{
+        filename: string
+        fileKey: string
+        fileType?: string
+        url?: string
+        size?: number
+      }>
     }>
     uploadedFiles?: Array<{
       filename: string
@@ -153,6 +160,13 @@ export class AzureSqlDB {
       fileType: string
     }>
     uploaded_files?: Array<{
+      filename: string
+      fileKey: string
+      fileType?: string
+      url?: string
+      size?: number
+    }>
+    portCertFiles?: Array<{
       filename: string
       fileKey: string
       fileType?: string
@@ -293,6 +307,33 @@ export class AzureSqlDB {
               `)
           }
         }
+
+        // 동행인 항만이수증 저장
+        const companionPortCertFiles = companion.port_cert_files || []
+        if (companionPortCertFiles.length > 0) {
+          console.log('[v0] Saving companion port cert files for', companion.name, ':', companionPortCertFiles.length)
+          for (const file of companionPortCertFiles) {
+            if (file && file.filename && file.fileKey) {
+              await dbPool
+                .request()
+                .input('companion_id', sql.BigInt, companionId)
+                .input('application_id', sql.BigInt, applicationId)
+                .input('file_name', sql.NVarChar(500), file.filename)
+                .input('file_key', sql.NVarChar(500), file.fileKey)
+                .input('blob_url', sql.NVarChar(1000), file.url || file.fileKey)
+                .input('file_type', sql.NVarChar(100), file.fileType || 'application/octet-stream')
+                .input('file_size', sql.BigInt, file.size || null)
+                .input('attachment_type', sql.NVarChar(50), 'PORT_CERT')
+                .input('uploaded_at', sql.DateTime, now).query(`
+                  INSERT INTO visit_companion_attachments (
+                    companion_id, application_id, file_name, file_key, blob_url, file_type, file_size, attachment_type, uploaded_at
+                  ) VALUES (
+                    @companion_id, @application_id, @file_name, @file_key, @blob_url, @file_type, @file_size, @attachment_type, @uploaded_at
+                  )
+                `)
+            }
+          }
+        }
       }
     }
 
@@ -322,11 +363,12 @@ export class AzureSqlDB {
             .input('blob_url', sql.NVarChar(1000), file.url || file.fileKey)
             .input('file_type', sql.NVarChar(100), file.fileType || file.mimeType || 'application/octet-stream')
             .input('file_size', sql.BigInt, file.size || null)
+            .input('attachment_type', sql.NVarChar(50), 'GENERAL')
             .input('uploaded_at', sql.DateTime, now).query(`
               INSERT INTO visit_attachments (
-                application_id, file_name, file_key, blob_url, file_type, file_size, uploaded_at
+                application_id, file_name, file_key, blob_url, file_type, file_size, attachment_type, uploaded_at
               ) VALUES (
-                @application_id, @file_name, @file_key, @blob_url, @file_type, @file_size, @uploaded_at
+                @application_id, @file_name, @file_key, @blob_url, @file_type, @file_size, @attachment_type, @uploaded_at
               )
             `)
           console.log('[v0] File attachment saved successfully')
@@ -337,6 +379,32 @@ export class AzureSqlDB {
       console.log('[v0] All file attachments processed')
     } else {
       console.log('[v0] No uploaded files to save')
+    }
+
+    // 5. 신청자 본인 항만이수증 저장 (PORT_CERT)
+    const portCertFiles = data.portCertFiles || []
+    if (portCertFiles.length > 0) {
+      console.log('[v0] Saving port cert files:', portCertFiles.length)
+      for (const file of portCertFiles) {
+        if (file && file.filename && file.fileKey) {
+          await dbPool
+            .request()
+            .input('application_id', sql.BigInt, applicationId)
+            .input('file_name', sql.NVarChar(500), file.filename)
+            .input('file_key', sql.NVarChar(500), file.fileKey)
+            .input('blob_url', sql.NVarChar(1000), file.url || file.fileKey)
+            .input('file_type', sql.NVarChar(100), file.fileType || 'application/octet-stream')
+            .input('file_size', sql.BigInt, file.size || null)
+            .input('attachment_type', sql.NVarChar(50), 'PORT_CERT')
+            .input('uploaded_at', sql.DateTime, now).query(`
+              INSERT INTO visit_attachments (
+                application_id, file_name, file_key, blob_url, file_type, file_size, attachment_type, uploaded_at
+              ) VALUES (
+                @application_id, @file_name, @file_key, @blob_url, @file_type, @file_size, @attachment_type, @uploaded_at
+              )
+            `)
+        }
+      }
     }
 
     console.log('[v0] Visit application created successfully:', { applicationId, applicationNumber })
