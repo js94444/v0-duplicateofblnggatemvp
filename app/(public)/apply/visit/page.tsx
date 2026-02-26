@@ -103,25 +103,25 @@ export default function VisitAgreementPage() {
               {/* Icons and lines row */}
               <div className="grid grid-cols-[auto_1fr_auto_1fr_auto_1fr_auto] items-center gap-4">
                 {visitSteps.map((step, idx) => (
-                  <>
-                    <div key={`icon-${idx}`} className={`w-14 h-14 rounded-full flex items-center justify-center transition-all duration-500 ${idx === 0 ? 'bg-amber-500 text-black shadow-[0_0_20px_rgba(245,158,11,0.5)]' : 'bg-white/10 text-white/40'}`}>
+                  <React.Fragment key={`icon-group-${idx}`}>
+                    <div className={`w-14 h-14 rounded-full flex items-center justify-center transition-all duration-500 ${idx === 0 ? 'bg-amber-500 text-black shadow-[0_0_20px_rgba(245,158,11,0.5)]' : 'bg-white/10 text-white/40'}`}>
                       {step.icon}
                     </div>
                     {idx < visitSteps.length - 1 && (
-                      <div key={`line-${idx}`} className="h-[2px] bg-white/10 w-full" />
+                      <div className="h-[2px] bg-white/10 w-full" />
                     )}
-                  </>
+                  </React.Fragment>
                 ))}
               </div>
               {/* Labels row */}
               <div className="grid grid-cols-[auto_1fr_auto_1fr_auto_1fr_auto] items-center gap-4">
                 {visitSteps.map((step, idx) => (
-                  <>
-                    <span key={`label-${idx}`} className={`text-sm font-bold text-center whitespace-nowrap ${idx === 0 ? 'text-amber-500' : 'text-white/40'}`} style={{ width: '56px' }}>{step.label}</span>
+                  <React.Fragment key={`label-group-${idx}`}>
+                    <span className={`text-sm font-bold text-center whitespace-nowrap ${idx === 0 ? 'text-amber-500' : 'text-white/40'}`} style={{ width: '56px' }}>{step.label}</span>
                     {idx < visitSteps.length - 1 && (
-                      <div key={`spacer-${idx}`} />
+                      <div />
                     )}
-                  </>
+                  </React.Fragment>
                 ))}
               </div>
             </div>
@@ -152,7 +152,7 @@ export default function VisitAgreementPage() {
                   <ul className="list-disc pl-5 space-y-1">
                     <li>시설 내 촬영, 녹음, 녹화 금지</li>
                     <li>허가되지 않은 구역 출입 금지</li>
-                    <li>업무상 ��득한 정보의 외부 유출 금지</li>
+                    <li>업무상 ���득한 정보의 외부 유출 금지</li>
                     <li>방문 목적 외 활동 금지</li>
                   </ul>
                 </div>
