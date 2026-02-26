@@ -1,43 +1,20 @@
 "use client"
 
-import React from "react"
-
-import { useState, useEffect } from "react"
+import React, { useState } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { ArrowLeft, ArrowRight, ClipboardCheck, Bell, UserCheck, MapPin, Info, Check } from "lucide-react"
 import Link from "next/link"
-import Image from "next/image"
 import { PublicHeader } from "@/components/public/public-header"
 
 export default function VisitAgreementPage() {
   const router = useRouter()
-  const [scrolled, setScrolled] = useState(false)
   const [agreements, setAgreements] = useState({
     privacy: false,
     security: false,
     safety: false,
     all: false
   })
-
-  useEffect(() => {
-    const handleScroll = () => setScrolled(window.scrollY > 20)
-    window.addEventListener('scroll', handleScroll)
-    return () => window.removeEventListener('scroll', handleScroll)
-  }, [])
-
-  const PremiumLogo = () => (
-    <Link href="/" className="flex items-center group cursor-pointer">
-      <Image
-        src="/images/boryeong-lng-ci.png"
-        alt="보령LNG터미널"
-        width={200}
-        height={40}
-        className="h-8 md:h-10 w-auto group-hover:opacity-90 transition-opacity"
-        priority
-      />
-    </Link>
-  )
 
   const visitSteps = [
     { label: "방문신청", icon: <ClipboardCheck size={16} /> },
@@ -160,7 +137,7 @@ export default function VisitAgreementPage() {
                 <div className="space-y-4">
                   <p><strong>1. 개인정보의 수집 및 이용 목적</strong><br />보령LNG터미널 시설 방문 신청 및 출입 관리</p>
                   <p><strong>2. 수집하는 개인정보의 항목</strong><br />성명, 생년월일, 휴대전화번호, 이메일, 직책, 소속, 주소, 차량번호, 차종, 방문목적 등</p>
-                  <p><strong>3. 개인정보의 보유 및 이용 기간</strong><br />방문 종료 후 1년 (보안 지침에 따라 연장될 수 있음)</p>
+                  <p><strong>3. 개인정보의 보유 및 이용 기간</strong><br />방문 종료 후 1년 (���안 지침에 따라 연장될 수 있음)</p>
                 </div>
               }
             />
