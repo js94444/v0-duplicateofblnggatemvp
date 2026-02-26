@@ -48,21 +48,21 @@ export function PublicHeader({ initialScrolled = false }: PublicHeaderProps) {
         </Link>
 
         {/* Desktop Nav */}
-        <div className="hidden md:flex items-center gap-8 font-bold uppercase text-white/70">
+        <div className="hidden md:flex items-center gap-8 uppercase text-white/70">
           {navLinks.map((link) => (
             <Link
               key={link.label}
               href={link.href}
               className={`transition-colors hover:text-amber-500 ${lang === "ko"
-                  ? "text-[14px] tracking-normal"
-                  : "text-[13px] tracking-widest"
+                  ? "text-[14px] font-extrabold tracking-wider" // 한글: 폰트 두께와 크기 동시 강화
+                  : "text-[13px] font-bold tracking-widest"
                 }`}
             >
               {link.label}
             </Link>
           ))}
 
-          {/* 한영 전환 버튼 (3글자 KOR/ENG 적용) */}
+          {/* 한영 전환 버튼 */}
           <button
             type="button"
             onClick={() => setLang((prev) => (prev === "ko" ? "en" : "ko"))}
@@ -70,7 +70,7 @@ export function PublicHeader({ initialScrolled = false }: PublicHeaderProps) {
             aria-label="언어 전환"
           >
             <Globe size={14} />
-            <span className="text-[12px] font-bold tracking-widest">
+            <span className="text-[12px] font-extrabold tracking-[0.15em]">
               {lang === "ko" ? "ENG" : "KOR"}
             </span>
           </button>
@@ -84,7 +84,7 @@ export function PublicHeader({ initialScrolled = false }: PublicHeaderProps) {
           >
             <Link href="/admin/login">
               <UserCircle size={16} />
-              <span className="text-[13px]">Admin</span>
+              <span className="text-[13px] font-bold tracking-wider">Admin</span>
             </Link>
           </Button>
         </div>
@@ -122,27 +122,28 @@ export function PublicHeader({ initialScrolled = false }: PublicHeaderProps) {
               <X size={28} />
             </button>
           </div>
-          <nav className="flex flex-col gap-6 px-8 pt-8 font-bold uppercase text-white/80">
+          <nav className="flex flex-col gap-6 px-8 pt-8 uppercase text-white/80">
             {navLinks.map((link) => (
               <Link
                 key={link.label}
                 href={link.href}
                 onClick={() => setIsMenuOpen(false)}
-                className={`transition-colors hover:text-amber-500 ${lang === "ko" ? "text-2xl" : "text-xl tracking-widest"
+                className={`transition-colors hover:text-amber-500 ${lang === "ko"
+                    ? "text-2xl font-extrabold tracking-normal"
+                    : "text-xl font-bold tracking-widest"
                   }`}
               >
                 {link.label}
               </Link>
             ))}
 
-            {/* 모바일 언어 전환 */}
             <button
               type="button"
               onClick={() => {
                 setLang((prev) => (prev === "ko" ? "en" : "ko"));
                 setIsMenuOpen(false);
               }}
-              className="flex items-center gap-2 text-white/60 hover:text-amber-500 transition-colors text-sm mt-2"
+              className="flex items-center gap-2 text-white/60 hover:text-amber-500 transition-colors text-sm mt-2 font-bold"
             >
               <Globe size={16} />
               {lang === "ko" ? "VIEW IN ENGLISH (ENG)" : "한국어로 보기 (KOR)"}
@@ -151,7 +152,7 @@ export function PublicHeader({ initialScrolled = false }: PublicHeaderProps) {
             <Link
               href="/admin/login"
               onClick={() => setIsMenuOpen(false)}
-              className="flex items-center gap-2 text-white/60 hover:text-amber-500 transition-colors text-sm mt-4"
+              className="flex items-center gap-2 text-white/60 hover:text-amber-500 transition-colors text-sm mt-4 font-bold"
             >
               <UserCircle size={16} />
               Admin
