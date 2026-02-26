@@ -37,43 +37,8 @@ async function getPool(): Promise<sql.ConnectionPool> {
   if (!pool) {
     pool = await sql.connect(config)
     console.log('[v0] Azure SQL connection pool created')
-    // 인덱스 자동 생성 (없으면 추가, 있으면 스킵)
-    await createIndexesIfNotExists(pool).catch(e => console.error('[v0] Index creation error (non-fatal):', e.message))
   }
   return pool
-}
-
-async function createIndexesIfNotExists(p: sql.ConnectionPool): Promise<void> {
-  const indexes = [
-    // visit_applications - 실제 DB 컬럼명 사용
-    `IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_visit_applications_number') 
-     CREATE NONCLUSTERED INDEX IX_visit_applications_number ON visit_applications(application_number)`,
-    `IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_visit_applications_status') 
-     CREATE NONCLUSTERED INDEX IX_visit_applications_status ON visit_applications(status) INCLUDE (application_number, visitor_name, created_at)`,
-    `IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_visit_applications_visitor_phone') 
-     CREATE NONCLUSTERED INDEX IX_visit_applications_visitor_phone ON visit_applications(visitor_phone)`,
-    `IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_visit_applications_visit_start_date') 
-     CREATE NONCLUSTERED INDEX IX_visit_applications_visit_start_date ON visit_applications(visit_start_date)`,
-    `IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_visit_applications_created_at') 
-     CREATE NONCLUSTERED INDEX IX_visit_applications_created_at ON visit_applications(created_at DESC)`,
-    // visit_companions - application_id로 JOIN 최적화
-    `IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_visit_companions_application_id') 
-     CREATE NONCLUSTERED INDEX IX_visit_companions_application_id ON visit_companions(application_id)`,
-    // visit_companion_devices - companion_id로 JOIN 최적화
-    `IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_visit_companion_devices_companion_id') 
-     CREATE NONCLUSTERED INDEX IX_visit_companion_devices_companion_id ON visit_companion_devices(companion_id)`,
-    // visit_electronic_devices - application_id로 JOIN 최적화
-    `IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_visit_electronic_devices_application_id') 
-     CREATE NONCLUSTERED INDEX IX_visit_electronic_devices_application_id ON visit_electronic_devices(application_id)`,
-    // visit_attachments - application_id로 JOIN 최적화
-    `IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_visit_attachments_application_id') 
-     CREATE NONCLUSTERED INDEX IX_visit_attachments_application_id ON visit_attachments(application_id)`,
-  ]
-
-  for (const sql_str of indexes) {
-    await p.request().query(sql_str)
-  }
-  console.log('[v0] Performance indexes verified/created')
 }
 
 // 한국 시간(UTC+9) 생성 함수
@@ -586,27 +551,12 @@ export class AzureSqlDB {
   if (result.recordset.length > 0) {
     const row = result.recordset[0]
     
-    // Fetch all related data in parallel
-    const [companionsResult, devicesResult, companionDevicesResult, filesResult] = await Promise.all([
-      dbPool.request()
-        .input('application_id', sql.BigInt, row.application_id)
-        .query('SELECT * FROM visit_companions WHERE application_id = @application_id'),
-      dbPool.request()
-        .input('application_id', sql.BigInt, row.application_id)
-        .query('SELECT * FROM visit_electronic_devices WHERE application_id = @application_id'),
-      dbPool.request()
-        .input('application_id', sql.BigInt, row.application_id)
-        .query(`
-          SELECT vcd.companion_id, vcd.item_name, vcd.model_name, vcd.serial_number, vcd.reason
-          FROM visit_companion_devices vcd
-          JOIN visit_companions vc ON vcd.companion_id = vc.companion_id
-          WHERE vc.application_id = @application_id
-        `),
-      dbPool.request()
-        .input('application_id', sql.BigInt, row.application_id)
-        .query('SELECT * FROM visit_attachments WHERE application_id = @application_id'),
-    ])
-
+    // Fetch companions
+    const companionsResult = await dbPool
+      .request()
+      .input('application_id', sql.BigInt, row.application_id)
+      .query('SELECT * FROM visit_companions WHERE application_id = @application_id')
+    
     const companions = companionsResult.recordset.map((c: any) => ({
       companion_id: c.companion_id,
       name: c.name,
@@ -615,19 +565,52 @@ export class AzureSqlDB {
       organization: c.organization,
       position: c.position,
     }))
-
+    
+    // Fetch electronic devices for main applicant
+    console.log('[v0] Fetching electronic devices for application_id:', row.application_id)
+    const devicesResult = await dbPool
+      .request()
+      .input('application_id', sql.BigInt, row.application_id)
+      .query('SELECT * FROM visit_electronic_devices WHERE application_id = @application_id')
+    
+    console.log('[v0] Electronic devices recordset:', devicesResult.recordset)
     const electronicDevices = devicesResult.recordset.map((d: any) => ({
       item_name: d.item_name,
       model_name: d.model_name,
       serial_number: d.serial_number,
       reason: d.reason,
     }))
-
+    console.log('[v0] Mapped electronicDevices:', electronicDevices)
+    
+    // Fetch companion devices
+    console.log('[v0] Fetching companion devices for application_id:', row.application_id)
+    const companionDevicesResult = await dbPool
+      .request()
+      .input('application_id', sql.BigInt, row.application_id)
+      .query(`
+        SELECT 
+          vcd.companion_id,
+          vcd.item_name,
+          vcd.model_name,
+          vcd.serial_number,
+          vcd.reason
+        FROM visit_companion_devices vcd
+        JOIN visit_companions vc ON vcd.companion_id = vc.companion_id
+        WHERE vc.application_id = @application_id
+      `)
+    
+    console.log('[v0] Companion devices recordset:', companionDevicesResult.recordset)
+    // Map devices to companions using companion_id - convert to number for comparison
     const companionsWithDevices = companions.map((c: any) => {
+      const companionIdNum = parseInt(c.companion_id, 10)
+      console.log('[v0] Processing companion:', c.name, 'companion_id:', c.companion_id, 'as number:', companionIdNum)
       const devices = companionDevicesResult.recordset
         .filter((d: any) => {
+          // Handle case where companion_id might be an array due to SQL join
           const actualDeviceId = Array.isArray(d.companion_id) ? d.companion_id[0] : d.companion_id
-          return String(actualDeviceId) === String(c.companion_id)
+          const match = String(actualDeviceId) === String(c.companion_id)
+          console.log('[v0] Device companion_id:', d.companion_id, 'actual:', actualDeviceId, 'comparing with:', c.companion_id, 'match:', match)
+          return match
         })
         .map((d: any) => ({
           item_name: d.item_name,
@@ -635,8 +618,17 @@ export class AzureSqlDB {
           serial_number: d.serial_number,
           reason: d.reason,
         }))
+      console.log('[v0] Companion', c.name, 'found devices:', devices.length)
       return { ...c, electronicDevices: devices }
     })
+    console.log('[v0] CompanionsWithDevices final:', JSON.stringify(companionsWithDevices, null, 2))
+    
+    // Fetch attachments
+    console.log('[v0] Fetching attachments for application_id:', row.application_id)
+    const filesResult = await dbPool
+      .request()
+      .input('application_id', sql.BigInt, row.application_id)
+      .query('SELECT * FROM visit_attachments WHERE application_id = @application_id')
     
     console.log('[v0] Files recordset:', filesResult.recordset)
     const files = filesResult.recordset.map((f: any) => ({
@@ -833,112 +825,125 @@ export class AzureSqlDB {
     return application
   }
 
-  // 모든 신청서 조회 (최적화: 전체 데이터를 4개 쿼리로 한번에 가져와 메모리에서 매핑)
+  // 모든 신청서 조회
   static async getAllApplications(): Promise<Application[]> {
     const dbPool = await getPool()
 
-    // 4개 쿼리 병렬 실행으로 N+1 문제 완전 해결
-    const [appResult, attachResult, companionResult, companionDeviceResult, deviceResult] = await Promise.all([
-      dbPool.request().query(`
-        SELECT application_id, application_number, status, visitor_name, visitor_phone,
-               visitor_organization, visitor_position, visitor_email, visitor_birth_date,
-               visitor_address, visit_start_date, visit_end_date,
-               visit_purpose, detailed_purpose, contact_name, contact_mobile, access_area,
-               vehicle_number, vehicle_model, rejection_reason, created_at, updated_at
-        FROM visit_applications WITH (NOLOCK)
-        ORDER BY created_at DESC
-      `),
-      dbPool.request().query(`
-        SELECT application_id, file_name, file_key, blob_url, file_type, file_size
-        FROM visit_attachments WITH (NOLOCK)
-      `),
-      dbPool.request().query(`
-        SELECT companion_id, application_id, name, phone, birth_date, organization, position
-        FROM visit_companions WITH (NOLOCK)
-      `),
-      dbPool.request().query(`
-        SELECT vcd.companion_id, vcd.item_name, vcd.model_name, vcd.serial_number, vcd.reason,
-               vc.application_id
-        FROM visit_companion_devices vcd WITH (NOLOCK)
-        JOIN visit_companions vc WITH (NOLOCK) ON vcd.companion_id = vc.companion_id
-      `),
-      dbPool.request().query(`
-        SELECT application_id, item_name, model_name, serial_number, reason
-        FROM visit_electronic_devices WITH (NOLOCK)
-      `),
-    ])
+    console.log('[v0] Getting all applications from Azure SQL')
 
-    // 메모리에서 application_id 기준으로 그룹핑
-    const attachMap = new Map<string, any[]>()
-    for (const a of attachResult.recordset) {
-      const key = String(a.application_id)
-      if (!attachMap.has(key)) attachMap.set(key, [])
-      attachMap.get(key)!.push({ filename: a.file_name, key: a.file_key, url: a.blob_url, type: a.file_type, size: a.file_size ? Number(a.file_size) : 0 })
-    }
+    const result = await dbPool.request().query('SELECT * FROM visit_applications WITH (NOLOCK) ORDER BY created_at DESC')
 
-    const companionDeviceMap = new Map<string, any[]>()
-    for (const d of companionDeviceResult.recordset) {
-      const key = String(d.companion_id)
-      if (!companionDeviceMap.has(key)) companionDeviceMap.set(key, [])
-      companionDeviceMap.get(key)!.push({ item_name: d.item_name, model_name: d.model_name, serial_number: d.serial_number, reason: d.reason })
-    }
+    console.log('[v0] Raw DB results sample:', result.recordset.slice(0, 3).map(r => ({ 
+      id: r.application_id, 
+      receipt: r.application_number, 
+      status: r.status 
+    })))
 
-    const companionMap = new Map<string, any[]>()
-    for (const c of companionResult.recordset) {
-      const key = String(c.application_id)
-      if (!companionMap.has(key)) companionMap.set(key, [])
-      companionMap.get(key)!.push({
-        companion_id: String(c.companion_id),
-        name: c.name, phone: c.phone, birth_date: c.birth_date,
-        organization: c.organization, position: c.position,
-        electronicDevices: companionDeviceMap.get(String(c.companion_id)) || [],
-      })
-    }
-
-    const deviceMap = new Map<string, any[]>()
-    for (const d of deviceResult.recordset) {
-      const key = String(d.application_id)
-      if (!deviceMap.has(key)) deviceMap.set(key, [])
-      deviceMap.get(key)!.push({ item_name: d.item_name, model_name: d.model_name, serial_number: d.serial_number, reason: d.reason })
-    }
-
-    // 신청서에 관련 데이터 매핑
-    const applications: Application[] = appResult.recordset.map((row) => {
+    const applications: Application[] = await Promise.all(result.recordset.map(async (row) => {
       const normalizedStatus = normalizeStatus(row.status)
-      const appId = String(row.application_id)
-      const companions = companionMap.get(appId) || []
+      console.log(`[v0] Row ${row.application_id} (${row.application_number}): DB status="${row.status}" -> normalized="${normalizedStatus}"`)
+      
+      // Get attachments for this application
+      const attachmentResult = await dbPool.request()
+        .input('application_id', sql.BigInt, row.application_id)
+        .query('SELECT * FROM visit_attachments WHERE application_id = @application_id')
+      
+      const files = attachmentResult.recordset.map(attachment => ({
+        filename: attachment.file_name,
+        key: attachment.file_key,
+        url: attachment.blob_url,
+        type: attachment.file_type,
+        size: attachment.file_size ? Number(attachment.file_size) : 0,
+      }))
 
-      const receiptPrefix = row.application_number.split('-')[0]
-      let applicationType: Type
-      switch (receiptPrefix) {
-        case 'PA': applicationType = Type.PORT_ACCESS; break
-        case 'GV': applicationType = Type.GROUP_VISIT; break
-        case 'VR': applicationType = Type.VISIT_R3; break
-        case 'GI': applicationType = Type.GOODS_INOUT; break
-        default:
-          applicationType = row.access_area === '항만' ? Type.PORT_ACCESS
-            : companions.length > 0 ? Type.GROUP_VISIT
-            : Type.VISIT_R3
+      // Get companions for this application
+      const companionResult = await dbPool.request()
+        .input('application_id', sql.BigInt, row.application_id)
+        .query('SELECT * FROM visit_companions WHERE application_id = @application_id')
+      
+      // Get all companion devices in one query (avoid N+1)
+      const companionDevicesResult = await dbPool.request()
+        .input('application_id', sql.BigInt, row.application_id)
+        .query(`
+          SELECT vcd.* 
+          FROM visit_companion_devices vcd
+          JOIN visit_companions vc ON vcd.companion_id = vc.companion_id
+          WHERE vc.application_id = @application_id
+        `)
+      
+      // Map devices to companions in memory
+      const companions = companionResult.recordset.map(companion => ({
+        companion_id: String(companion.companion_id),
+        name: companion.name,
+        phone: companion.phone,
+        birth_date: companion.birth_date,
+        organization: companion.organization,
+        position: companion.position,
+        electronicDevices: companionDevicesResult.recordset
+          .filter(d => String(d.companion_id) === String(companion.companion_id))
+          .map(d => ({
+            item_name: d.item_name,
+            model_name: d.model_name,
+            serial_number: d.serial_number,
+            reason: d.reason,
+          }))
+      }))
+
+      // Get electronic devices for this application
+      const devicesResult = await dbPool.request()
+        .input('application_id', sql.BigInt, row.application_id)
+        .query('SELECT * FROM visit_electronic_devices WHERE application_id = @application_id')
+      
+      const electronicDevices = devicesResult.recordset.map(device => ({
+        item_name: device.item_name,
+        model_name: device.model_name,
+        serial_number: device.serial_number,
+        reason: device.reason,
+      }))
+
+  console.log(`[v0] Application ${row.application_number}: Found ${files.length} attachments, ${companions.length} companions, ${electronicDevices.length} devices`)
+  
+  // Determine type from receipt number prefix
+  const receiptPrefix = row.application_number.split('-')[0]
+  let applicationType: Type
+  switch (receiptPrefix) {
+    case 'PA':
+      applicationType = Type.PORT_ACCESS
+      break
+    case 'GV':
+      applicationType = Type.GROUP_VISIT
+      break
+    case 'VR':
+      applicationType = Type.VISIT_R3
+      break
+    case 'GI':
+      applicationType = Type.GOODS_INOUT
+      break
+    default:
+      // Fallback: check companions or access_area
+      if (row.access_area === '항만') {
+        applicationType = Type.PORT_ACCESS
+      } else if (companions.length > 0) {
+        applicationType = Type.GROUP_VISIT
+      } else {
+        applicationType = Type.VISIT_R3
       }
-
-      return {
-        id: appId,
-        receipt: row.application_number,
-        type: applicationType,
-        status: normalizedStatus,
+  }
+  
+  const application: any = {
+    id: row.application_id.toString(),
+    receipt: row.application_number,
+    type: applicationType,
+    status: normalizedStatus,
         visitor_name: row.visitor_name,
         visitor_phone: row.visitor_phone,
         visitor_organization: row.visitor_organization,
         visitor_position: row.visitor_position,
-        visitor_birth_date: row.visitor_birth_date,
-        visitor_address: row.visitor_address,
-        visit_datetime: row.visit_start_date ? new Date(row.visit_start_date) : null,
+        visit_datetime: new Date(row.visit_start_date),
         visit_start_date: row.visit_start_date ? new Date(row.visit_start_date) : null,
         visit_end_date: row.visit_end_date ? new Date(row.visit_end_date) : null,
         visit_purpose: row.visit_purpose,
-        detailed_purpose: row.detailed_purpose,
         contact_name: row.contact_name,
-        contact_mobile: row.contact_mobile,
         contact_email: row.visitor_email,
         access_area: row.access_area as AccessArea,
         vehicle_number: row.vehicle_number,
@@ -948,11 +953,14 @@ export class AzureSqlDB {
         created_at: new Date(row.created_at),
         updated_at: new Date(row.updated_at),
         rejection_reason: row.rejection_reason,
-        files: attachMap.get(appId) || [],
-        companions,
-        electronicDevices: deviceMap.get(appId) || [],
-      } as any
-    })
+        files: files,
+        companions: companions,
+        electronicDevices: electronicDevices,
+      }
+      return application
+    }))
+
+    console.log('[v0] Retrieved applications from Azure SQL:', applications.length)
 
     return applications
   }

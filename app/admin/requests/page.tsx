@@ -1,7 +1,6 @@
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
-import useSWR from "swr"
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -21,11 +20,11 @@ import {
 import { useToast } from "@/hooks/use-toast"
 
 export default function AdminRequestsPage() {
+  const [applications, setApplications] = useState<Application[]>([])
   const [filteredApplications, setFilteredApplications] = useState<Application[]>([])
+  const [loading, setLoading] = useState(true)
   const [contacts, setContacts] = useState<{ name: string; department: string; mobile: string }[]>([])
   const [selectedApplication, setSelectedApplication] = useState<Application | null>(null)
-  const [modalLoading, setModalLoading] = useState(false)
-  const [detailCache, setDetailCache] = useState<Record<string, Application>>({})
   const [approvalDialog, setApprovalDialog] = useState<{
     application: Application
     action: "approve" | "reject"
@@ -38,40 +37,85 @@ export default function AdminRequestsPage() {
   const [searchQuery, setSearchQuery] = useState("")
   const [dateFrom, setDateFrom] = useState("")
   const [dateTo, setDateTo] = useState("")
-
+  
   // Sorting
   const [sortField, setSortField] = useState<string>("")
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc")
 
   const { toast } = useToast()
 
-  // SWR로 목록 캐싱 - 30초마다 자동 갱신, 포커스 시 재검증
-  const fetcher = useCallback((url: string) =>
-    fetch(url).then(res => res.json()).then(data => {
-      const raw = data.data || data
-      return raw.map((a: any) => ({ ...a, status: String(a.status ?? "").trim().toUpperCase() }))
-    }), [])
-
-  const { data: applications = [], isLoading: loading, mutate: refreshApplications } = useSWR(
-    '/api/admin/requests',
-    fetcher,
-    {
-      revalidateOnFocus: false,
-      dedupingInterval: 30000, // 30초 내 중복 요청 방지
-      onError: () => toast({ title: "데이터 로드 실패", description: "신청 목록을 불러오는 중 오류가 발생했습니다", variant: "destructive" }),
-    }
-  )
-
   useEffect(() => {
+    fetchApplications()
+    // Load contacts
     fetch('/data/contacts.json')
       .then(res => res.json())
       .then(data => setContacts(data))
-      .catch(() => {})
+      .catch(err => console.error('[v0] Failed to load contacts:', err))
   }, [])
 
   useEffect(() => {
     applyFilters()
   }, [applications, activeTab, statusFilter, areaFilter, searchQuery, dateFrom, dateTo, sortField, sortDirection])
+
+  const fetchApplications = async () => {
+    try {
+      const timestamp = Date.now()
+      console.log("[v0] Fetching applications at:", new Date().toISOString())
+      const response = await fetch(`/api/admin/requests?t=${timestamp}`, {
+        cache: 'no-store',
+        headers: {
+          'Cache-Control': 'no-cache',
+          'Pragma': 'no-cache',
+        },
+      })
+      console.log("[v0] Admin API response status:", response.status)
+      
+      if (response.ok) {
+        const responseData = await response.json()
+        const queryTime = responseData.queryTime || 'unknown'
+        const applicationsRaw = responseData.data || responseData
+        
+        // Normalize status to uppercase to prevent casing issues
+        const applicationsNormalized = applicationsRaw.map((a: any) => ({
+          ...a,
+          status: String(a.status ?? "").trim().toUpperCase()
+        }))
+        
+        console.log("[v0] API Query Time:", queryTime)
+        console.log("[v0] Applications loaded:", applicationsNormalized.length, "items")
+        console.log("[v0] Sample statuses (normalized):", applicationsNormalized.slice(0, 5).map((a: any) => ({ 
+          receipt: a.receipt, 
+          status: a.status 
+        })))
+        console.log("[v0] Sample companions data:", applicationsNormalized.slice(0, 3).map((a: any) => ({
+          receipt: a.receipt,
+          type: a.type,
+          companions: a.companions,
+          companionsCount: a.companions?.length || 0,
+          electronicDevices: a.electronicDevices,
+          devicesCount: a.electronicDevices?.length || 0
+        })))
+        setApplications(applicationsNormalized)
+      } else {
+        const errorData = await response.json().catch(() => ({}))
+        console.error("[v0] Failed to load applications:", errorData)
+        toast({
+          title: "데이터 로드 실패",
+          description: errorData.message || "신청 목록을 불러오는 중 오류가 발생했습니다",
+          variant: "destructive",
+        })
+      }
+    } catch (error) {
+      console.error("[v0] Admin requests fetch error:", error)
+      toast({
+        title: "데이터 로드 실패",
+        description: "v0 프리뷰 환경에서는 데이터베이스 연결이 제한됩니다. Vercel에 배포하면 정상 작동합니다.",
+        variant: "destructive",
+      })
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const applyFilters = () => {
     let filtered = applications
@@ -153,23 +197,40 @@ export default function AdminRequestsPage() {
     setFilteredApplications(filtered)
   }
 
-  const fetchFullApplication = async (receipt: string, baseApplication?: Application) => {
-    // 캐시에 있으면 즉시 표시
-    if (detailCache[receipt]) {
-      setSelectedApplication(detailCache[receipt])
-      return
-    }
-    // 모달 즉시 열기 (기본 데이터로 먼저 표시)
-    if (baseApplication) {
-      setSelectedApplication(baseApplication)
-    }
-    setModalLoading(true)
+  const fetchFullApplication = async (receipt: string) => {
     try {
+      console.log("[v0] Fetching full application data for:", receipt)
       const response = await fetch(`/api/status/${receipt}`)
       if (response.ok) {
         const fullData = await response.json()
-        // 캐시에 저장
-        setDetailCache(prev => ({ ...prev, [receipt]: fullData }))
+        console.log("[v0] Full application data received:", fullData)
+        console.log("[v0] Full data - visitor_birth_date:", fullData.visitor_birth_date)
+        console.log("[v0] Full data - visitor_address:", fullData.visitor_address)
+        console.log("[v0] Full data - contact_mobile:", fullData.contact_mobile)
+        console.log("[v0] Full data - electronicDevices:", fullData.electronicDevices)
+        console.log("[v0] Full data - companions:", fullData.companions)
+        console.log("[v0] ===== COMPANIONS DETAIL START =====")
+        console.log("[v0] Companions count:", fullData.companions?.length || 0)
+        console.log("[v0] Companions JSON:", JSON.stringify(fullData.companions, null, 2))
+        if (fullData.companions && fullData.companions.length > 0) {
+          fullData.companions.forEach((companion: any, index: number) => {
+            console.log(`[v0] ----- Companion ${index} START -----`)
+            console.log(`[v0] Companion ${index} - has electronicDevices:`, 'electronicDevices' in companion)
+            console.log(`[v0] Companion ${index} - electronicDevices value:`, companion.electronicDevices)
+            console.log(`[v0] Companion ${index} - electronicDevices length:`, companion.electronicDevices?.length || 0)
+            console.log(`[v0] Companion ${index} - full object:`, JSON.stringify(companion, null, 2))
+            console.log(`[v0] ----- Companion ${index} END -----`)
+          })
+        } else {
+          console.log("[v0] No companions found or companions array is empty")
+        }
+        console.log("[v0] ===== COMPANIONS DETAIL END =====")
+        console.log("[v0] Full data - visitors:", fullData.visitors)
+        if (fullData.visitors && fullData.visitors.length > 1) {
+          console.log(`[v0] Visitor 1 (companion) - full object:`, JSON.stringify(fullData.visitors[1], null, 2))
+          console.log(`[v0] Visitor 1 - electronicDevices:`, fullData.visitors[1].electronicDevices)
+        }
+        console.log("[v0] Full data - files:", fullData.files)
         setSelectedApplication(fullData)
       } else {
         console.error("[v0] Failed to fetch full application data")
@@ -186,8 +247,6 @@ export default function AdminRequestsPage() {
         description: "상세 정보를 불러오는 중 오류가 발생했습니다",
         variant: "destructive",
       })
-    } finally {
-      setModalLoading(false)
     }
   }
 
@@ -213,7 +272,7 @@ export default function AdminRequestsPage() {
           title: action === "approve" ? "승인 완료" : "반려 완료",
           description: `신청이 ${action === "approve" ? "승인" : "반려"}되었습니다`,
         })
-        refreshApplications()
+        fetchApplications()
       } else {
         throw new Error(responseData.message || "처리 실패")
       }
@@ -293,7 +352,7 @@ export default function AdminRequestsPage() {
           <Button
             onClick={() => {
               setLoading(true)
-              refreshApplications()
+              fetchApplications()
             }}
             className="bg-amber-500 hover:bg-amber-600 text-black font-bold px-6 py-3 rounded-xl transition-all shadow-[0_0_20px_rgba(245,158,11,0.3)]"
             disabled={loading}
@@ -589,7 +648,7 @@ export default function AdminRequestsPage() {
                                 <div className="flex items-center gap-2">
                                   <Button
                                     size="sm"
-                                    onClick={() => fetchFullApplication(application.receipt, application)}
+                                    onClick={() => fetchFullApplication(application.receipt)}
                                     className="bg-white/10 hover:bg-white/20 border border-white/20 text-white rounded-lg"
                                   >
                                     👁️ 보기
@@ -639,8 +698,7 @@ export default function AdminRequestsPage() {
         <ApplicationDetailModal
           application={selectedApplication}
           open={!!selectedApplication}
-          loading={modalLoading}
-          onClose={() => { setSelectedApplication(null); setModalLoading(false) }}
+          onClose={() => setSelectedApplication(null)}
         />
       )}
 

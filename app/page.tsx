@@ -1,10 +1,33 @@
 "use client"
 
+import { Button } from "@/components/ui/button"
 import Link from "next/link"
-import { FileText, Search, ShieldCheck, ChevronRight } from "lucide-react"
-import { PublicHeader } from "@/components/public/public-header"
+import Image from "next/image"
+import { FileText, Search, ShieldCheck, UserCircle, Menu, X, ChevronRight } from "lucide-react"
+import { useState, useEffect } from "react"
 
 export default function HomePage() {
+  const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const [scrolled, setScrolled] = useState(false)
+
+  useEffect(() => {
+    const handleScroll = () => setScrolled(window.scrollY > 20)
+    window.addEventListener('scroll', handleScroll)
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [])
+
+  const PremiumLogo = () => (
+    <Link href="/" className="flex items-center group cursor-pointer">
+      <Image
+        src="/images/boryeong-lng-ci.png"
+        alt="보령LNG터미널"
+        width={200}
+        height={40}
+        className="h-8 md:h-10 w-auto group-hover:opacity-90 transition-opacity"
+        priority
+      />
+    </Link>
+  )
 
   const menuItems = [
     { title: "방문신청", sub: "New Visit", icon: <FileText size={24} />, href: "/apply/visit" },
@@ -15,7 +38,28 @@ export default function HomePage() {
   return (
     <div className="min-h-screen font-sans bg-black text-white flex flex-col relative overflow-hidden">
       
-      <PublicHeader />
+      {/* Header */}
+      <header className={`fixed top-0 w-full z-50 transition-all duration-500 px-6 md:px-12 flex items-center justify-between ${
+        scrolled ? 'h-16 bg-black/60 backdrop-blur-xl border-b border-white/10' : 'h-24 bg-transparent'
+      }`}>
+        <PremiumLogo />
+        
+        <div className="hidden md:flex items-center gap-8 text-[13px] font-bold tracking-widest uppercase text-white/70">
+          <Link href="#" className="hover:text-amber-500 transition-colors">Intro</Link>
+          <Link href="#" className="hover:text-amber-500 transition-colors">Notice</Link>
+          <Link href="#" className="hover:text-amber-500 transition-colors">Support</Link>
+          <Button variant="ghost" size="sm" asChild className="flex items-center gap-2 border border-white/20 hover:border-amber-500/50 hover:bg-amber-500/10 px-5 py-2 rounded-full transition-all">
+            <Link href="/admin/login">
+              <UserCircle size={16} />
+              <span>Admin</span>
+            </Link>
+          </Button>
+        </div>
+
+        <button type="button" className="md:hidden p-2 text-white" onClick={() => setIsMenuOpen(true)}>
+          <Menu size={28} />
+        </button>
+      </header>
 
       {/* Main Section */}
       <main className="relative flex-1 flex flex-col justify-end pb-12 md:pb-24 px-6 md:px-12">
@@ -86,7 +130,21 @@ export default function HomePage() {
         </div>
       </footer>
 
-
+      {/* Mobile Full Screen Menu */}
+      {isMenuOpen && (
+        <div className="fixed inset-0 bg-black/95 backdrop-blur-2xl z-[100] p-12 flex flex-col justify-center gap-12 animate-in fade-in duration-300">
+          <button type="button" className="absolute top-8 right-8 text-white/50 hover:text-white" onClick={() => setIsMenuOpen(false)}>
+            <X size={40} />
+          </button>
+          <div className="flex flex-col gap-8 text-4xl font-black">
+            <Link href="/apply/visit" className="hover:text-amber-500">방문신청</Link>
+            <Link href="/status" className="hover:text-amber-500">예약조회</Link>
+            <Link href="/guidelines" className="hover:text-amber-500">안전수칙</Link>
+            <Link href="/admin/login" className="hover:text-amber-500">시스템관리</Link>
+          </div>
+          <PremiumLogo />
+        </div>
+      )}
 
     </div>
   )

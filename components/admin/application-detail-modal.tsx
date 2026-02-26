@@ -1,19 +1,25 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Skeleton } from "@/components/ui/skeleton"
 import { type Application, APPLICATION_STATUS_LABELS } from "@/lib/types"
-import { X, Download, Loader2 } from "lucide-react"
+import { X, Download } from "lucide-react"
 
 interface ApplicationDetailModalProps {
   application: Application
   open: boolean
-  loading?: boolean
   onClose: () => void
 }
 
-export function ApplicationDetailModal({ application, open, loading = false, onClose }: ApplicationDetailModalProps) {
+export function ApplicationDetailModal({ application, open, onClose }: ApplicationDetailModalProps) {
   const app = application as any
+  
+  console.log("[v0] Modal received application:", app)
+  console.log("[v0] Modal - visitor_birth_date:", app?.visitor_birth_date)
+  console.log("[v0] Modal - visitor_address:", app?.visitor_address)
+  console.log("[v0] Modal - contact_mobile:", app?.contact_mobile)
+  console.log("[v0] Modal - electronicDevices:", app?.electronicDevices)
+  console.log("[v0] Modal - companions:", app?.companions)
+  console.log("[v0] Modal - files:", app?.files)
   
   const getStatusColor = (status: string) => {
     const statusUpper = status.toUpperCase()
@@ -55,11 +61,8 @@ export function ApplicationDetailModal({ application, open, loading = false, onC
         <DialogHeader className="flex-shrink-0 border-b border-white/10 pb-4">
           <div className="flex items-center justify-between">
             <div>
-  <div className="flex items-center gap-2">
-    <DialogTitle className="text-2xl font-black text-white mb-2">신청 상세정보</DialogTitle>
-    {loading && <Loader2 className="w-5 h-5 text-[#0298c2] animate-spin mb-2" />}
-  </div>
-  <p className="text-sm text-white/40">접수번호: {app.receipt}</p>
+              <DialogTitle className="text-2xl font-black text-white mb-2">신청 상세정보</DialogTitle>
+              <p className="text-sm text-white/40">접수번호: {app.receipt}</p>
             </div>
             <div className="flex items-center gap-3">
               <Badge className={`${getStatusColor(app.status)} font-bold px-4 py-2`}>
@@ -78,15 +81,7 @@ export function ApplicationDetailModal({ application, open, loading = false, onC
         </DialogHeader>
 
         <div className="flex-1 overflow-y-auto pr-2 space-y-6 py-4">
-          {loading ? (
-            <div className="space-y-4">
-              <Skeleton className="h-32 w-full rounded-2xl bg-white/10" />
-              <Skeleton className="h-24 w-full rounded-2xl bg-white/10" />
-              <Skeleton className="h-24 w-full rounded-2xl bg-white/10" />
-              <Skeleton className="h-20 w-full rounded-2xl bg-white/10" />
-            </div>
-          ) : (<>
-
+          
           {/* 기본정보 카드 */}
           <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-6">
             <h3 className="text-lg font-black text-white mb-4 flex items-center gap-2">
@@ -237,7 +232,6 @@ export function ApplicationDetailModal({ application, open, loading = false, onC
             </div>
           )}
 
-          </>)}
         </div>
       </DialogContent>
     </Dialog>

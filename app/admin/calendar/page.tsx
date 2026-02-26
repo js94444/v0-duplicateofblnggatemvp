@@ -1,505 +1,519 @@
 "use client"
 
-import { useState, useMemo } from "react"
-import useSWR from "swr"
+import { useState, useEffect } from "react"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Badge } from "@/components/ui/badge"
-import { Skeleton } from "@/components/ui/skeleton"
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import {
   APPLICATION_TYPE_LABELS,
   APPLICATION_STATUS_LABELS,
   type Application,
   type ApplicationStatus,
 } from "@/lib/types"
-import {
-  ChevronLeft,
-  ChevronRight,
-  CalendarDays,
-  Users,
-  Anchor,
-  User,
-  LayoutGrid,
-  RefreshCw,
-  Clock,
-  Building2,
-  Phone,
-  FileText,
-} from "lucide-react"
 
-// 이벤트 바 렌더링을 위한 타입 (주(week) 단위)
-interface EventBar {
-  app: Application
-  startCol: number  // 0~6 (해당 주에서 시작 열)
-  span: number      // 몇 칸에 걸쳐 있는지
-  continueLeft: boolean  // 이전 주에서 이어지는 이벤트
-  continueRight: boolean // 다음 주로 이어지는 이벤트
-  row: number       // 같은 셀에서 몇 번째 줄
-}
-
-interface WeekRow {
-  days: { date: Date; isCurrentMonth: boolean; isToday: boolean }[]
-  eventBars: EventBar[]
-}
-
-const fetcher = (url: string) =>
-  fetch(url)
-    .then((r) => r.json())
-    .then((d) => {
-      const raw = d.data || d
-      return raw.map((a: any) => ({ ...a, status: String(a.status ?? "").trim().toUpperCase() }))
-    })
-
-const TYPE_STYLES: Record<string, { bar: string; badge: string; dot: string; solid: string }> = {
-  GROUP_VISIT: {
-    bar: "bg-violet-500/90 hover:bg-violet-500",
-    badge: "bg-violet-500/20 text-violet-300 border-violet-500/30",
-    dot: "bg-violet-400",
-    solid: "bg-violet-500",
-  },
-  PORT_ACCESS: {
-    bar: "bg-[#0298c2]/90 hover:bg-[#0298c2]",
-    badge: "bg-[#0298c2]/20 text-[#0298c2] border-[#0298c2]/30",
-    dot: "bg-[#0298c2]",
-    solid: "bg-[#0298c2]",
-  },
-  VISIT_R3: {
-    bar: "bg-emerald-500/90 hover:bg-emerald-500",
-    badge: "bg-emerald-500/20 text-emerald-300 border-emerald-500/30",
-    dot: "bg-emerald-400",
-    solid: "bg-emerald-500",
-  },
-}
-
-const STATUS_STYLES: Record<string, string> = {
-  PENDING: "bg-amber-500/20 text-amber-300 border-amber-500/30",
-  UNDER_REVIEW: "bg-blue-500/20 text-blue-300 border-blue-500/30",
-  APPROVED: "bg-emerald-500/20 text-emerald-300 border-emerald-500/30",
-  REJECTED: "bg-red-500/20 text-red-300 border-red-500/30",
-}
-
-function getVisitDateRange(app: Application): { start: Date | null; end: Date | null } {
-  const a = app as any
-  const rawStart = a.visit_start_date || a.access_start_datetime || null
-  const rawEnd = a.visit_end_date || null
-  const start = rawStart ? new Date(rawStart) : null
-  const end = rawEnd ? new Date(rawEnd) : null
-  return {
-    start: start && !isNaN(start.getTime()) ? start : null,
-    end: end && !isNaN(end.getTime()) ? end : null,
-  }
-}
-
-function toDay(date: Date): Date {
-  const d = new Date(date)
-  d.setHours(0, 0, 0, 0)
-  return d
-}
-
-function getApplicantInfo(app: Application) {
-  const a = app as any
-  return {
-    organization: a.visitor_organization || a.company_name || a.organization || "미상",
-    contact: a.visitor_name || a.contact_name || a.applicant_name || "미상",
-    phone: a.visitor_phone || a.contact_mobile || a.contact_phone || "미상",
-  }
+interface CalendarDay {
+  date: Date
+  applications: Application[]
+  isCurrentMonth: boolean
+  isToday: boolean
 }
 
 export default function AdminCalendarPage() {
   const [currentDate, setCurrentDate] = useState(new Date())
-  const [selectedApp, setSelectedApp] = useState<Application | null>(null)
-  const [statusFilter, setStatusFilter] = useState<ApplicationStatus | "ALL">("ALL")
+  const [calendarDays, setCalendarDays] = useState<CalendarDay[]>([])
+  const [selectedDay, setSelectedDay] = useState<CalendarDay | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const [applications, setApplications] = useState<Application[]>([])
+  const [statusFilter, setStatusFilter] = useState<ApplicationStatus | "ALL">("APPROVED")
 
-  const { data: applications = [], isLoading, mutate } = useSWR<Application[]>(
-    "/api/admin/requests",
-    fetcher,
-    { revalidateOnFocus: false, dedupingInterval: 30000 }
-  )
+  useEffect(() => {
+    fetchApplications()
+  }, [])
 
-  // 주 단위로 달력 + 이벤트 바 계산
-  const weekRows = useMemo<WeekRow[]>(() => {
+  useEffect(() => {
+    generateCalendar()
+  }, [currentDate, applications, statusFilter])
+
+  const fetchApplications = async () => {
+    try {
+      const response = await fetch("/api/admin/requests")
+      if (response.ok) {
+        const result = await response.json()
+        const apps = result.data || []
+        console.log("[v0] Fetched applications:", apps)
+        console.log("[v0] Type breakdown:", {
+          GROUP_VISIT: apps.filter((a: any) => a.type === 'GROUP_VISIT').length,
+          VISIT_R3: apps.filter((a: any) => a.type === 'VISIT_R3').length,
+          PORT_ACCESS: apps.filter((a: any) => a.type === 'PORT_ACCESS').length,
+          total: apps.length
+        })
+        setApplications(apps)
+      }
+    } catch (error) {
+      console.error("Failed to fetch applications:", error)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const generateCalendar = () => {
     const year = currentDate.getFullYear()
     const month = currentDate.getMonth()
     const firstDay = new Date(year, month, 1)
-    const startDate = toDay(new Date(firstDay))
+    const lastDay = new Date(year, month + 1, 0)
+    const startDate = new Date(firstDay)
     startDate.setDate(startDate.getDate() - firstDay.getDay())
 
-    const today = toDay(new Date())
+    const days: CalendarDay[] = []
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
 
-    // 필터링된 앱 목록
-    const filtered = applications.filter((app) => {
-      if (statusFilter !== "ALL" && app.status !== statusFilter) return false
-      const { start } = getVisitDateRange(app)
-      return !!start
-    })
+    for (let i = 0; i < 42; i++) {
+      const date = new Date(startDate)
+      date.setDate(startDate.getDate() + i)
+      date.setHours(0, 0, 0, 0)
 
-    const rows: WeekRow[] = []
-
-    for (let week = 0; week < 6; week++) {
-      const weekStart = new Date(startDate)
-      weekStart.setDate(startDate.getDate() + week * 7)
-      const weekEnd = new Date(weekStart)
-      weekEnd.setDate(weekStart.getDate() + 6)
-      weekEnd.setHours(23, 59, 59, 999)
-
-      const days = Array.from({ length: 7 }, (_, d) => {
-        const date = new Date(weekStart)
-        date.setDate(weekStart.getDate() + d)
-        return {
-          date: toDay(date),
-          isCurrentMonth: date.getMonth() === month,
-          isToday: date.getTime() === today.getTime(),
+      const dayApplications = applications.filter((app) => {
+        if (statusFilter !== "ALL" && app.status !== statusFilter) {
+          return false
         }
+
+        const visitDate = getVisitDate(app)
+        if (!visitDate) return false
+
+        const appDate = new Date(visitDate)
+        appDate.setHours(0, 0, 0, 0)
+        return appDate.getTime() === date.getTime()
       })
 
-      // 이 주에 걸치는 이벤트 계산
-      const barsRaw: Omit<EventBar, "row">[] = []
-
-      for (const app of filtered) {
-        const { start, end } = getVisitDateRange(app)
-        if (!start) continue
-        const appEnd = end ? toDay(end) : toDay(start)
-        const appStart = toDay(start)
-
-        // 이 주와 겹치는지 확인
-        if (appEnd < weekStart || appStart > weekEnd) continue
-
-        const clampedStart = appStart < weekStart ? weekStart : appStart
-        const clampedEnd = appEnd > weekEnd ? weekEnd : appEnd
-
-        const startCol = Math.round((clampedStart.getTime() - weekStart.getTime()) / 86400000)
-        const endCol = Math.round((clampedEnd.getTime() - weekStart.getTime()) / 86400000)
-        const span = endCol - startCol + 1
-
-        barsRaw.push({
-          app,
-          startCol,
-          span,
-          continueLeft: appStart < weekStart,
-          continueRight: appEnd > weekEnd,
-        })
-      }
-
-      // 같은 열에서 row(줄) 배정 (겹치지 않게)
-      const rowOccupied: Record<number, number[]> = {}
-      const bars: EventBar[] = barsRaw
-        .sort((a, b) => {
-          if (a.startCol !== b.startCol) return a.startCol - b.startCol
-          return b.span - a.span
-        })
-        .map((bar) => {
-          let row = 0
-          while (true) {
-            const cols = rowOccupied[row] || []
-            const overlap = Array.from({ length: bar.span }, (_, i) => bar.startCol + i).some((c) => cols.includes(c))
-            if (!overlap) break
-            row++
-          }
-          if (!rowOccupied[row]) rowOccupied[row] = []
-          for (let i = 0; i < bar.span; i++) rowOccupied[row].push(bar.startCol + i)
-          return { ...bar, row }
-        })
-
-      rows.push({ days, eventBars: bars })
+      days.push({
+        date: new Date(date),
+        applications: dayApplications,
+        isCurrentMonth: date.getMonth() === month,
+        isToday: date.getTime() === today.getTime(),
+      })
     }
 
-    return rows
-  }, [currentDate, applications, statusFilter])
-
-  const stats = useMemo(() => {
-    const filtered = statusFilter === "ALL" ? applications : applications.filter((a) => a.status === statusFilter)
-    const monthApps = filtered.filter((app) => {
-      const { start } = getVisitDateRange(app)
-      if (!start) return false
-      return start.getMonth() === currentDate.getMonth() && start.getFullYear() === currentDate.getFullYear()
-    })
-    return {
-      total: monthApps.length,
-      groupVisit: monthApps.filter((a) => a.type === "GROUP_VISIT").length,
-      portAccess: monthApps.filter((a) => a.type === "PORT_ACCESS").length,
-      visitR3: monthApps.filter((a) => a.type === "VISIT_R3").length,
-    }
-  }, [applications, currentDate, statusFilter])
-
-  const navigateMonth = (dir: number) => {
-    const d = new Date(currentDate)
-    d.setMonth(d.getMonth() + dir)
-    setCurrentDate(d)
+    setCalendarDays(days)
   }
 
-  const currentYear = currentDate.getFullYear()
-  const currentMonth = currentDate.getMonth()
-  const monthLabel = currentDate.toLocaleDateString("ko-KR", { year: "numeric", month: "long" })
+  const getVisitDate = (app: Application): Date | null => {
+    const appAny = app as any
+    let result: Date | null = null
+    
+    switch (app.type) {
+      case "GROUP_VISIT":
+        result = appAny.visit_start_date ? new Date(appAny.visit_start_date) : null
+        break
+      case "PORT_ACCESS":
+        // Try multiple field names for PORT_ACCESS
+        const portDate = appAny.access_start_datetime || appAny.visit_start_date || appAny.visit_datetime
+        result = portDate ? new Date(portDate) : null
+        console.log('[v0] PORT_ACCESS date check:', {
+          receipt: app.receipt,
+          access_start_datetime: appAny.access_start_datetime,
+          visit_start_date: appAny.visit_start_date,
+          visit_datetime: appAny.visit_datetime,
+          result
+        })
+        break
+      case "VISIT_R3":
+        result = appAny.visit_datetime ? new Date(appAny.visit_datetime) : null
+        break
+      default:
+        result = null
+    }
+    
+    return result
+  }
 
-  // 년도 목록: 현재 기준 ±5년
-  const yearOptions = Array.from({ length: 11 }, (_, i) => currentYear - 5 + i)
-  const monthOptions = ["1월","2월","3월","4월","5월","6월","7월","8월","9월","10월","11월","12월"]
+  const getApplicantInfo = (app: Application) => {
+    switch (app.type) {
+      case "GROUP_VISIT":
+        return {
+          organization: (app as any).organization || "미상",
+          contact: (app as any).contact_name || (app as any).representative || "미상",
+        }
+      case "PORT_ACCESS":
+        return {
+          organization: (app as any).company_name || (app as any).visitor_organization || "미상",
+          contact: (app as any).applicant_name || (app as any).visitor_name || (app as any).contact_name || "미상",
+        }
+      case "VISIT_R3":
+        return {
+          organization: (app as any).visitor_organization || "미상",
+          contact: (app as any).visitor_name || (app as any).contact_name || "미상",
+        }
+      default:
+        return {
+          organization: "미상",
+          contact: "미상",
+        }
+    }
+  }
 
-  const STAT_CARDS = [
-    { label: "이번 달 총 신청", value: stats.total, icon: LayoutGrid, color: "text-white", ring: "border-white/20" },
-    { label: "단체방문신청", value: stats.groupVisit, icon: Users, color: "text-violet-400", ring: "border-violet-500/30" },
-    { label: "항만출입신청", value: stats.portAccess, icon: Anchor, color: "text-[#0298c2]", ring: "border-[#0298c2]/30" },
-    { label: "개인방문신청", value: stats.visitR3, icon: User, color: "text-emerald-400", ring: "border-emerald-500/30" },
-  ]
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case "PENDING":
+        return "bg-yellow-100 text-yellow-800 border-yellow-200"
+      case "UNDER_REVIEW":
+        return "bg-blue-100 text-blue-800 border-blue-200"
+      case "APPROVED":
+        return "bg-green-100 text-green-800 border-green-200"
+      case "REJECTED":
+        return "bg-red-100 text-red-800 border-red-200"
+      default:
+        return "bg-gray-100 text-gray-800 border-gray-200"
+    }
+  }
+
+  const getTypeColor = (type: string) => {
+    switch (type) {
+      case "GROUP_VISIT":
+        return "bg-purple-100 text-purple-800"
+      case "PORT_ACCESS":
+        return "bg-blue-100 text-blue-800"
+      case "VISIT_R3":
+        return "bg-green-100 text-green-800"
+      default:
+        return "bg-gray-100 text-gray-800"
+    }
+  }
+
+  const navigateMonth = (direction: number) => {
+    const newDate = new Date(currentDate)
+    newDate.setMonth(currentDate.getMonth() + direction)
+    setCurrentDate(newDate)
+  }
+
+  const goToToday = () => {
+    setCurrentDate(new Date())
+  }
+
+  const formatDate = (date: Date) => {
+    return date.toLocaleDateString("ko-KR", {
+      year: "numeric",
+      month: "long",
+    })
+  }
+
+  const formatTime = (date: Date) => {
+    return date.toLocaleTimeString("ko-KR", {
+      hour: "2-digit",
+      minute: "2-digit",
+    })
+  }
+
+  const getStatistics = () => {
+    const filteredApps =
+      statusFilter === "ALL" ? applications : applications.filter((app) => app.status === statusFilter)
+    const currentMonthApps = filteredApps.filter((app) => {
+      const visitDate = getVisitDate(app)
+      if (!visitDate) return false
+      const appDate = new Date(visitDate)
+      return appDate.getMonth() === currentDate.getMonth() && appDate.getFullYear() === currentDate.getFullYear()
+    })
+
+    return {
+      total: currentMonthApps.length,
+      groupVisit: currentMonthApps.filter((app) => app.type === "GROUP_VISIT").length,
+      portAccess: currentMonthApps.filter((app) => app.type === "PORT_ACCESS").length,
+      visitR3: currentMonthApps.filter((app) => app.type === "VISIT_R3").length,
+    }
+  }
+
+  const stats = getStatistics()
+
+  if (isLoading) {
+    return (
+      <div className="container py-8">
+        <div className="flex items-center justify-center h-64">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        </div>
+      </div>
+    )
+  }
 
   return (
-    <div className="container mx-auto px-6 flex flex-col h-full py-6 gap-4">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 shrink-0">
-        <div>
-          <h1 className="text-3xl font-black text-white tracking-tight flex items-center gap-3">
-            <CalendarDays className="w-8 h-8 text-[#0298c2]" />
-            방문 캘린더
-          </h1>
-          <p className="text-white/40 text-sm mt-1">방문 기간별 현황 및 관리</p>
-        </div>
-        <div className="flex items-center gap-2">
-          <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as ApplicationStatus | "ALL")}>
-            <SelectTrigger className="w-32 bg-white/5 border-white/10 text-white focus:ring-[#0298c2]/30">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent className="bg-[#0a1628] border-white/10 text-white">
-              <SelectItem value="ALL">전체</SelectItem>
-              <SelectItem value="APPROVED">승인됨</SelectItem>
-              <SelectItem value="PENDING">대기중</SelectItem>
-              <SelectItem value="UNDER_REVIEW">검토중</SelectItem>
-              <SelectItem value="REJECTED">반려됨</SelectItem>
-            </SelectContent>
-          </Select>
-          <Button onClick={() => setCurrentDate(new Date())} size="sm" className="bg-white/5 hover:bg-white/10 border border-white/10 text-white">오늘</Button>
-          <Button onClick={() => mutate()} size="sm" className="bg-white/5 hover:bg-white/10 border border-white/10 text-white">
-            <RefreshCw className="w-4 h-4" />
-          </Button>
-        </div>
-      </div>
-
-      {/* Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 shrink-0">
-        {STAT_CARDS.map(({ label, value, icon: Icon, color, ring }) => (
-          <div key={label} className={`bg-white/5 backdrop-blur-xl border ${ring} rounded-xl p-3 flex items-center gap-3`}>
-            <div className="w-9 h-9 rounded-lg bg-white/5 flex items-center justify-center shrink-0">
-              <Icon className={`w-4 h-4 ${color}`} />
-            </div>
-            <div>
-              {isLoading ? <Skeleton className="h-6 w-8 bg-white/10 mb-1" /> : (
-                <div className={`text-2xl font-black ${color}`}>{value}</div>
-              )}
-              <p className="text-white/40 text-[11px]">{label}</p>
-            </div>
+    <div className="container py-8">
+      <div className="space-y-6">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold">방문 캘린더</h1>
+            <p className="text-muted-foreground">신청일별 방문 현황 및 관리</p>
           </div>
-        ))}
-      </div>
-
-      {/* Calendar */}
-      <div className="bg-[#0d1e35] border border-white/15 rounded-3xl overflow-hidden shadow-2xl flex-1 flex flex-col min-h-0">
-        {/* Month nav */}
-        <div className="flex items-center justify-between px-5 py-3 border-b border-white/10 bg-white/3">
-          <div className="flex items-center gap-2">
-            <Button onClick={() => navigateMonth(-1)} size="sm" className="bg-white/5 hover:bg-white/10 border border-white/10 text-white w-8 h-8 p-0">
-              <ChevronLeft className="w-4 h-4" />
-            </Button>
-            {/* 년도 선택 */}
-            <Select value={String(currentYear)} onValueChange={(v) => { const d = new Date(currentDate); d.setFullYear(Number(v)); setCurrentDate(d) }}>
-              <SelectTrigger className="w-24 h-8 bg-white/5 border-white/10 text-white text-sm font-bold focus:ring-[#0298c2]/30">
+          <div className="flex items-center space-x-2">
+            <Select value={statusFilter} onValueChange={(value) => setStatusFilter(value as ApplicationStatus | "ALL")}>
+              <SelectTrigger className="w-32">
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent className="bg-[#0a1628] border-white/10 text-white">
-                {yearOptions.map((y) => (
-                  <SelectItem key={y} value={String(y)}>{y}년</SelectItem>
-                ))}
+              <SelectContent>
+                <SelectItem value="ALL">전체</SelectItem>
+                <SelectItem value="APPROVED">승인됨</SelectItem>
+                <SelectItem value="PENDING">대기중</SelectItem>
+                <SelectItem value="UNDER_REVIEW">검토중</SelectItem>
+                <SelectItem value="REJECTED">반려됨</SelectItem>
               </SelectContent>
             </Select>
-            {/* 월 선택 */}
-            <Select value={String(currentMonth)} onValueChange={(v) => { const d = new Date(currentDate); d.setMonth(Number(v)); setCurrentDate(d) }}>
-              <SelectTrigger className="w-20 h-8 bg-white/5 border-white/10 text-white text-sm font-bold focus:ring-[#0298c2]/30">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent className="bg-[#0a1628] border-white/10 text-white">
-                {monthOptions.map((m, i) => (
-                  <SelectItem key={i} value={String(i)}>{m}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Button onClick={() => navigateMonth(1)} size="sm" className="bg-white/5 hover:bg-white/10 border border-white/10 text-white w-8 h-8 p-0">
-              <ChevronRight className="w-4 h-4" />
+            <Button onClick={goToToday} variant="outline" size="sm">
+              오늘
+            </Button>
+            <Button onClick={fetchApplications} variant="outline" size="sm">
+              새로고침
             </Button>
           </div>
-          <span className="text-white/30 text-xs">
-            {statusFilter === "ALL" ? "전체" : APPLICATION_STATUS_LABELS[statusFilter as ApplicationStatus]} 신청
-          </span>
         </div>
 
-        {/* Day headers */}
-        <div className="grid grid-cols-7 border-b border-white/10 bg-white/5">
-          {["일", "월", "화", "수", "목", "금", "토"].map((day, i) => (
-            <div key={day} className={`py-1.5 text-center text-[11px] font-bold tracking-widest ${i === 0 ? "text-red-400" : i === 6 ? "text-sky-400" : "text-white/50"}`}>
-              {day}
-            </div>
-          ))}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <Card>
+            <CardContent className="pt-4">
+              <div className="text-2xl font-bold text-primary">{stats.total}</div>
+              <p className="text-xs text-muted-foreground">이번 달 총 신청</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="pt-4">
+              <div className="text-2xl font-bold text-purple-600">{stats.groupVisit}</div>
+              <p className="text-xs text-muted-foreground">단체방문신청</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="pt-4">
+              <div className="text-2xl font-bold text-blue-600">{stats.portAccess}</div>
+              <p className="text-xs text-muted-foreground">항만출입신청</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="pt-4">
+              <div className="text-2xl font-bold text-green-600">{stats.visitR3}</div>
+              <p className="text-xs text-muted-foreground">개인방문신청</p>
+            </CardContent>
+          </Card>
         </div>
 
-        {/* Week rows */}
-        <div className="flex-1 flex flex-col overflow-auto">
-          {isLoading ? (
-            Array.from({ length: 6 }).map((_, wi) => (
-              <div key={wi} className="grid grid-cols-7 border-b border-white/8 flex-1">
-                {Array.from({ length: 7 }).map((_, di) => (
-                  <div key={di} className="p-2 border-r border-white/8 min-h-24">
-                    <Skeleton className="h-6 w-6 bg-white/10 mb-2 rounded-full" />
-                    <Skeleton className="h-5 w-full bg-white/5 rounded mb-1" />
-                  </div>
-                ))}
+        {/* Calendar */}
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-xl">
+                {formatDate(currentDate)}
+                <span className="text-sm font-normal text-muted-foreground ml-2">
+                  ({statusFilter === "ALL" ? "전체" : APPLICATION_STATUS_LABELS[statusFilter as ApplicationStatus]}{" "}
+                  신청)
+                </span>
+              </CardTitle>
+              <div className="flex items-center space-x-2">
+                <Button onClick={() => navigateMonth(-1)} variant="outline" size="sm">
+                  이전
+                </Button>
+                <Button onClick={() => navigateMonth(1)} variant="outline" size="sm">
+                  다음
+                </Button>
               </div>
-            ))
-          ) : (
-            weekRows.map((week, wi) => {
-              // 이 주의 최대 row 수 계산 (셀 높이 결정)
-              const maxRow = week.eventBars.length > 0 ? Math.max(...week.eventBars.map(b => b.row)) + 1 : 0
-
-              const BAR_H = 20  // 이벤트 바 높이
-              const BAR_GAP = 22 // 이벤트 바 간격(row stride)
-
-              return (
-                <div key={wi} className="border-b border-white/8 last:border-b-0 flex-1 relative" style={{ minHeight: `${36 + Math.max(maxRow * BAR_GAP + 4, 0)}px` }}>
-                  {/* 날짜 숫자 행 */}
-                  <div className="grid grid-cols-7">
-                    {week.days.map((day, di) => {
-                      const isSunday = di === 0
-                      const isSaturday = di === 6
-                      return (
-                        <div
-                          key={di}
-                          className={`
-                            border-r border-white/8 last:border-r-0 pt-1.5 px-1.5 pb-0.5
-                            ${!day.isCurrentMonth ? "bg-white/[0.01]" : ""}
-                            ${day.isToday ? "bg-[#0298c2]/8" : ""}
-                          `}
-                        >
-                          <span className={`
-                            text-xs font-bold w-6 h-6 flex items-center justify-center rounded-full
-                            ${day.isToday ? "bg-[#0298c2] text-white shadow-lg" :
-                              isSunday ? "text-red-400" :
-                              isSaturday ? "text-sky-400" :
-                              day.isCurrentMonth ? "text-white/80" : "text-white/20"}
-                          `}>
-                            {day.date.getDate()}
-                          </span>
-                        </div>
-                      )
-                    })}
-                  </div>
-
-                  {/* 이벤트 바 레이어 - overflow:hidden 으로 격자 밖으로 삐져나가지 않게 */}
-                  <div className="relative overflow-hidden" style={{ minHeight: `${Math.max(maxRow * BAR_GAP + 4, 4)}px` }}>
-                    {week.eventBars.map((bar, bi) => {
-                      const ts = TYPE_STYLES[bar.app.type] || TYPE_STYLES.VISIT_R3
-                      const info = getApplicantInfo(bar.app)
-                      // span이 7을 넘지 않도록 클램핑
-                      const clampedSpan = Math.min(bar.span, 7 - bar.startCol)
-                      const leftPct = (bar.startCol / 7) * 100
-                      const widthPct = (clampedSpan / 7) * 100
-                      const padL = bar.continueLeft ? 0 : 2
-                      const padR = bar.continueRight ? 0 : 2
-
-                      return (
-                        <div
-                          key={bi}
-                          onClick={() => setSelectedApp(bar.app)}
-                          title={`${info.contact} / ${info.organization}`}
-                          className={`
-                            absolute cursor-pointer transition-opacity hover:opacity-90
-                            ${ts.bar} text-white text-[10px] font-semibold
-                            flex items-center overflow-hidden
-                            ${bar.continueLeft ? "rounded-l-none" : "rounded-l-sm"}
-                            ${bar.continueRight ? "rounded-r-none" : "rounded-r-sm"}
-                          `}
-                          style={{
-                            top: `${bar.row * BAR_GAP + 2}px`,
-                            left: `calc(${leftPct}% + ${padL}px)`,
-                            width: `calc(${widthPct}% - ${padL + padR}px)`,
-                            height: `${BAR_H}px`,
-                          }}
-                        >
-                          <span className="truncate px-1.5 leading-none">
-                            {info.contact}
-                          </span>
-                        </div>
-                      )
-                    })}
-                  </div>
-
-                  {/* 배경 격자 세로선 */}
-                  <div className="absolute inset-0 grid grid-cols-7 pointer-events-none top-0">
-                    {week.days.map((_, di) => (
-                      <div key={di} className="border-r border-white/8 last:border-r-0" />
-                    ))}
-                  </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-7 gap-1">
+              {/* Day headers */}
+              {["일", "월", "화", "수", "목", "금", "토"].map((day) => (
+                <div key={day} className="p-2 text-center text-sm font-medium text-muted-foreground">
+                  {day}
                 </div>
-              )
-            })
-          )}
-        </div>
-      </div>
+              ))}
 
-      {/* Legend */}
-      <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-xl px-5 py-2 flex flex-wrap items-center gap-5 shrink-0">
-        <span className="text-white/40 text-xs font-bold uppercase tracking-widest">범례</span>
-        {Object.entries(TYPE_STYLES).map(([type, ts]) => (
-          <div key={type} className="flex items-center gap-2">
-            <div className={`w-3 h-3 rounded-sm ${ts.solid}`} />
-            <span className="text-white/70 text-xs font-medium">{APPLICATION_TYPE_LABELS[type as keyof typeof APPLICATION_TYPE_LABELS]}</span>
-          </div>
-        ))}
-      </div>
-
-      {/* Detail Dialog */}
-      <Dialog open={!!selectedApp} onOpenChange={() => setSelectedApp(null)}>
-        <DialogContent className="max-w-lg bg-[#0a1628]/95 backdrop-blur-2xl border border-white/10 text-white shadow-2xl rounded-3xl">
-          {selectedApp && (() => {
-            const { start, end } = getVisitDateRange(selectedApp)
-            const info = getApplicantInfo(selectedApp)
-            const ts = TYPE_STYLES[selectedApp.type] || TYPE_STYLES.VISIT_R3
-            const ss = STATUS_STYLES[selectedApp.status] || STATUS_STYLES.PENDING
-            const dateLabel = start
-              ? end && end.toDateString() !== start.toDateString()
-                ? `${start.toLocaleDateString("ko-KR", { month: "short", day: "numeric" })} ~ ${end.toLocaleDateString("ko-KR", { month: "short", day: "numeric" })}`
-                : start.toLocaleDateString("ko-KR", { month: "short", day: "numeric" })
-              : "-"
-
-            return (
-              <>
-                <DialogHeader className="pb-4 border-b border-white/10">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Badge className={`${ts.badge} border text-xs font-bold`}>{APPLICATION_TYPE_LABELS[selectedApp.type]}</Badge>
-                    <Badge className={`${ss} border text-xs font-bold`}>{APPLICATION_STATUS_LABELS[selectedApp.status]}</Badge>
-                  </div>
-                  <DialogTitle className="text-xl font-black text-white">{info.contact}</DialogTitle>
-                  <p className="text-white/40 text-sm font-mono">{(selectedApp as any).receipt}</p>
-                </DialogHeader>
-                <div className="grid grid-cols-2 gap-4 pt-4 text-sm">
-                  <div className="flex items-center gap-2 text-white/70">
-                    <Building2 className="w-4 h-4 text-white/40 shrink-0" />
-                    <span>{info.organization}</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-white/70">
-                    <Phone className="w-4 h-4 text-white/40 shrink-0" />
-                    <span>{info.phone}</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-white/70 col-span-2">
-                    <Clock className="w-4 h-4 text-white/40 shrink-0" />
-                    <span>{dateLabel}</span>
-                  </div>
-                  {(selectedApp as any).visit_purpose && (
-                    <div className="flex items-start gap-2 text-white/60 col-span-2 pt-2 border-t border-white/10">
-                      <FileText className="w-4 h-4 text-white/40 shrink-0 mt-0.5" />
-                      <span>{(selectedApp as any).visit_purpose}</span>
+              {/* Calendar days */}
+              {calendarDays.map((day, index) => (
+                <div
+                  key={index}
+                  className={`
+                    min-h-28 p-1 border rounded-lg cursor-pointer transition-colors hover:bg-muted/50
+                    ${day.isCurrentMonth ? "bg-background" : "bg-muted/20"}
+                    ${day.isToday ? "ring-2 ring-primary" : ""}
+                    ${day.applications.length > 0 ? "hover:shadow-md" : ""}
+                  `}
+                  onClick={() => day.applications.length > 0 && setSelectedDay(day)}
+                >
+                  <div className="flex flex-col h-full">
+                    <div
+                      className={`
+                        text-sm font-medium mb-1 flex items-center justify-between
+                        ${day.isCurrentMonth ? "text-foreground" : "text-muted-foreground"}
+                        ${day.isToday ? "text-primary font-bold" : ""}
+                      `}
+                    >
+                      <span>{day.date.getDate()}</span>
+                      {day.applications.length > 0 && (
+                        <span className="text-xs bg-primary text-primary-foreground rounded-full px-1.5 py-0.5 min-w-[1.25rem] text-center">
+                          {day.applications.length}
+                        </span>
+                      )}
                     </div>
-                  )}
+                    <div className="flex-1 space-y-1">
+                      {day.applications.slice(0, 3).map((app, appIndex) => {
+                        const applicantInfo = getApplicantInfo(app)
+                        return (
+                          <div
+                            key={appIndex}
+                            className={`
+                              text-xs px-1.5 py-1 rounded truncate border
+                              ${getTypeColor(app.type)}
+                            `}
+                            title={`${APPLICATION_TYPE_LABELS[app.type]} - ${applicantInfo.organization} (${applicantInfo.contact}) - ${app.receipt}`}
+                          >
+                            <div className="font-medium">{APPLICATION_TYPE_LABELS[app.type]}</div>
+                            <div className="text-[10px] opacity-80 truncate">{applicantInfo.organization}</div>
+                          </div>
+                        )
+                      })}
+                      {day.applications.length > 3 && (
+                        <div className="text-xs text-muted-foreground px-1 py-0.5 bg-muted/50 rounded text-center">
+                          +{day.applications.length - 3}개 더
+                        </div>
+                      )}
+                    </div>
+                  </div>
                 </div>
-              </>
-            )
-          })()}
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">범례</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="flex items-center space-x-2">
+                <div className="w-4 h-4 rounded bg-purple-100 border border-purple-200"></div>
+                <span className="text-sm">단체방문신청</span>
+              </div>
+              <div className="flex items-center space-x-2">
+                <div className="w-4 h-4 rounded bg-blue-100 border border-blue-200"></div>
+                <span className="text-sm">항만출입신청</span>
+              </div>
+              <div className="flex items-center space-x-2">
+                <div className="w-4 h-4 rounded bg-green-100 border border-green-200"></div>
+                <span className="text-sm">개인방문신청</span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      <Dialog open={!!selectedDay} onOpenChange={() => setSelectedDay(null)}>
+        <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>
+              {selectedDay?.date.toLocaleDateString("ko-KR", {
+                year: "numeric",
+                month: "long",
+                day: "numeric",
+                weekday: "long",
+              })}
+            </DialogTitle>
+            <DialogDescription>총 {selectedDay?.applications.length}건의 신청이 있습니다.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            {selectedDay?.applications.map((app) => {
+              const visitDate = getVisitDate(app)
+              const applicantInfo = getApplicantInfo(app)
+              return (
+                <Card key={app.id}>
+                  <CardContent className="pt-4">
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-2">
+                          <Badge className={getTypeColor(app.type)}>{APPLICATION_TYPE_LABELS[app.type]}</Badge>
+                          <Badge variant="outline" className={getStatusColor(app.status)}>
+                            {APPLICATION_STATUS_LABELS[app.status]}
+                          </Badge>
+                        </div>
+                        <span className="text-sm text-muted-foreground font-mono">{app.receipt}</span>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <h4 className="font-medium text-sm text-muted-foreground">신청자 정보</h4>
+                          <div className="space-y-1 text-sm">
+                            <div>
+                              <span className="font-medium">소속:</span> {applicantInfo.organization}
+                            </div>
+                            <div>
+                              <span className="font-medium">담당자:</span> {applicantInfo.contact}
+                            </div>
+                            <div>
+                              <span className="font-medium">연락처:</span> {app.contact_phone || "미상"}
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="space-y-2">
+                          <h4 className="font-medium text-sm text-muted-foreground">방문 정보</h4>
+                          <div className="space-y-1 text-sm">
+                            {visitDate && (
+                              <div>
+                                <span className="font-medium">방문시간:</span> {formatTime(visitDate)}
+                              </div>
+                            )}
+                            <div>
+                              <span className="font-medium">신청일:</span>{" "}
+                              {new Date(app.created_at).toLocaleDateString("ko-KR")}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {app.type === "GROUP_VISIT" && (
+                        <div className="pt-2 border-t">
+                          <div className="text-sm space-y-1">
+                            <div>
+                              <span className="font-medium">방문목적:</span> {(app as any).visit_purpose}
+                            </div>
+                            <div>
+                              <span className="font-medium">방문장소:</span> {(app as any).visit_location}
+                            </div>
+                            <div>
+                              <span className="font-medium">방문인원:</span> {(app as any).visitors?.length || 0}명
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {app.type === "PORT_ACCESS" && (
+                        <div className="pt-2 border-t">
+                          <div className="text-sm space-y-1">
+                            <div>
+                              <span className="font-medium">출입목적:</span> {(app as any).access_purpose}
+                            </div>
+                            <div>
+                              <span className="font-medium">작업내용:</span> {(app as any).work_description}
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {app.type === "VISIT_R3" && (
+                        <div className="pt-2 border-t">
+                          <div className="text-sm space-y-1">
+                            <div>
+                              <span className="font-medium">방문목적:</span> {(app as any).visit_purpose}
+                            </div>
+                            <div>
+                              <span className="font-medium">방문자:</span> {(app as any).visitor_name}
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              )
+            })}
+          </div>
         </DialogContent>
       </Dialog>
     </div>
