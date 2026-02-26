@@ -30,11 +30,10 @@ export function PublicHeader({ initialScrolled = false }: PublicHeaderProps) {
   return (
     <>
       <header
-        className={`fixed top-0 w-full z-50 transition-all duration-500 px-6 md:px-12 flex items-center justify-between ${
-          scrolled
+        className={`fixed top-0 w-full z-50 transition-all duration-500 px-6 md:px-12 flex items-center justify-between ${scrolled
             ? "h-16 bg-black/60 backdrop-blur-xl border-b border-white/10"
             : "h-24 bg-transparent"
-        }`}
+          }`}
       >
         {/* Logo */}
         <Link href="/" className="flex items-center group cursor-pointer">
@@ -49,18 +48,21 @@ export function PublicHeader({ initialScrolled = false }: PublicHeaderProps) {
         </Link>
 
         {/* Desktop Nav */}
-        <div className="hidden md:flex items-center gap-8 text-[13px] font-bold tracking-widest uppercase text-white/70">
+        <div className="hidden md:flex items-center gap-8 font-bold uppercase text-white/70">
           {navLinks.map((link) => (
             <Link
               key={link.label}
               href={link.href}
-              className="hover:text-amber-500 transition-colors"
+              className={`transition-colors hover:text-amber-500 ${lang === "ko"
+                  ? "text-[14px] tracking-normal"
+                  : "text-[13px] tracking-widest"
+                }`}
             >
               {link.label}
             </Link>
           ))}
 
-          {/* 한영 전환 버튼 */}
+          {/* 한영 전환 버튼 (3글자 KOR/ENG 적용) */}
           <button
             type="button"
             onClick={() => setLang((prev) => (prev === "ko" ? "en" : "ko"))}
@@ -69,7 +71,7 @@ export function PublicHeader({ initialScrolled = false }: PublicHeaderProps) {
           >
             <Globe size={14} />
             <span className="text-[12px] font-bold tracking-widest">
-              {lang === "ko" ? "EN" : "KO"}
+              {lang === "ko" ? "ENG" : "KOR"}
             </span>
           </button>
 
@@ -82,7 +84,7 @@ export function PublicHeader({ initialScrolled = false }: PublicHeaderProps) {
           >
             <Link href="/admin/login">
               <UserCircle size={16} />
-              <span>Admin</span>
+              <span className="text-[13px]">Admin</span>
             </Link>
           </Button>
         </div>
@@ -120,25 +122,32 @@ export function PublicHeader({ initialScrolled = false }: PublicHeaderProps) {
               <X size={28} />
             </button>
           </div>
-          <nav className="flex flex-col gap-6 px-8 pt-8 text-xl font-bold tracking-widest uppercase text-white/80">
+          <nav className="flex flex-col gap-6 px-8 pt-8 font-bold uppercase text-white/80">
             {navLinks.map((link) => (
               <Link
                 key={link.label}
                 href={link.href}
                 onClick={() => setIsMenuOpen(false)}
-                className="hover:text-amber-500 transition-colors"
+                className={`transition-colors hover:text-amber-500 ${lang === "ko" ? "text-2xl" : "text-xl tracking-widest"
+                  }`}
               >
                 {link.label}
               </Link>
             ))}
+
+            {/* 모바일 언어 전환 */}
             <button
               type="button"
-              onClick={() => setLang((prev) => (prev === "ko" ? "en" : "ko"))}
-              className="flex items-center gap-2 text-white/60 hover:text-amber-500 transition-colors text-sm"
+              onClick={() => {
+                setLang((prev) => (prev === "ko" ? "en" : "ko"));
+                setIsMenuOpen(false);
+              }}
+              className="flex items-center gap-2 text-white/60 hover:text-amber-500 transition-colors text-sm mt-2"
             >
               <Globe size={16} />
-              {lang === "ko" ? "영어로 보기 (EN)" : "한국어로 보기 (KO)"}
+              {lang === "ko" ? "VIEW IN ENGLISH (ENG)" : "한국어로 보기 (KOR)"}
             </button>
+
             <Link
               href="/admin/login"
               onClick={() => setIsMenuOpen(false)}
