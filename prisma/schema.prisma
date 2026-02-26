@@ -1,0 +1,56 @@
+// Prisma schema for Azure SQL Server
+generator client {
+  provider = "prisma-client-js"
+  binaryTargets = ["native", "debian-openssl-3.0.x"]
+  engineType = "binary"
+}
+
+datasource db {
+  provider = "sqlserver"
+  url      = env("DATABASE_URL")
+}
+
+// 개인방문 신청서 (VISIT_R3)
+model VisitR3 {
+  id                    String   @id @default(uuid())
+  receipt               String   @unique
+  type                  String   @default("VISIT_R3")
+  status                String   @default("PENDING")
+  
+  // 방문자 정보
+  visitor_name          String
+  visitor_phone         String
+  visitor_organization  String
+  visitor_position      String
+  visit_datetime        DateTime
+  visit_purpose         String   @db.NVarChar(500)
+  
+  // 담당자 정보
+  contact_name          String?
+  contact_email         String?
+  
+  // 출입 정보
+  access_area           String
+  vehicle_number        String?
+  vehicle_model         String?
+  visit_start_time      String?
+  visit_end_time        String?
+  
+  // QR 및 입출입 시간
+  qr_code_url           String?
+  entry_time            DateTime?
+  exit_time             DateTime?
+  
+  // 반려 정보
+  rejection_reason      String?  @db.NVarChar(500)
+  
+  // 메타데이터
+  created_at            DateTime @default(now())
+  updated_at            DateTime @updatedAt
+
+  @@map("visit_r3")
+  @@index([receipt])
+  @@index([status])
+  @@index([visitor_phone])
+  @@index([created_at])
+}
