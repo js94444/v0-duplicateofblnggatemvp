@@ -19,6 +19,7 @@ import {
   APPLICATION_STATUS_LABELS,
 } from "@/lib/types"
 import { useToast } from "@/hooks/use-toast"
+import { RefreshCw } from "lucide-react"
 
 export default function AdminRequestsPage() {
   const [filteredApplications, setFilteredApplications] = useState<Application[]>([])
@@ -272,7 +273,7 @@ export default function AdminRequestsPage() {
 
   if (loading) {
     return (
-      <div className="container py-8">
+      <div className="container mx-auto px-6 py-10">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-4 border-amber-500 border-t-transparent mx-auto mb-4"></div>
           <p className="text-white/60">데이터를 불러오는 중...</p>
@@ -282,23 +283,21 @@ export default function AdminRequestsPage() {
   }
 
   return (
-    <div className="container max-w-[1400px] mx-auto py-8 px-6 md:px-8">
-      <div className="space-y-6">
+    <div className="container mx-auto px-6 py-10">
+      <div className="space-y-8">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-black text-white">신청 관리</h1>
-            <p className="text-xs uppercase tracking-[0.2em] text-white/40 font-bold mt-2">Application Management</p>
+            <h1 className="text-3xl font-black text-white tracking-tight">신청 관리</h1>
+            <p className="text-white/40 text-sm mt-1 font-medium">출입 신청 목록 및 승인 처리</p>
           </div>
           <Button
-            onClick={() => {
-              setLoading(true)
-              refreshApplications()
-            }}
-            className="bg-amber-500 hover:bg-amber-600 text-black font-bold px-6 py-3 rounded-xl transition-all shadow-[0_0_20px_rgba(245,158,11,0.3)]"
+            onClick={() => refreshApplications()}
+            className="bg-white/10 hover:bg-white/20 border border-white/20 text-white font-bold px-5 py-2 rounded-xl transition-all"
             disabled={loading}
           >
-            {loading ? "새로고침 중..." : "🔄 새로고침"}
+            <RefreshCw size={15} className={`mr-2 ${loading ? "animate-spin" : ""}`} />
+            새로고침
           </Button>
         </div>
 

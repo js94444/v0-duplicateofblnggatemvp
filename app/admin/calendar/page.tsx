@@ -244,15 +244,12 @@ export default function AdminCalendarPage() {
   ]
 
   return (
-    <div className="container mx-auto px-6 flex flex-col h-full py-6 gap-4">
+    <div className="container mx-auto px-6 py-10 flex flex-col gap-8">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 shrink-0">
+      <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-black text-white tracking-tight flex items-center gap-3">
-            <CalendarDays className="w-8 h-8 text-[#0298c2]" />
-            방문 캘린더
-          </h1>
-          <p className="text-white/40 text-sm mt-1">방문 기간별 현황 및 관리</p>
+          <h1 className="text-3xl font-black text-white tracking-tight">방문 캘린더</h1>
+          <p className="text-white/40 text-sm mt-1 font-medium">방문 기간별 현황 및 관리</p>
         </div>
         <div className="flex items-center gap-2">
           <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as ApplicationStatus | "ALL")}>
@@ -268,8 +265,9 @@ export default function AdminCalendarPage() {
             </SelectContent>
           </Select>
           <Button onClick={() => setCurrentDate(new Date())} size="sm" className="bg-white/5 hover:bg-white/10 border border-white/10 text-white">오늘</Button>
-          <Button onClick={() => mutate()} size="sm" className="bg-white/5 hover:bg-white/10 border border-white/10 text-white">
-            <RefreshCw className="w-4 h-4" />
+          <Button onClick={() => mutate()} size="sm" className="bg-white/10 hover:bg-white/20 border border-white/20 text-white font-bold px-5 py-2 rounded-xl transition-all">
+            <RefreshCw className="w-4 h-4 mr-2" />
+            새로고침
           </Button>
         </div>
       </div>

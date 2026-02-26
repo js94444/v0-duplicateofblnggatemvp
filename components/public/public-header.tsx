@@ -30,11 +30,10 @@ export function PublicHeader({ initialScrolled = false }: PublicHeaderProps) {
   return (
     <>
       <header
-        className={`fixed top-0 w-full z-50 transition-all duration-500 px-6 md:px-12 flex items-center justify-between ${
-          scrolled
+        className={`fixed top-0 w-full z-50 transition-all duration-500 px-6 md:px-12 flex items-center justify-between ${scrolled
             ? "h-16 bg-black/60 backdrop-blur-xl border-b border-white/10"
             : "h-24 bg-transparent"
-        }`}
+          }`}
       >
         {/* Logo */}
         <Link href="/" className="flex items-center group cursor-pointer">
@@ -49,12 +48,15 @@ export function PublicHeader({ initialScrolled = false }: PublicHeaderProps) {
         </Link>
 
         {/* Desktop Nav */}
-        <div className="hidden md:flex items-center gap-8 text-[13px] font-bold tracking-widest uppercase text-white/70">
+        <div className="hidden md:flex items-center gap-8 uppercase text-white/70">
           {navLinks.map((link) => (
             <Link
               key={link.label}
               href={link.href}
-              className="hover:text-amber-500 transition-colors"
+              className={`transition-colors hover:text-amber-500 ${lang === "ko"
+                  ? "text-[14px] font-extrabold tracking-wider" // 한글: 폰트 두께와 크기 동시 강화
+                  : "text-[13px] font-bold tracking-widest"
+                }`}
             >
               {link.label}
             </Link>
@@ -68,8 +70,8 @@ export function PublicHeader({ initialScrolled = false }: PublicHeaderProps) {
             aria-label="언어 전환"
           >
             <Globe size={14} />
-            <span className="text-[12px] font-bold tracking-widest">
-              {lang === "ko" ? "EN" : "KO"}
+            <span className="text-[12px] font-extrabold tracking-[0.15em]">
+              {lang === "ko" ? "ENG" : "KOR"}
             </span>
           </button>
 
@@ -82,7 +84,7 @@ export function PublicHeader({ initialScrolled = false }: PublicHeaderProps) {
           >
             <Link href="/admin/login">
               <UserCircle size={16} />
-              <span>Admin</span>
+              <span className="text-[13px] font-bold tracking-wider">Admin</span>
             </Link>
           </Button>
         </div>
@@ -120,29 +122,37 @@ export function PublicHeader({ initialScrolled = false }: PublicHeaderProps) {
               <X size={28} />
             </button>
           </div>
-          <nav className="flex flex-col gap-6 px-8 pt-8 text-xl font-bold tracking-widest uppercase text-white/80">
+          <nav className="flex flex-col gap-6 px-8 pt-8 uppercase text-white/80">
             {navLinks.map((link) => (
               <Link
                 key={link.label}
                 href={link.href}
                 onClick={() => setIsMenuOpen(false)}
-                className="hover:text-amber-500 transition-colors"
+                className={`transition-colors hover:text-amber-500 ${lang === "ko"
+                    ? "text-2xl font-extrabold tracking-normal"
+                    : "text-xl font-bold tracking-widest"
+                  }`}
               >
                 {link.label}
               </Link>
             ))}
+
             <button
               type="button"
-              onClick={() => setLang((prev) => (prev === "ko" ? "en" : "ko"))}
-              className="flex items-center gap-2 text-white/60 hover:text-amber-500 transition-colors text-sm"
+              onClick={() => {
+                setLang((prev) => (prev === "ko" ? "en" : "ko"));
+                setIsMenuOpen(false);
+              }}
+              className="flex items-center gap-2 text-white/60 hover:text-amber-500 transition-colors text-sm mt-2 font-bold"
             >
               <Globe size={16} />
-              {lang === "ko" ? "영어로 보기 (EN)" : "한국어로 보기 (KO)"}
+              {lang === "ko" ? "VIEW IN ENGLISH (ENG)" : "한국어로 보기 (KOR)"}
             </button>
+
             <Link
               href="/admin/login"
               onClick={() => setIsMenuOpen(false)}
-              className="flex items-center gap-2 text-white/60 hover:text-amber-500 transition-colors text-sm mt-4"
+              className="flex items-center gap-2 text-white/60 hover:text-amber-500 transition-colors text-sm mt-4 font-bold"
             >
               <UserCircle size={16} />
               Admin

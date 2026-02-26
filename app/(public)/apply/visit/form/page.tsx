@@ -205,16 +205,16 @@ export default function VisitFormPage() {
             }
           } else {
             toast({
-              title: "데이터 로드 실패",
-              description: "신청 정보를 불러올 수 없습니다.",
+              title: t("데이터 로드 실패", "Failed to load data"),
+              description: t("신청 정보를 불러올 수 없습니다.", "Unable to load application information."),
               variant: "destructive",
             })
             router.push("/apply/visit")
           }
         } catch (error) {
           toast({
-            title: "오류 발생",
-            description: "데이터 로드 중 오류가 발생했습니다.",
+            title: t("오류 발생", "Error"),
+            description: t("데이터 로드 중 오류가 발생했습니다.", "An error occurred while loading data."),
             variant: "destructive",
           })
         }
@@ -225,54 +225,53 @@ export default function VisitFormPage() {
   }, [])
 
   const accessAreaOptions = [
-    { value: "정문", label: "정문" },
-    { value: "본관동(1층)", label: "본관동(1층)" },
-    { value: "본관동(3층)", label: "본관동(3층)" },
-    { value: "공정지역", label: "공정지역" },
-    { value: "제1부두", label: "제1부두" },
-    { value: "제2부두", label: "제2부두" },
-    { value: "정비동", label: "정비동" },
+    { value: "정문", label: t("정문", "Main Gate") },
+    { value: "본관동(1층)", label: t("본관동(1층)", "Main Building (1F)") },
+    { value: "본관동(3층)", label: t("본관동(3층)", "Main Building (3F)") },
+    { value: "공정지역", label: t("공정지역", "Process Area") },
+    { value: "제1부두", label: t("제1부두", "Berth No.1") },
+    { value: "제2부두", label: t("제2부두", "Berth No.2") },
+    { value: "정비동", label: t("정비동", "Maintenance Building") },
   ]
 
   const vehicleTypeOptions = [
-    { value: "휘발유", label: "휘발유" },
-    { value: "경유", label: "경유" },
+    { value: "휘발유", label: t("휘발유", "Gasoline") },
+    { value: "경유", label: t("경유", "Diesel") },
     { value: "LPG", label: "LPG" },
-    { value: "전기", label: "전기" },
-,
+    { value: "전기", label: t("전기", "Electric") },
   ]
 
   const visitPurposeOptions = [
-    { value: "업무 협의 및 회의 등", label: "업무 협의 및 회의 등" },
-    { value: "공사/작업, 유지보수, A/S 등", label: "공사/작업, 유지보수, A/S 등" },
-    { value: "물품반입/반출, 납품 등", label: "물품반입/반출, 납품 등" },
-    { value: "점검 및 감사, 훈련 등", label: "점검 및 감사, 훈련 등" },
-    { value: "부두 작업 및 부두 출입 등", label: "부두 작업 및 부두 출입 등" },
-    { value: "견학", label: "견학" },
-    { value: "기타 업무", label: "기타 업무" },
+    { value: "업무 협의 및 회의 등", label: t("업무 협의 및 회의 등", "Business meeting / Discussion") },
+    { value: "공사/작업, 유지보수, A/S 등", label: t("공사/작업, 유지보수, A/S 등", "Construction / Maintenance / A/S") },
+    { value: "물품반입/반출, 납품 등", label: t("물품반입/반출, 납품 등", "Delivery / Import / Export") },
+    { value: "점검 및 감사, 훈련 등", label: t("점검 및 감사, 훈련 등", "Inspection / Audit / Training") },
+    { value: "부두 작업 및 부두 출입 등", label: t("부두 작업 및 부두 출입 등", "Berth Work / Berth Access") },
+    { value: "견학", label: t("견학", "Site Tour") },
+    { value: "기타 업무", label: t("기타 업무", "Other") },
   ]
 
   const validateForm = (): boolean => {
     const newErrors: FormErrors = {}
 
-    if (!formData.visitor_name.trim()) newErrors.visitor_name = "이름을 입력해주세요"
-    if (!formData.visitor_phone.trim()) newErrors.visitor_phone = "휴대전화번호를 입력해주세요"
-    if (!formData.visitor_birth_date) newErrors.visitor_birth_date = "생년월일을 입력해주세요"
-    if (!formData.visitor_organization.trim()) newErrors.visitor_organization = "소속을 입력해주세요"
-    if (!formData.visitor_position.trim()) newErrors.visitor_position = "직책을 입력해주세요"
-    if (!formData.visitor_address.trim()) newErrors.visitor_address = "회사 주소를 입력해주세요"
-    if (!formData.contact_name.trim()) newErrors.contact_name = "담당자를 입력해주세요"
-    if (!formData.visit_start_date) newErrors.visit_start_date = "방문시작일을 선택해주세요"
-    if (!formData.visit_end_date) newErrors.visit_end_date = "방문종료일을 선택해주세요"
-    if (!formData.access_area) newErrors.access_area = "출입지역을 선택해주세요"
+    if (!formData.visitor_name.trim()) newErrors.visitor_name = t("이름을 입력해주세요", "Please enter your name")
+    if (!formData.visitor_phone.trim()) newErrors.visitor_phone = t("휴대전화번호를 입력해주세요", "Please enter your mobile number")
+    if (!formData.visitor_birth_date) newErrors.visitor_birth_date = t("생년월일을 입력해주세요", "Please enter your date of birth")
+    if (!formData.visitor_organization.trim()) newErrors.visitor_organization = t("소속을 입력해주세요", "Please enter your organization")
+    if (!formData.visitor_position.trim()) newErrors.visitor_position = t("직책을 입력해주세요", "Please enter your position")
+    if (!formData.visitor_address.trim()) newErrors.visitor_address = t("회사 주소를 입력해주세요", "Please enter your company address")
+    if (!formData.contact_name.trim()) newErrors.contact_name = t("담당자를 입력해주세요", "Please select a contact person")
+    if (!formData.visit_start_date) newErrors.visit_start_date = t("방문시작일을 선택해주세요", "Please select a visit start date")
+    if (!formData.visit_end_date) newErrors.visit_end_date = t("방문종료일을 선택해주세요", "Please select a visit end date")
+    if (!formData.access_area) newErrors.access_area = t("출입지역을 선택해주세요", "Please select an access area")
     
     // 차량없음 체크되지 않은 경우에만 차량 정보 필수
     if (!formData.has_no_vehicle) {
-      if (!formData.vehicle_number.trim()) newErrors.vehicle_number = "차량번호를 입력해주세요"
-      if (!formData.vehicle_model.trim()) newErrors.vehicle_model = "차량의 유종을 입력해주세요"
+      if (!formData.vehicle_number.trim()) newErrors.vehicle_number = t("차량번호를 입력해주세요", "Please enter your vehicle number")
+      if (!formData.vehicle_model.trim()) newErrors.vehicle_model = t("차량의 유종을 입력해주세요", "Please select vehicle fuel type")
     }
     
-    if (!formData.visit_purpose.trim()) newErrors.visit_purpose = "방문 목적을 입력해주세요"
+    if (!formData.visit_purpose.trim()) newErrors.visit_purpose = t("방문 목적을 입력해주세요", "Please select a visit purpose")
     
     // 방문기간 14일 이내 체크
     if (formData.visit_start_date && formData.visit_end_date) {
@@ -282,10 +281,10 @@ export default function VisitFormPage() {
       const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
       
       if (diffDays > 14) {
-        newErrors.visit_end_date = "방문신청 최대 가능기간은 14일입니다. 14일 이내로 다시 신청일자를 수정해주세요."
+        newErrors.visit_end_date = t("방문신청 최대 가능기간은 14일입니다. 14일 이내로 다시 신청일자를 수정해주세요.", "The maximum visit period is 14 days. Please adjust your dates.")
       }
       if (diffDays < 0) {
-        newErrors.visit_end_date = "방문종료일은 방문시작일보다 이후여야 합니다."
+        newErrors.visit_end_date = t("방문종료일은 방문시작일보다 이후여야 합니다.", "End date must be after start date.")
       }
     }
 
@@ -307,15 +306,15 @@ export default function VisitFormPage() {
       companions.forEach((companion, index) => {
         const errors: CompanionErrors[number] = {}
         if (!companion.privacy_consent) {
-          errors.privacy_consent = "개인정보 수집·이용 동의가 필요합니다"
+          errors.privacy_consent = t("개인정보 수집·이용 동의가 필요합니다", "Privacy consent is required")
           hasCompanionError = true
         }
         if (!companion.security_pledge) {
-          errors.security_pledge = "보안 서약이 필요합니다"
+          errors.security_pledge = t("보안 서약이 필요합니다", "Security pledge is required")
           hasCompanionError = true
         }
         if (!companion.safety_pledge) {
-          errors.safety_pledge = "안전준수 서약이 필요합니다"
+          errors.safety_pledge = t("안전준수 서약이 필요합니다", "Safety pledge is required")
           hasCompanionError = true
         }
         if (Object.keys(errors).length > 0) {
@@ -327,8 +326,8 @@ export default function VisitFormPage() {
 
       if (hasCompanionError) {
         toast({
-          title: "입력 오류",
-          description: "동행인의 모든 동의 항목을 체크해주세요",
+          title: t("입력 오류", "Input Error"),
+          description: t("동행인의 모든 동의 항목을 체크해주세요", "Please check all consent items for companions"),
           variant: "destructive",
         })
         return
@@ -337,8 +336,8 @@ export default function VisitFormPage() {
 
     if (!isFormValid || !areDevicesValid) {
       toast({
-        title: "입력 오류",
-        description: "필수 항목을 모두 입력해주세요",
+        title: t("입력 오류", "Input Error"),
+        description: t("필수 항목을 모두 입력해주세요", "Please fill in all required fields"),
         variant: "destructive",
       })
       return
@@ -408,21 +407,21 @@ export default function VisitFormPage() {
 
       if (isEditMode) {
         toast({
-          title: "변경이 완료되었습니다",
-          description: "신청 내용이 수정되어 재심사 대기중입니다.",
+          title: t("변경이 완료되었습니다", "Changes Saved"),
+          description: t("신청 내용이 수정되어 재심사 대기중입니다.", "Your application has been updated and is pending review."),
         })
       } else {
         toast({
-          title: "신청이 완료되었습니다",
-          description: `접수번호: ${receipt}`,
+          title: t("신청이 완료되었습니다", "Application Submitted"),
+          description: t("접수번호", "Receipt No") + `: ${receipt}`,
         })
       }
 
       router.push(`/status/${receipt}`)
     } catch (error) {
       toast({
-        title: "오류가 발생했습니다",
-        description: error instanceof Error ? error.message : "다시 시도해주세요",
+        title: t("오류가 발생했습니다", "An error occurred"),
+        description: error instanceof Error ? error.message : t("다시 시도해주세요", "Please try again"),
         variant: "destructive",
       })
     } finally {
@@ -573,10 +572,10 @@ export default function VisitFormPage() {
 
     electronicDevices.forEach((device, index) => {
       const errors: DeviceErrors[number] = {}
-      if (!device.item_name.trim()) errors.item_name = "품명을 입력해주세요"
-      if (!device.model_name.trim()) errors.model_name = "모델명을 입력해주세요"
-      if (!device.serial_number.trim()) errors.serial_number = "시리얼넘버를 입력해주세요"
-      if (!device.reason.trim()) errors.reason = "사유를 입력해주세요"
+      if (!device.item_name.trim()) errors.item_name = t("품명을 입력해주세요", "Please enter item name")
+      if (!device.model_name.trim()) errors.model_name = t("모델명을 입력해주세요", "Please enter model name")
+      if (!device.serial_number.trim()) errors.serial_number = t("시리얼넘버를 입력해주세요", "Please enter serial number")
+      if (!device.reason.trim()) errors.reason = t("사유를 입력해주세요", "Please enter reason")
 
       if (Object.keys(errors).length > 0) {
         newDeviceErrors[index] = errors
@@ -623,23 +622,23 @@ export default function VisitFormPage() {
               <div className="flex items-start gap-3">
                 <div className="w-1 h-12 bg-amber-500 rounded-full shadow-[0_0_10px_rgba(245,158,11,0.5)]" />
                 <div className="flex-1">
-                  <CardTitle className="text-2xl font-black text-white mb-1">기본 정보</CardTitle>
+                  <CardTitle className="text-2xl font-black text-white mb-1">{t("기본 정보", "Basic Information")}</CardTitle>
                   <p className="text-[10px] font-bold tracking-[0.2em] uppercase text-white/30">BASIC INFORMATION</p>
                 </div>
               </div>
-              <CardDescription className="text-white/40 mt-4">방문자의 기본 정보를 입력해주세요</CardDescription>
+              <CardDescription className="text-white/40 mt-4">{t("방문자의 기본 정보를 입력해주세요", "Please enter visitor's basic information")}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-8 p-8">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <FormInput
-                  label="이름"
+                  label={t("이름", "Name")}
                   required
                   value={formData.visitor_name}
                   onChange={(e) => updateField("visitor_name", e.target.value)}
                   error={errors.visitor_name}
                 />
                 <FormInput
-                  label="휴대전화번호"
+                  label={t("휴대전화번호", "Mobile Number")}
                   required
                   type="tel"
                   value={formData.visitor_phone}
@@ -649,7 +648,7 @@ export default function VisitFormPage() {
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <FormInput
-                  label="생년월일"
+                  label={t("생년월일", "Date of Birth")}
                   required
                   type="date"
                   value={formData.visitor_birth_date}
@@ -657,7 +656,7 @@ export default function VisitFormPage() {
                   error={errors.visitor_birth_date}
                 />
                 <FormInput
-                  label="소속 (회사명 또는 기관명)"
+                  label={t("소속 (회사명 또는 기관명)", "Organization (Company or Institution)")}
                   required
                   value={formData.visitor_organization}
                   onChange={(e) => updateField("visitor_organization", e.target.value)}
@@ -666,14 +665,14 @@ export default function VisitFormPage() {
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <FormInput
-                  label="직책"
+                  label={t("직책", "Position")}
                   required
                   value={formData.visitor_position}
                   onChange={(e) => updateField("visitor_position", e.target.value)}
                   error={errors.visitor_position}
                 />
                 <FormInput
-                  label="이메일 (선택사항)"
+                  label={t("이메일 (선택사항)", "Email (Optional)")}
                   type="email"
                   value={formData.visitor_email}
                   onChange={(e) => updateField("visitor_email", e.target.value)}
@@ -681,7 +680,7 @@ export default function VisitFormPage() {
                 />
               </div>
               <FormInput
-                label="회사주소 (회사 또는 기관의 주소)"
+                label={t("회사주소 (회사 또는 기관의 주소)", "Company Address")}
                 required
                 value={formData.visitor_address}
                 onChange={(e) => updateField("visitor_address", e.target.value)}
@@ -691,7 +690,7 @@ export default function VisitFormPage() {
               {/* 차량 정보 */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                 <FormInput
-                  label="차량번호"
+                  label={t("차량번호", "Vehicle Number")}
                   required={!formData.has_no_vehicle}
                   value={formData.vehicle_number}
                   onChange={(e) => updateField("vehicle_number", e.target.value)}
@@ -699,7 +698,7 @@ export default function VisitFormPage() {
                   disabled={formData.has_no_vehicle}
                 />
                 <FormSelect
-                  placeholder="차량유종선택"
+                  placeholder={t("차량유종선택", "Select Fuel Type")}
                   required={!formData.has_no_vehicle}
                   options={vehicleTypeOptions}
                   value={formData.vehicle_model}
@@ -733,7 +732,7 @@ export default function VisitFormPage() {
                     htmlFor="has_no_vehicle"
                     className="text-sm font-medium leading-none cursor-pointer text-white/80"
                   >
-                    차량없음
+                    {t("차량없음", "No Vehicle")}
                   </label>
                 </div>
               </div>
@@ -748,7 +747,7 @@ export default function VisitFormPage() {
                   <div className="p-2 bg-amber-500/10 text-amber-500 rounded-lg group-hover:bg-amber-500 group-hover:text-black transition-all">
                     <Plus size={18} strokeWidth={3} />
                   </div>
-                  <span className="text-base font-bold group-hover:text-amber-500 transition-colors">전자기기 추가</span>
+                  <span className="text-base font-bold group-hover:text-amber-500 transition-colors">{t("전자기기 추가", "Add Electronic Device")}</span>
                 </Button>
               </div>
 
@@ -758,7 +757,7 @@ export default function VisitFormPage() {
                   <div className="flex justify-between items-center">
                     <div className="flex items-center gap-2">
                       <div className="w-1 h-6 bg-amber-500 rounded-full" />
-                      <h4 className="font-bold text-sm text-white">전자기기 {index + 1}</h4>
+                      <h4 className="font-bold text-sm text-white">{t("전자기기", "Device")} {index + 1}</h4>
                     </div>
                     <Button
                       type="button"
@@ -771,7 +770,7 @@ export default function VisitFormPage() {
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                     <FormInput
-                      label="품명 (노트북, 태블릿 등)"
+                      label={t("품명 (노트북, 태블릿 등)", "Item Name (Laptop, Tablet, etc.)")}
                       required
                       value={device.item_name}
                       onChange={(e) => updateDevice(index, "item_name", e.target.value)}
@@ -779,7 +778,7 @@ export default function VisitFormPage() {
     
                     />
                     <FormInput
-                      label="모델명 (예:MacBook Pro)"
+                      label={t("모델명 (예:MacBook Pro)", "Model Name (e.g. MacBook Pro)")}
                       required
                       value={device.model_name}
                       onChange={(e) => updateDevice(index, "model_name", e.target.value)}
@@ -787,7 +786,7 @@ export default function VisitFormPage() {
     
                     />
                     <FormInput
-                      label="시리얼넘버"
+                      label={t("시리얼넘버", "Serial Number")}
                       required
                       value={device.serial_number}
                       onChange={(e) => updateDevice(index, "serial_number", e.target.value)}
@@ -796,7 +795,7 @@ export default function VisitFormPage() {
                     />
                   </div>
                   <FormInput
-                    label="사유 (반입 사유 입력)"
+                    label={t("사유 (반입 사유 입력)", "Reason for bringing in")}
                     required
                     value={device.reason}
                     onChange={(e) => updateDevice(index, "reason", e.target.value)}
@@ -814,17 +813,17 @@ export default function VisitFormPage() {
               <div className="flex items-start gap-3">
                 <div className="w-1 h-12 bg-amber-500 rounded-full shadow-[0_0_10px_rgba(245,158,11,0.5)]" />
                 <div className="flex-1">
-                  <CardTitle className="text-2xl font-black text-white mb-1">방문 정보</CardTitle>
+                  <CardTitle className="text-2xl font-black text-white mb-1">{t("방문 정보", "Visit Information")}</CardTitle>
                   <p className="text-[10px] font-bold tracking-[0.2em] uppercase text-white/30">VISIT INFORMATION</p>
                 </div>
               </div>
-              <CardDescription className="text-white/40 mt-4">방문 일정 및 목적을 입력해주세요</CardDescription>
+              <CardDescription className="text-white/40 mt-4">{t("방문 일정 및 목적을 입력해주세요", "Please enter your visit schedule and purpose")}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-8 p-8">
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-white/80">
                     <span className="text-red-400 mr-0.5">*</span>
-                    담당자
+                    {t("담당자", "Contact Person")}
                   </label>
                 <ContactSelector
                   value={formData.contact_name}
@@ -847,8 +846,8 @@ export default function VisitFormPage() {
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <FormSelect
-                  label="방문 목적"
-                  placeholder="방문 목적을 선택하세요"
+                  label={t("방문 목적", "Visit Purpose")}
+                  placeholder={t("방문 목적을 선택하세요", "Select visit purpose")}
                   required
                   options={visitPurposeOptions}
                   value={formData.visit_purpose}
@@ -857,8 +856,8 @@ export default function VisitFormPage() {
                   className="h-14 w-full"
                 />
                   <FormSelect
-                    label="출입지역"
-                    placeholder="출입지역을 선택하세요"
+                    label={t("출입지역", "Access Area")}
+                    placeholder={t("출입지역을 선택하세요", "Select access area")}
                     required
                     options={accessAreaOptions}
                     value={formData.access_area}
@@ -871,12 +870,12 @@ export default function VisitFormPage() {
                 {/* 상세 방문 사유 */}
                 <div className="space-y-2">
                   <label className="text-sm font-bold text-white/80">
-                    상세 방문 사유 <span className="text-amber-400">  🛠️ 부두 작업 및 현장 공사/작업의 내용 🛠️ </span>
+                    {t("상세 방문 사유", "Detailed Visit Reason")} <span className="text-amber-400"> {t("부두 작업 및 현장 공사/작업의 내용", "Details for berth / construction work")} </span>
                   </label>
                   <textarea
                     value={formData.detailed_purpose}
                     onChange={(e) => updateField("detailed_purpose", e.target.value)}
-                    placeholder="예: 탱크 정비 작업 "
+                    placeholder={t("예: 탱크 정비 작업", "e.g. Tank maintenance work")}
                     rows={2}
                     className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-amber-500/50 resize-none"
                   />
@@ -888,7 +887,7 @@ export default function VisitFormPage() {
                 <div className="space-y-2">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                   <FormInputSimple
-                    label="방문시작일"
+                    label={t("방문시작일", "Visit Start Date")}
                     required
                     type="date"
                     value={formData.visit_start_date}
@@ -897,7 +896,7 @@ export default function VisitFormPage() {
   
                   />
                   <FormInputSimple
-                    label="방문종료일"
+                    label={t("방문종료일", "Visit End Date")}
                     required
                     type="date"
                     value={formData.visit_end_date}
@@ -908,7 +907,7 @@ export default function VisitFormPage() {
                 </div>
                 <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-4 text-center">
                   <p className="text-base text-white font-bold">
-                    방문신청 최대 가능기간은 <span className="text-amber-500">14일</span> 입니다.
+                    {t("방문신청 최대 가능기간은", "Maximum visit period is")} <span className="text-amber-500">14{t("일", " days")}</span> {t("입니다.", "")}
                   </p>
                 </div>
               </div>
@@ -921,13 +920,13 @@ export default function VisitFormPage() {
               <div className="flex items-start gap-3">
                 <div className="w-1 h-12 bg-amber-500 rounded-full shadow-[0_0_10px_rgba(245,158,11,0.5)]" />
                 <div className="flex-1">
-                  <CardTitle className="text-2xl font-black text-white mb-1">동행인 추가등록</CardTitle>
+                  <CardTitle className="text-2xl font-black text-white mb-1">{t("동행인 추가등록", "Add Companions")}</CardTitle>
                   <p className="text-[10px] font-bold tracking-[0.2em] uppercase text-white/30">COMPANION REGISTRATION</p>
                 </div>
               </div>
               <div className="mt-4 p-4 bg-blue-500/10 rounded-xl border border-blue-400/30">
                 <p className="text-sm font-medium text-blue-400">
-                  동행인은 별도 차량을 이용할 수 없습니다. (차량이용자는 따로 방문신청하시기 바랍니다.)
+                  {t("동행인은 별도 차량을 이용할 수 없습니다. (차량이용자는 따로 방문신청하시기 바랍니다.)", "Companions cannot use a separate vehicle. (Vehicle users must submit a separate visit application.)")}
                 </p>
               </div>
             </CardHeader>
@@ -941,7 +940,7 @@ export default function VisitFormPage() {
                   <div className="p-2 bg-amber-500/10 text-amber-500 rounded-lg group-hover:bg-amber-500 group-hover:text-black transition-all">
                     <Plus size={18} strokeWidth={3} />
                   </div>
-                  <span className="text-base font-bold group-hover:text-amber-500 transition-colors">동행인을 추가하시려면 클릭하세요</span>
+                  <span className="text-base font-bold group-hover:text-amber-500 transition-colors">{t("동행인을 추가하시려면 클릭하세요", "Click to add a companion")}</span>
                 </Button>
               </div>
 
@@ -951,7 +950,7 @@ export default function VisitFormPage() {
                     <div className="flex justify-between items-center">
                       <div className="flex items-center gap-2">
                         <div className="w-1 h-6 bg-amber-500 rounded-full" />
-                        <CardTitle className="text-lg font-bold text-white">동행인 {companionIndex + 1}</CardTitle>
+                        <CardTitle className="text-lg font-bold text-white">{t("동행인", "Companion")} {companionIndex + 1}</CardTitle>
                       </div>
                       <Button
                         type="button"
@@ -966,7 +965,7 @@ export default function VisitFormPage() {
                   <CardContent className="space-y-6 p-6">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                       <FormInput
-                        label="이름"
+                        label={t("이름", "Name")}
                         required
                         value={companion.name}
                         onChange={(e) => updateCompanion(companionIndex, "name", e.target.value)}
@@ -974,7 +973,7 @@ export default function VisitFormPage() {
       
                       />
                 <FormInput
-                  label="휴대전화번호"
+                  label={t("휴대전화번호", "Mobile Number")}
                   required
                   type="tel"
                   value={companion.phone}
@@ -984,7 +983,7 @@ export default function VisitFormPage() {
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                       <FormInput
-                        label="생년월일"
+                        label={t("생년월일", "Date of Birth")}
                         required
                         type="date"
                         value={companion.birth_date}
@@ -993,7 +992,7 @@ export default function VisitFormPage() {
       
                       />
                       <FormInput
-                        label="소속"
+                        label={t("소속", "Organization")}
                         required
                         value={companion.organization}
                         onChange={(e) => updateCompanion(companionIndex, "organization", e.target.value)}
@@ -1001,7 +1000,7 @@ export default function VisitFormPage() {
       
                       />
                       <FormInput
-                        label="직책"
+                        label={t("직책", "Position")}
                         required
                         value={companion.position}
                         onChange={(e) => updateCompanion(companionIndex, "position", e.target.value)}
@@ -1020,7 +1019,7 @@ export default function VisitFormPage() {
                         <div className="p-2 bg-amber-500/10 text-amber-500 rounded-lg group-hover:bg-amber-500 group-hover:text-black transition-all">
                           <Plus size={18} strokeWidth={3} />
                         </div>
-                        <span className="text-base font-bold group-hover:text-amber-500 transition-colors">전자기기 추가</span>
+                        <span className="text-base font-bold group-hover:text-amber-500 transition-colors">{t("전자기기 추가", "Add Electronic Device")}</span>
                       </Button>
                     </div>
 
@@ -1030,7 +1029,7 @@ export default function VisitFormPage() {
                         <div className="flex justify-between items-center">
                           <div className="flex items-center gap-2">
                             <div className="w-1 h-6 bg-amber-500 rounded-full" />
-                            <h4 className="font-bold text-sm text-white">전자기기 {deviceIndex + 1}</h4>
+                            <h4 className="font-bold text-sm text-white">{t("전자기기", "Device")} {deviceIndex + 1}</h4>
                           </div>
                           <Button
                             type="button"
@@ -1043,7 +1042,7 @@ export default function VisitFormPage() {
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                           <FormInput
-                            label="품명 (노트북, 태블릿 등)"
+                            label={t("품명 (노트북, 태블릿 등)", "Item Name (Laptop, Tablet, etc.)")}
                             required
                             value={device.item_name}
                             onChange={(e) =>
@@ -1052,7 +1051,7 @@ export default function VisitFormPage() {
           
                           />
                           <FormInput
-                            label="모델명 (예:MacBook Pro)"
+                            label={t("모델명 (예:MacBook Pro)", "Model Name (e.g. MacBook Pro)")}
                             required
                             value={device.model_name}
                             onChange={(e) =>
@@ -1061,7 +1060,7 @@ export default function VisitFormPage() {
           
                           />
                           <FormInput
-                            label="시리얼넘버"
+                            label={t("시리얼넘버", "Serial Number")}
                             required
                             value={device.serial_number}
                             onChange={(e) =>
@@ -1071,7 +1070,7 @@ export default function VisitFormPage() {
                           />
                         </div>
                         <FormInput
-                          label="사유 (반입 사유 입력)"
+                          label={t("사유 (반입 사유 입력)", "Reason for bringing in")}
                           required
                           value={device.reason}
                           onChange={(e) =>
@@ -1094,7 +1093,7 @@ export default function VisitFormPage() {
                         />
                               <label htmlFor={`privacy-${companionIndex}`} className="text-sm font-bold cursor-pointer text-white">
                                 <span className="text-red-400 mr-1">*</span>
-                                개인정보 수집·이용 동의
+                                {t("개인정보 수집·이용 동의", "Privacy Consent")}
                               </label>
                       </div>
                       {companionErrors[companionIndex]?.privacy_consent && (
@@ -1111,7 +1110,7 @@ export default function VisitFormPage() {
                         />
                               <label htmlFor={`security-${companionIndex}`} className="text-sm font-bold cursor-pointer text-white">
                                 <span className="text-red-400 mr-1">*</span>
-                                보안 서약
+                                {t("보안 서약", "Security Pledge")}
                               </label>
                       </div>
                       {companionErrors[companionIndex]?.security_pledge && (
@@ -1128,7 +1127,7 @@ export default function VisitFormPage() {
                         />
                               <label htmlFor={`safety-${companionIndex}`} className="text-sm font-bold cursor-pointer text-white">
                                 <span className="text-red-400 mr-1">*</span>
-                                안전준수 서약
+                                {t("안전준수 서약", "Safety Pledge")}
                               </label>
                       </div>
                       {companionErrors[companionIndex]?.safety_pledge && (
@@ -1147,16 +1146,16 @@ export default function VisitFormPage() {
               <div className="flex items-start gap-3">
                 <div className="w-1 h-12 bg-amber-500 rounded-full shadow-[0_0_10px_rgba(245,158,11,0.5)]" />
                 <div className="flex-1">
-                  <CardTitle className="text-2xl font-black text-white mb-1">첨부파일</CardTitle>
+                  <CardTitle className="text-2xl font-black text-white mb-1">{t("첨부파일", "Attachments")}</CardTitle>
                   <p className="text-[10px] font-bold tracking-[0.2em] uppercase text-white/30">ATTACHMENTS</p>
                 </div>
               </div>
-              <CardDescription className="text-white/40 mt-4">항만이수증, 승선신고서 등 필요한 서류를 업로드해주세요</CardDescription>
+              <CardDescription className="text-white/40 mt-4">{t("항만이수증, 승선신고서 등 필요한 서류를 업로드해주세요", "Please upload required documents such as port safety certificate, boarding declaration, etc.")}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4 p-8">
               <FileUpload
-                label="파일 업로드"
-                description="이미지 파일(PNG, JPG) 또는 PDF 파일을 업로드할 수 있습니다"
+                label={t("파일 업로드", "Upload File")}
+                description={t("이미지 파일(PNG, JPG) 또는 PDF 파일을 업로드할 수 있습니다", "You can upload image files (PNG, JPG) or PDF files")}
                 onFilesUploaded={(files) => {
                   console.log("[v0] Files uploaded:", files)
                   const fileData = files.map((file) => ({
@@ -1171,13 +1170,13 @@ export default function VisitFormPage() {
               <div className="p-4 bg-blue-500/10 rounded-xl border border-blue-400/30">
                 <div className="space-y-2 text-sm">
                   <p>
-                    <span className="font-bold text-blue-400">항만 출입자의 경우 '항만안전교육 필수 이수'</span>
+                    <span className="font-bold text-blue-400">{t("항만 출입자의 경우 '항만안전교육 필수 이수'", "Port visitors must complete the 'Port Safety Training'")}</span>
                   </p>
                   <p>
-                    <span className="font-bold text-white">항만안전교육 포털</span> : <a href="https://kptiedu.kr" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300 underline">https://kptiedu.kr</a>
+                    <span className="font-bold text-white">{t("항만안전교육 포털", "Port Safety Training Portal")}</span> : <a href="https://kptiedu.kr" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300 underline">https://kptiedu.kr</a>
                   </p>
                   <p className="text-white/70">
-                    ※ 업무별 교육과정 등 자세한 사항은 '항만안전연수원' 문의 바랍니다. (T. 1661-9356)
+                    {t("※ 업무별 교육과정 등 자세한 사항은 '항만안전연수원' 문의 바랍니다. (T. 1661-9356)", "※ For details on training by job type, contact the 'Port Safety Training Center'. (T. 1661-9356)")}
                   </p>
                 </div>
               </div>
@@ -1190,14 +1189,14 @@ export default function VisitFormPage() {
               onClick={() => router.back()}
               className="bg-black/40 border border-white/10 hover:border-white/30 hover:bg-black/50 text-white backdrop-blur-sm transition-all duration-300 px-10 py-6 rounded-xl text-xl font-bold"
             >
-              취소
+              {t("취소", "Cancel")}
             </Button>
             <Button 
               type="submit" 
               disabled={isSubmitting}
               className="group bg-amber-500 hover:bg-amber-600 hover:scale-105 text-black backdrop-blur-sm transition-all duration-300 hover:shadow-[0_0_25px_rgba(245,158,11,0.6)] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 px-10 py-6 rounded-xl text-xl font-bold"
             >
-              {isSubmitting ? "처리중..." : "신청하기"}
+              {isSubmitting ? t("처리중...", "Processing...") : t("신청하기", "Submit")}
             </Button>
           </div>
             </form>
