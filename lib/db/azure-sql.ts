@@ -655,7 +655,7 @@ export class AzureSqlDB {
     const row = result.recordset[0]
     
     // Fetch all related data in parallel
-    const [companionsResult, devicesResult, companionDevicesResult, filesResult] = await Promise.all([
+    const [companionsResult, devicesResult, companionDevicesResult, filesResult, companionAttachmentsResult] = await Promise.all([
       dbPool.request()
         .input('application_id', sql.BigInt, row.application_id)
         .query('SELECT * FROM visit_companions WHERE application_id = @application_id'),
@@ -673,6 +673,14 @@ export class AzureSqlDB {
       dbPool.request()
         .input('application_id', sql.BigInt, row.application_id)
         .query('SELECT * FROM visit_attachments WHERE application_id = @application_id'),
+      dbPool.request()
+        .input('application_id', sql.BigInt, row.application_id)
+        .query(`
+          SELECT vca.companion_id, vca.file_name, vca.file_key, vca.blob_url, vca.file_type, vca.file_size, vca.attachment_type
+          FROM visit_companion_attachments vca
+          JOIN visit_companions vc ON vca.companion_id = vc.companion_id
+          WHERE vc.application_id = @application_id
+        `).catch(() => ({ recordset: [] })),
     ])
 
     const companions = companionsResult.recordset.map((c: any) => ({
@@ -703,18 +711,32 @@ export class AzureSqlDB {
           serial_number: d.serial_number,
           reason: d.reason,
         }))
-      return { ...c, electronicDevices: devices }
+      const companionPortCerts = (companionAttachmentsResult.recordset || [])
+        .filter((a: any) => {
+          const actualId = Array.isArray(a.companion_id) ? a.companion_id[0] : a.companion_id
+          return String(actualId) === String(c.companion_id)
+        })
+        .map((a: any) => ({
+          filename: a.file_name,
+          key: a.file_key,
+          url: a.blob_url,
+          type: a.file_type,
+          size: a.file_size ? Number(a.file_size) : 0,
+          attachment_type: a.attachment_type,
+        }))
+      return { ...c, electronicDevices: devices, portCertFiles: companionPortCerts }
     })
     
-    console.log('[v0] Files recordset:', filesResult.recordset)
-    const files = filesResult.recordset.map((f: any) => ({
+    const allFiles = filesResult.recordset.map((f: any) => ({
       filename: f.file_name,
       key: f.file_key,
       url: f.blob_url,
-      size: f.file_size,
+      size: f.file_size ? Number(f.file_size) : 0,
       type: f.file_type,
+      attachment_type: f.attachment_type,
     }))
-    console.log('[v0] Mapped files:', files)
+    const files = allFiles.filter((f: any) => f.attachment_type !== 'PORT_CERT')
+    const portCertFiles = allFiles.filter((f: any) => f.attachment_type === 'PORT_CERT')
     
     // Determine type based on receipt prefix or access_area
     const receiptPrefix = row.application_number.split('-')[0]
@@ -806,6 +828,7 @@ export class AzureSqlDB {
       updated_at: new Date(row.updated_at),
       rejection_reason: row.rejection_reason,
       files,
+      portCertFiles,
     }
 
     return application
@@ -905,8 +928,8 @@ export class AzureSqlDB {
   static async getAllApplications(): Promise<Application[]> {
     const dbPool = await getPool()
 
-    // 4개 쿼리 병렬 실행으로 N+1 문제 완전 해결
-    const [appResult, attachResult, companionResult, companionDeviceResult, deviceResult] = await Promise.all([
+    // 6개 쿼리 병렬 실행으로 N+1 문제 완전 해결
+    const [appResult, attachResult, companionResult, companionDeviceResult, deviceResult, companionAttachResult] = await Promise.all([
       dbPool.request().query(`
         SELECT application_id, application_number, status, visitor_name, visitor_phone,
                visitor_organization, visitor_position, visitor_email, visitor_birth_date,
@@ -917,7 +940,7 @@ export class AzureSqlDB {
         ORDER BY created_at DESC
       `),
       dbPool.request().query(`
-        SELECT application_id, file_name, file_key, blob_url, file_type, file_size
+        SELECT application_id, file_name, file_key, blob_url, file_type, file_size, attachment_type
         FROM visit_attachments WITH (NOLOCK)
       `),
       dbPool.request().query(`
@@ -934,14 +957,33 @@ export class AzureSqlDB {
         SELECT application_id, item_name, model_name, serial_number, reason
         FROM visit_electronic_devices WITH (NOLOCK)
       `),
+      dbPool.request().query(`
+        SELECT companion_id, application_id, file_name, file_key, blob_url, file_type, file_size, attachment_type
+        FROM visit_companion_attachments WITH (NOLOCK)
+      `).catch(() => ({ recordset: [] })),
     ])
 
     // 메모리에서 application_id 기준으로 그룹핑
     const attachMap = new Map<string, any[]>()
+    const portCertMap = new Map<string, any[]>()
     for (const a of attachResult.recordset) {
       const key = String(a.application_id)
-      if (!attachMap.has(key)) attachMap.set(key, [])
-      attachMap.get(key)!.push({ filename: a.file_name, key: a.file_key, url: a.blob_url, type: a.file_type, size: a.file_size ? Number(a.file_size) : 0 })
+      const fileEntry = { filename: a.file_name, key: a.file_key, url: a.blob_url, type: a.file_type, size: a.file_size ? Number(a.file_size) : 0, attachment_type: a.attachment_type }
+      if (a.attachment_type === 'PORT_CERT') {
+        if (!portCertMap.has(key)) portCertMap.set(key, [])
+        portCertMap.get(key)!.push(fileEntry)
+      } else {
+        if (!attachMap.has(key)) attachMap.set(key, [])
+        attachMap.get(key)!.push(fileEntry)
+      }
+    }
+
+    // 동행인 첨부파일 맵 (companion_id 기준)
+    const companionAttachMap = new Map<string, any[]>()
+    for (const a of companionAttachResult.recordset) {
+      const key = String(a.companion_id)
+      if (!companionAttachMap.has(key)) companionAttachMap.set(key, [])
+      companionAttachMap.get(key)!.push({ filename: a.file_name, key: a.file_key, url: a.blob_url, type: a.file_type, size: a.file_size ? Number(a.file_size) : 0, attachment_type: a.attachment_type })
     }
 
     const companionDeviceMap = new Map<string, any[]>()
@@ -960,6 +1002,7 @@ export class AzureSqlDB {
         name: c.name, phone: c.phone, birth_date: c.birth_date,
         organization: c.organization, position: c.position,
         electronicDevices: companionDeviceMap.get(String(c.companion_id)) || [],
+        portCertFiles: companionAttachMap.get(String(c.companion_id)) || [],
       })
     }
 
@@ -1017,6 +1060,7 @@ export class AzureSqlDB {
         updated_at: new Date(row.updated_at),
         rejection_reason: row.rejection_reason,
         files: attachMap.get(appId) || [],
+        portCertFiles: portCertMap.get(appId) || [],
         companions,
         electronicDevices: deviceMap.get(appId) || [],
       } as any
