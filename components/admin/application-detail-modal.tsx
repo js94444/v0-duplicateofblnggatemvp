@@ -55,11 +55,11 @@ function FileThumbnail({ file, onLightbox }: { file: any; onLightbox: (url: stri
 
   if (isImage && previewUrl) {
     return (
-      <div className="group relative flex flex-col rounded-2xl overflow-hidden border border-white/10 bg-black/40 hover:border-amber-500/50 transition-all cursor-pointer" style={{ width: 120 }}>
+      <div className="group relative flex flex-col rounded-2xl overflow-hidden border border-white/10 bg-black/40 hover:border-amber-500/50 transition-all cursor-pointer" style={{ width: 200 }}>
         {/* 썸네일 이미지 */}
         <div
           className="relative overflow-hidden"
-          style={{ height: 160 }}
+          style={{ height: 280 }}
           onClick={() => onLightbox(previewUrl, file.filename || "이수증")}
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
