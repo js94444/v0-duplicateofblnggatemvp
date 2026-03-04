@@ -759,7 +759,7 @@ export default function VisitFormPage() {
                   </div>
                   <FileUpload
                     label={t("이수증 업로드", "Upload Certificate")}
-                    description={t("이미지(PNG, JPG) 또는 PDF", "Image (PNG, JPG) or PDF")}
+                    description={t("이미지(PNG, JPG) 업로드 권장 (PDF도 가능)", "Image (PNG, JPG) recommended. PDF also accepted.")}
                     maxFiles={3}
                     onFilesUploaded={(files) => {
                       const fileData = files.map((file) => ({
@@ -1179,7 +1179,7 @@ export default function VisitFormPage() {
                         </div>
                         <FileUpload
                           label={t("이수증 업로드", "Upload Certificate")}
-                          description={t("이미지(PNG, JPG) 또는 PDF", "Image (PNG, JPG) or PDF")}
+                          description={t("이미지(PNG, JPG) 업로드 권장 (PDF도 가능)", "Image (PNG, JPG) recommended. PDF also accepted.")}
                           maxFiles={3}
                           onFilesUploaded={(files) => {
                             const fileData = files.map((file) => ({

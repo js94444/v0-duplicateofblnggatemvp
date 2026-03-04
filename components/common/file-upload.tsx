@@ -134,7 +134,7 @@ export function FileUpload({
         {required && <span className="text-red-400 ml-1">*</span>}
       </Label>
       
-      <p className="text-xs text-white/60 font-medium -mt-1">이미지 파일(PNG, JPG) 또는 PDF 파일을 업로드할 수 있습니다.</p>
+      <p className="text-xs text-white/60 font-medium -mt-1">이미지 파일(PNG, JPG) 업로드를 권장합니다. (PDF 파일도 업로드 가능)</p>
 
       <Card
         {...getRootProps()}
