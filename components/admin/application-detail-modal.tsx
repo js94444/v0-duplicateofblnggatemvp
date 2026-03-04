@@ -114,6 +114,30 @@ function FileThumbnail({ file, onLightbox }: { file: any; onLightbox: (url: stri
   )
 }
 
+// 항만이수증 전용 썸네일 목록 — 라이트박스 포함
+function PortCertThumbnails({ files }: { files: any[] }) {
+  const [lightbox, setLightbox] = useState<{ url: string; name: string } | null>(null)
+
+  if (!files || files.length === 0) return null
+
+  return (
+    <>
+      <div className="flex flex-col gap-3">
+        {files.map((file, idx) => (
+          <FileThumbnail
+            key={idx}
+            file={file}
+            onLightbox={(url, name) => setLightbox({ url, name })}
+          />
+        ))}
+      </div>
+      {lightbox && (
+        <Lightbox src={lightbox.url} alt={lightbox.name} onClose={() => setLightbox(null)} />
+      )}
+    </>
+  )
+}
+
 // 첨부파일 섹션 — 이미지는 썸네일 그리드, 문서는 리스트
 function AttachmentSection({ title, files }: { title: string; files: any[] }) {
   const [lightbox, setLightbox] = useState<{ url: string; name: string } | null>(null)
@@ -241,40 +265,52 @@ export function ApplicationDetailModal({ application, open, loading = false, onC
                   <span className="p-2 bg-amber-500/20 rounded-xl text-amber-500 text-sm">01</span>
                   기본정보
                 </h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-x-8 gap-y-8">
-                  <InfoField label="이름" value={app.visitor_name} />
-                  <InfoField label="휴대전화번호" value={app.visitor_phone} />
-                  <InfoField label="생년월일" value={formatDate(app.visitor_birth_date)} />
-                  <InfoField label="소속" value={app.visitor_organization} />
-                  <InfoField label="직책" value={app.visitor_position} />
-                  <InfoField label="이메일" value={app.visitor_email || app.contact_email} />
-                  <InfoField label="회사주소" value={app.visitor_address} />
-                  <InfoField label="차량번호" value={app.vehicle_number} />
-                  <InfoField label="차종" value={app.vehicle_model} />
-                </div>
 
-                {/* 본인 전자기기 */}
-                {app.electronicDevices && app.electronicDevices.length > 0 && (
-                  <div className="mt-8 pt-6 border-t border-white/10 space-y-4">
-                    <p className="text-xs font-black text-amber-500/80 uppercase tracking-widest">PERSONAL DEVICES</p>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {app.electronicDevices.map((device: any, idx: number) => (
-                        <div key={idx} className="bg-black/40 border border-white/5 rounded-2xl p-5 grid grid-cols-2 lg:grid-cols-4 gap-4">
-                          <InfoField label="품명" value={device.item_name} />
-                          <InfoField label="모델명" value={device.model_name} />
-                          <InfoField label="시리얼" value={device.serial_number} />
-                          <InfoField label="사유" value={device.reason} />
-                        </div>
-                      ))}
+                {/* 2단 구성: 좌측 텍스트 필드 2열 / 우측 항만이수증 썸네일 */}
+                <div className={`flex gap-8 items-start`}>
+                  {/* 좌측: 텍스트 필드 2열 */}
+                  <div className="flex-1 min-w-0">
+                    <div className="grid grid-cols-2 gap-x-8 gap-y-8">
+                      <InfoField label="이름" value={app.visitor_name} />
+                      <InfoField label="휴대전화번호" value={app.visitor_phone} />
+                      <InfoField label="생년월일" value={formatDate(app.visitor_birth_date)} />
+                      <InfoField label="소속" value={app.visitor_organization} />
+                      <InfoField label="직책" value={app.visitor_position} />
+                      <InfoField label="이메일" value={app.visitor_email || app.contact_email} />
+                      <InfoField label="회사주소" value={app.visitor_address} />
+                      <InfoField label="차량번호" value={app.vehicle_number} />
+                      <InfoField label="차종" value={app.vehicle_model} />
                     </div>
+
+                    {/* 본인 전자기기 */}
+                    {app.electronicDevices && app.electronicDevices.length > 0 && (
+                      <div className="mt-8 pt-6 border-t border-white/10 space-y-4">
+                        <p className="text-xs font-black text-amber-500/80 uppercase tracking-widest">PERSONAL DEVICES</p>
+                        <div className="grid grid-cols-1 gap-4">
+                          {app.electronicDevices.map((device: any, idx: number) => (
+                            <div key={idx} className="bg-black/40 border border-white/5 rounded-2xl p-5 grid grid-cols-2 lg:grid-cols-4 gap-4">
+                              <InfoField label="품명" value={device.item_name} />
+                              <InfoField label="모델명" value={device.model_name} />
+                              <InfoField label="시리얼" value={device.serial_number} />
+                              <InfoField label="사유" value={device.reason} />
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* 일반 첨부파일 */}
+                    <AttachmentSection title="첨부파일" files={generalFiles} />
                   </div>
-                )}
 
-                {/* 신청자 본인 항만이수증 */}
-                <AttachmentSection title="항만이수증 (신청자)" files={applicantPortCerts} />
-
-                {/* 일반 첨부파일 */}
-                <AttachmentSection title="첨부파일" files={generalFiles} />
+                  {/* 우측: 항만이수증 썸네일 (이수증 있을 때만) */}
+                  {applicantPortCerts.length > 0 && (
+                    <div className="flex-shrink-0 space-y-3">
+                      <p className="text-xs font-black text-amber-500/80 uppercase tracking-widest">항만이수증</p>
+                      <PortCertThumbnails files={applicantPortCerts} />
+                    </div>
+                  )}
+                </div>
               </div>
 
               {/* 02. 방문정보 */}
@@ -307,39 +343,46 @@ export function ApplicationDetailModal({ application, open, loading = false, onC
                     동행인 정보 ({app.companions.length}명)
                   </h3>
                   <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-                    {app.companions.map((companion: any, idx: number) => (
-                      <div key={idx} className="bg-black/40 border border-white/10 rounded-3xl p-6 space-y-5">
-                        {/* 이름 / 생년월일 — 이수증 비교를 위해 상단에 크게 */}
-                        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                          <InfoField label="이름" value={companion.name} />
-                          <InfoField label="연락처" value={companion.phone} />
-                          <InfoField label="생년월일" value={formatDate(companion.birth_date)} />
-                        </div>
-                        <div className="grid grid-cols-2 gap-4">
-                          <InfoField label="소속" value={companion.organization} />
-                          <InfoField label="직책" value={companion.position} />
-                        </div>
-
-                        {/* 동행인 전자기기 */}
-                        {companion.electronicDevices && companion.electronicDevices.length > 0 && (
-                          <div className="pt-4 border-t border-white/10">
-                            <p className="text-[10px] font-black text-white/40 mb-3 uppercase tracking-widest">Device List</p>
-                            {companion.electronicDevices.map((d: any, dIdx: number) => (
-                              <div key={dIdx} className="bg-white/5 rounded-xl p-3 grid grid-cols-2 gap-2 text-sm mb-2">
-                                <span className="text-white/60">{d.item_name} ({d.model_name})</span>
-                                <span className="text-white/40 text-right font-mono">{d.serial_number}</span>
+                    {app.companions.map((companion: any, idx: number) => {
+                      const companionPortCerts = companion.portCertFiles || []
+                      return (
+                        <div key={idx} className="bg-black/40 border border-white/10 rounded-3xl p-6">
+                          <div className="flex gap-6 items-start">
+                            {/* 좌측: 텍스트 필드 2열 */}
+                            <div className="flex-1 min-w-0 space-y-5">
+                              <div className="grid grid-cols-2 gap-x-6 gap-y-5">
+                                <InfoField label="이름" value={companion.name} />
+                                <InfoField label="연락처" value={companion.phone} />
+                                <InfoField label="생년월일" value={formatDate(companion.birth_date)} />
+                                <InfoField label="소속" value={companion.organization} />
+                                <InfoField label="직책" value={companion.position} />
                               </div>
-                            ))}
-                          </div>
-                        )}
 
-                        {/* 동행인 항만이수증 */}
-                        <AttachmentSection
-                          title={`항만이수증 — ${companion.name || `동행인 ${idx + 1}`}`}
-                          files={companion.portCertFiles || []}
-                        />
-                      </div>
-                    ))}
+                              {/* 동행인 전자기기 */}
+                              {companion.electronicDevices && companion.electronicDevices.length > 0 && (
+                                <div className="pt-4 border-t border-white/10">
+                                  <p className="text-[10px] font-black text-white/40 mb-3 uppercase tracking-widest">Device List</p>
+                                  {companion.electronicDevices.map((d: any, dIdx: number) => (
+                                    <div key={dIdx} className="bg-white/5 rounded-xl p-3 grid grid-cols-2 gap-2 text-sm mb-2">
+                                      <span className="text-white/60">{d.item_name} ({d.model_name})</span>
+                                      <span className="text-white/40 text-right font-mono">{d.serial_number}</span>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+
+                            {/* 우측: 동행인 항만이수증 썸네일 (있을 때만) */}
+                            {companionPortCerts.length > 0 && (
+                              <div className="flex-shrink-0 space-y-3">
+                                <p className="text-xs font-black text-amber-500/80 uppercase tracking-widest">항만이수증</p>
+                                <PortCertThumbnails files={companionPortCerts} />
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )
+                    })}
                   </div>
                 </div>
               )}
