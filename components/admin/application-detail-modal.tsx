@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import { type Application, APPLICATION_STATUS_LABELS } from "@/lib/types"
-import { X, Download, FileText, Image as ImageIcon } from "lucide-react"
+import { X, Download, FileText, ZoomIn } from "lucide-react"
 
 interface ApplicationDetailModalProps {
   application: Application
@@ -18,77 +18,145 @@ interface ApplicationDetailModalProps {
 // 이미지 파일인지 확인
 function isImageFile(filename: string, fileType?: string): boolean {
   const ext = filename?.split(".").pop()?.toLowerCase() || ""
-  const imageExts = ["jpg", "jpeg", "png", "gif", "webp", "bmp"]
-  if (imageExts.includes(ext)) return true
-  if (fileType && fileType.startsWith("image/")) return true
+  if (["jpg", "jpeg", "png", "gif", "webp", "bmp"].includes(ext)) return true
+  if (fileType?.startsWith("image/")) return true
   return false
 }
 
-// 파일 카드 컴포넌트 — 이미지는 호버 시 카드 하단에 미리보기
-function FileCard({ file }: { file: any }) {
-  const [hovered, setHovered] = useState(false)
+// 라이트박스 컴포넌트
+function Lightbox({ src, alt, onClose }: { src: string; alt: string; onClose: () => void }) {
+  return (
+    <div
+      className="fixed inset-0 z-[200] flex items-center justify-center bg-black/90 backdrop-blur-sm"
+      onClick={onClose}
+    >
+      <button
+        onClick={onClose}
+        className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-all"
+      >
+        <X size={20} />
+      </button>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={src}
+        alt={alt}
+        className="max-w-[90vw] max-h-[85vh] object-contain rounded-2xl shadow-2xl"
+        onClick={(e) => e.stopPropagation()}
+      />
+    </div>
+  )
+}
+
+// 썸네일 카드 — 이미지는 실제 이미지로, PDF는 아이콘으로 표시
+function FileThumbnail({ file, onLightbox }: { file: any; onLightbox: (url: string, name: string) => void }) {
   const fileUrl = file.url || file.key
   const isImage = isImageFile(file.filename || "", file.type)
   const previewUrl = fileUrl ? `/api/files/${encodeURIComponent(fileUrl)}` : null
 
-  return (
-    <div className="relative">
-      <div
-        className="flex items-center justify-between bg-black/40 border border-white/10 rounded-2xl p-4 group hover:border-amber-500/40 transition-all"
-        onMouseEnter={() => setHovered(true)}
-        onMouseLeave={() => setHovered(false)}
-      >
-        <div className="flex items-center gap-3 min-w-0">
-          <div className="w-10 h-10 bg-white/5 rounded-xl flex items-center justify-center flex-shrink-0">
-            {isImage
-              ? <ImageIcon size={18} className="text-blue-400" />
-              : <FileText size={18} className="text-amber-400" />
-            }
-          </div>
-          <div className="min-w-0">
-            <p className="text-sm font-semibold text-white truncate max-w-[180px]">{file.filename || "파일"}</p>
-            <p className="text-xs text-white/30 uppercase tracking-wider">{isImage ? "IMAGE" : "DOCUMENT"}</p>
-          </div>
-        </div>
-        {previewUrl && (
-          <Button
-            onClick={() => window.open(previewUrl, "_blank")}
-            size="icon"
-            className="bg-white/5 hover:bg-amber-500 text-white/60 hover:text-black rounded-xl transition-all flex-shrink-0"
-            title="다운로드 / 열기"
-          >
-            <Download size={16} />
-          </Button>
-        )}
-      </div>
-
-      {/* 호버 시 이미지 미리보기 — 카드 하단 */}
-      {isImage && hovered && previewUrl && (
-        <div className="mt-2 rounded-2xl overflow-hidden border border-amber-500/30 bg-black/60 shadow-xl">
+  if (isImage && previewUrl) {
+    return (
+      <div className="group relative flex flex-col rounded-2xl overflow-hidden border border-white/10 bg-black/40 hover:border-amber-500/50 transition-all cursor-pointer" style={{ width: 120 }}>
+        {/* 썸네일 이미지 */}
+        <div
+          className="relative overflow-hidden"
+          style={{ height: 160 }}
+          onClick={() => onLightbox(previewUrl, file.filename || "이수증")}
+        >
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={previewUrl}
             alt={file.filename}
-            className="w-full object-contain max-h-64"
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
             loading="lazy"
           />
+          {/* 호버 오버레이 */}
+          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all flex items-center justify-center opacity-0 group-hover:opacity-100">
+            <ZoomIn size={24} className="text-white drop-shadow-lg" />
+          </div>
         </div>
+        {/* 하단 파일명 + 다운로드 */}
+        <div className="flex items-center justify-between px-2 py-1.5 bg-black/60 gap-1">
+          <p className="text-[10px] text-white/50 truncate flex-1">{file.filename || "이수증"}</p>
+          <button
+            onClick={(e) => { e.stopPropagation(); if (previewUrl) window.open(previewUrl, "_blank") }}
+            className="flex-shrink-0 text-white/40 hover:text-amber-400 transition-colors"
+            title="다운로드"
+          >
+            <Download size={12} />
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  // PDF / 기타 문서
+  return (
+    <div className="flex items-center justify-between bg-black/40 border border-white/10 rounded-2xl p-4 hover:border-white/20 transition-all">
+      <div className="flex items-center gap-3 min-w-0">
+        <div className="w-10 h-10 bg-white/5 rounded-xl flex items-center justify-center flex-shrink-0">
+          <FileText size={18} className="text-amber-400" />
+        </div>
+        <div className="min-w-0">
+          <p className="text-sm font-semibold text-white truncate max-w-[180px]">{file.filename || "파일"}</p>
+          <p className="text-xs text-white/30 uppercase tracking-wider">DOCUMENT</p>
+        </div>
+      </div>
+      {previewUrl && (
+        <Button
+          onClick={() => window.open(previewUrl, "_blank")}
+          size="icon"
+          className="bg-white/5 hover:bg-amber-500 text-white/60 hover:text-black rounded-xl transition-all flex-shrink-0"
+        >
+          <Download size={16} />
+        </Button>
       )}
     </div>
   )
 }
 
-// 첨부파일 섹션 컴포넌트
+// 첨부파일 섹션 — 이미지는 썸네일 그리드, 문서는 리스트
 function AttachmentSection({ title, files }: { title: string; files: any[] }) {
+  const [lightbox, setLightbox] = useState<{ url: string; name: string } | null>(null)
+
   if (!files || files.length === 0) return null
+
+  const imageFiles = files.filter((f) => isImageFile(f.filename || "", f.type))
+  const docFiles = files.filter((f) => !isImageFile(f.filename || "", f.type))
+
   return (
     <div className="pt-6 border-t border-white/10 space-y-3">
       <p className="text-xs font-black text-amber-500/80 uppercase tracking-widest">{title}</p>
-      <div className="grid grid-cols-1 gap-2">
-        {files.map((file: any, idx: number) => (
-          <FileCard key={idx} file={file} />
-        ))}
-      </div>
+
+      {/* 이미지 썸네일 그리드 */}
+      {imageFiles.length > 0 && (
+        <div className="flex flex-wrap gap-3">
+          {imageFiles.map((file, idx) => (
+            <FileThumbnail
+              key={idx}
+              file={file}
+              onLightbox={(url, name) => setLightbox({ url, name })}
+            />
+          ))}
+        </div>
+      )}
+
+      {/* 문서 파일 리스트 */}
+      {docFiles.length > 0 && (
+        <div className="grid grid-cols-1 gap-2 mt-2">
+          {docFiles.map((file, idx) => (
+            <FileThumbnail key={idx} file={file} onLightbox={() => {}} />
+          ))}
+        </div>
+      )}
+
+      {/* 라이트박스 */}
+      {lightbox && (
+        <Lightbox
+          src={lightbox.url}
+          alt={lightbox.name}
+          onClose={() => setLightbox(null)}
+        />
+      )}
     </div>
   )
 }
