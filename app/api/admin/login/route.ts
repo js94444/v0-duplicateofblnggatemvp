@@ -14,7 +14,9 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    console.log("[v0] login attempt:", username)
     const user = await validateAdminCredentials(username, password)
+    console.log("[v0] validateAdminCredentials result:", user)
 
     if (!user) {
       return NextResponse.json(
