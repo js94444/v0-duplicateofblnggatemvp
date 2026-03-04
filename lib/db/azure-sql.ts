@@ -1165,10 +1165,18 @@ export class AzureSqlDB {
   /** 사용자명으로 계정 조회 (로그인 용) */
   static async getAccountByUsername(username: string): Promise<any | null> {
     const dbPool = await getPool()
+    // must_change_password 컬럼이 없는 환경 대비 ISNULL 처리
     const result = await dbPool.request()
       .input('username', sql.NVarChar(100), username)
       .query(`
-        SELECT account_id, username, name, password_hash, role, is_active, must_change_password
+        SELECT
+          account_id,
+          username,
+          name,
+          password_hash,
+          role,
+          is_active,
+          ISNULL(must_change_password, 0) AS must_change_password
         FROM admin_accounts
         WHERE username = @username AND is_active = 1
       `)
