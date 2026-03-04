@@ -638,22 +638,43 @@ export default function VisitFormPage() {
           <p className="text-white/40 text-sm mb-12">{t("방문 정보를 입력해주세요", "Please fill in your visit information")}</p>
 
           {/* 안내 문구 이동: 타이틀 하단 중앙 */}
-          <div className="max-w-2xl mx-auto mb-12 p-4 bg-blue-500/10 rounded-xl border border-blue-400/30 backdrop-blur-sm">
-            <div className="space-y-2 text-sm text-center">
-              <p>
-                <span className="font-bold text-blue-400">
-                  {t("항만 출입자의 경우 '항만안전교육 필수 이수'", "Port visitors must complete the 'Port Safety Training'")}
+          <div className="max-w-4xl mx-auto mb-12">
+            <div className="relative overflow-hidden bg-blue-500/10 backdrop-blur-md border border-blue-400/30 rounded-[24px] p-6 md:p-8 group hover:border-blue-400/50 transition-all duration-500">
+              {/* 배경 장식 효과 (선택 사항) */}
+              <div className="absolute -right-10 -top-10 w-32 h-32 bg-blue-500/10 blur-3xl rounded-full group-hover:bg-blue-500/20 transition-all" />
+
+              <div className="relative z-10 flex flex-col items-center text-center space-y-4">
+                {/* 강조 아이콘 또는 라벨 */}
+                <span className="px-4 py-1.5 bg-blue-500/20 border border-blue-400/40 rounded-full text-blue-400 text-xs font-black tracking-widest uppercase mb-2">
+                  {t("필수 확인", "Required Notice")}
                 </span>
-              </p>
-              <p>
-                <span className="font-bold text-white">{t("항만안전교육 포털", "Port Safety Training Portal")}</span> :{" "}
-                <a href="https://kptiedu.kr" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300 underline">
-                  https://kptiedu.kr
-                </a>
-              </p>
-              <p className="text-white/70 text-[11px]">
-                {t("※ 업무별 교육과정 등 자세한 사항은 '항만안전연수원' 문의 바랍니다. (T. 1661-9356)", "※ For details on training by job type, contact the 'Port Safety Training Center'. (T. 1661-9356)")}
-              </p>
+
+                <div className="space-y-3">
+                  <p className="text-xl md:text-2xl font-bold text-white leading-tight">
+                    {t("항만 출입자의 경우 '항만안전교육 필수 이수'", "Port visitors must complete the 'Port Safety Training'")}
+                  </p>
+
+                  <div className="flex flex-wrap justify-center items-center gap-x-3 gap-y-2 text-base md:text-lg">
+                    <span className="font-semibold text-blue-300">{t("항만안전교육 포털", "Port Safety Training Portal")}</span>
+                    <span className="hidden md:inline text-white/30">|</span>
+                    <a
+                      href="https://kptiedu.kr"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-white hover:text-blue-400 underline underline-offset-4 decoration-blue-500/50 transition-colors font-bold"
+                    >
+                      https://kptiedu.kr
+                    </a>
+                  </div>
+                </div>
+
+                <div className="pt-2">
+                  <p className="text-sm md:text-base text-white/60 font-medium">
+                    {t("※ 업무별 교육과정 등 자세한 사항은 '항만안전연수원' 문의 바랍니다.", "※ For details on training by job type, contact the 'Port Safety Training Center'.")}
+                    <span className="block md:inline md:ml-2 text-blue-400/90 font-bold">(T. 1661-9356)</span>
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
 
