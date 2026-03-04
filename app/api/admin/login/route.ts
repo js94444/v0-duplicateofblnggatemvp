@@ -1,7 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { validateAdminCredentials, generateAdminToken, MOCK_ADMIN_USER } from "@/lib/auth/admin"
+import { validateAdminCredentials, generateAdminToken } from "@/lib/auth/admin"
 
-export const runtime = 'nodejs'
+export const runtime = "nodejs"
 
 export async function POST(request: NextRequest) {
   try {
@@ -9,42 +9,33 @@ export async function POST(request: NextRequest) {
 
     if (!username || !password) {
       return NextResponse.json(
-        {
-          code: "MISSING_CREDENTIALS",
-          message: "아이디와 비밀번호를 입력해주세요",
-        },
-        { status: 400 },
+        { code: "MISSING_CREDENTIALS", message: "아이디와 비밀번호를 입력해주세요" },
+        { status: 400 }
       )
     }
 
-    // TODO: Replace with proper authentication
-    const isValid = validateAdminCredentials(username, password)
+    const user = await validateAdminCredentials(username, password)
 
-    if (!isValid) {
+    if (!user) {
       return NextResponse.json(
-        {
-          code: "INVALID_CREDENTIALS",
-          message: "아이디 또는 비밀번호가 올바르지 않습니다",
-        },
-        { status: 401 },
+        { code: "INVALID_CREDENTIALS", message: "아이디 또는 비밀번호가 올바르지 않습니다" },
+        { status: 401 }
       )
     }
 
-    const token = generateAdminToken(MOCK_ADMIN_USER)
+    const token = generateAdminToken(user)
 
     return NextResponse.json({
       token,
-      user: MOCK_ADMIN_USER,
+      user,
+      must_change_password: user.must_change_password ?? false,
       message: "로그인 성공",
     })
   } catch (error) {
-    console.error("Admin login error:", error)
+    console.error("[admin/login] error:", error)
     return NextResponse.json(
-      {
-        code: "INTERNAL_ERROR",
-        message: "서버 오류가 발생했습니다",
-      },
-      { status: 500 },
+      { code: "INTERNAL_ERROR", message: "서버 오류가 발생했습니다" },
+      { status: 500 }
     )
   }
 }

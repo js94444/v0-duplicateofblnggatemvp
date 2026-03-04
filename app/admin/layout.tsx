@@ -7,7 +7,7 @@ import { useEffect } from "react"
 import { useRouter, usePathname } from "next/navigation"
 import { AdminAuthProvider, useAdminAuth } from "@/hooks/use-admin-auth"
 import { Button } from "@/components/ui/button"
-import { Home, LogOut, LayoutDashboard, FileText, Calendar } from "lucide-react"
+import { Home, LogOut, LayoutDashboard, FileText, Calendar, Users } from "lucide-react"
 
 const bgStyle = {
   backgroundImage: "url('/images/lng-terminal-bg.jpg')",
@@ -70,7 +70,9 @@ function AdminLayoutContent({ children }: { children: React.ReactNode }) {
           <div className="flex items-center gap-4">
             <div className="text-right hidden sm:block">
               <p className="text-sm font-bold text-white">{user?.name}</p>
-              <p className="text-xs text-white/40">{user?.username}</p>
+              <p className="text-xs text-white/40">
+                {user?.role === "super_admin" ? "슈퍼어드민" : user?.role === "security" ? "특수경비대" : "담당자"}
+              </p>
             </div>
             <Button 
               onClick={logout}
@@ -135,6 +137,21 @@ function AdminLayoutContent({ children }: { children: React.ReactNode }) {
                 방문 캘린더
               </Button>
             </Link>
+            {user?.role === "super_admin" && (
+              <Link href="/admin/accounts">
+                <Button
+                  variant="ghost"
+                  className={`font-bold rounded-lg transition-all ${
+                    pathname === "/admin/accounts"
+                      ? "bg-amber-500 text-black hover:bg-amber-600 hover:text-black"
+                      : "text-white/60 hover:text-white hover:bg-white/10"
+                  }`}
+                >
+                  <Users size={16} className="mr-2" />
+                  계정 관리
+                </Button>
+              </Link>
+            )}
           </div>
         </div>
       </nav>

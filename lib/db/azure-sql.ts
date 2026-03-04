@@ -1160,6 +1160,158 @@ export class AzureSqlDB {
     return updated
   }
 
+  // ─── 계정 관리 ─────────────────────────────────────────
+
+  /** 사용자명으로 계정 조회 (로그인 용) */
+  static async getAccountByUsername(username: string): Promise<any | null> {
+    const dbPool = await getPool()
+    const result = await dbPool.request()
+      .input('username', sql.NVarChar(100), username)
+      .query(`
+        SELECT account_id, username, name, password_hash, role, is_active, must_change_password
+        FROM admin_accounts
+        WHERE username = @username AND is_active = 1
+      `)
+    return result.recordset[0] || null
+  }
+
+  /** 전체 계정 목록 (슈퍼어드민용) */
+  static async getAllAccounts(): Promise<any[]> {
+    const dbPool = await getPool()
+    const result = await dbPool.request().query(`
+      SELECT account_id, username, name, role, is_active, created_at, last_login_at
+      FROM admin_accounts
+      ORDER BY created_at DESC
+    `)
+    return result.recordset
+  }
+
+  /** 계정 생성 */
+  static async createAccount(data: {
+    username: string
+    name: string
+    password_hash: string
+    role: string
+  }): Promise<void> {
+    const dbPool = await getPool()
+    const now = getKoreaTime()
+    await dbPool.request()
+      .input('username', sql.NVarChar(100), data.username)
+      .input('name', sql.NVarChar(100), data.name)
+      .input('password_hash', sql.NVarChar(255), data.password_hash)
+      .input('role', sql.NVarChar(50), data.role)
+      .input('created_at', sql.DateTime, now)
+      .input('updated_at', sql.DateTime, now)
+      .query(`
+        INSERT INTO admin_accounts (username, name, password_hash, role, is_active, must_change_password, created_at, updated_at)
+        VALUES (@username, @name, @password_hash, @role, 1, 1, @created_at, @updated_at)
+      `)
+  }
+
+  /** 비밀번호 변경 */
+  static async updatePassword(accountId: number, passwordHash: string): Promise<void> {
+    const dbPool = await getPool()
+    const now = getKoreaTime()
+    await dbPool.request()
+      .input('account_id', sql.Int, accountId)
+      .input('password_hash', sql.NVarChar(255), passwordHash)
+      .input('updated_at', sql.DateTime, now)
+      .query(`
+        UPDATE admin_accounts
+        SET password_hash = @password_hash, must_change_password = 0, updated_at = @updated_at
+        WHERE account_id = @account_id
+      `)
+  }
+
+  /** 계정 수정 (역할, 이름, 활성화 여부) */
+  static async updateAccount(accountId: number, data: { name?: string; role?: string; is_active?: boolean }): Promise<void> {
+    const dbPool = await getPool()
+    const now = getKoreaTime()
+    await dbPool.request()
+      .input('account_id', sql.Int, accountId)
+      .input('name', sql.NVarChar(100), data.name ?? null)
+      .input('role', sql.NVarChar(50), data.role ?? null)
+      .input('is_active', sql.Bit, data.is_active !== undefined ? (data.is_active ? 1 : 0) : null)
+      .input('updated_at', sql.DateTime, now)
+      .query(`
+        UPDATE admin_accounts SET
+          name = ISNULL(@name, name),
+          role = ISNULL(@role, role),
+          is_active = ISNULL(@is_active, is_active),
+          updated_at = @updated_at
+        WHERE account_id = @account_id
+      `)
+  }
+
+  /** 계정 삭제 */
+  static async deleteAccount(accountId: number): Promise<void> {
+    const dbPool = await getPool()
+    await dbPool.request()
+      .input('account_id', sql.Int, accountId)
+      .query(`DELETE FROM admin_accounts WHERE account_id = @account_id`)
+  }
+
+  /** 마지막 로그인 시각 업데이트 */
+  static async updateLastLogin(accountId: number): Promise<void> {
+    const dbPool = await getPool()
+    await dbPool.request()
+      .input('account_id', sql.Int, accountId)
+      .input('last_login_at', sql.DateTime, getKoreaTime())
+      .query(`UPDATE admin_accounts SET last_login_at = @last_login_at WHERE account_id = @account_id`)
+  }
+
+  // ─── 신청서 확인 체크 ────────────────────────────────────
+
+  /** 확인 체크 조회 */
+  static async getApplicationCheck(applicationId: number, accountId: number): Promise<{ checked: boolean; checked_at: Date | null; note: string | null } | null> {
+    const dbPool = await getPool()
+    const result = await dbPool.request()
+      .input('application_id', sql.BigInt, applicationId)
+      .input('account_id', sql.Int, accountId)
+      .query(`
+        SELECT checked, checked_at, note
+        FROM application_checks
+        WHERE application_id = @application_id AND account_id = @account_id
+      `)
+    return result.recordset[0] || null
+  }
+
+  /** 신청서 ID 기준 전체 체크 목록 조회 */
+  static async getApplicationChecks(applicationId: number): Promise<any[]> {
+    const dbPool = await getPool()
+    const result = await dbPool.request()
+      .input('application_id', sql.BigInt, applicationId)
+      .query(`
+        SELECT ac.checked, ac.checked_at, ac.note, aa.name, aa.role
+        FROM application_checks ac
+        JOIN admin_accounts aa ON ac.account_id = aa.account_id
+        WHERE ac.application_id = @application_id
+      `)
+    return result.recordset
+  }
+
+  /** 확인 체크 저장/업데이트 (UPSERT) */
+  static async setApplicationCheck(applicationId: number, accountId: number, checked: boolean, note?: string): Promise<void> {
+    const dbPool = await getPool()
+    const now = getKoreaTime()
+    await dbPool.request()
+      .input('application_id', sql.BigInt, applicationId)
+      .input('account_id', sql.Int, accountId)
+      .input('checked', sql.Bit, checked ? 1 : 0)
+      .input('checked_at', sql.DateTime, checked ? now : null)
+      .input('note', sql.NVarChar(500), note || null)
+      .query(`
+        MERGE application_checks AS target
+        USING (SELECT @application_id AS application_id, @account_id AS account_id) AS source
+        ON target.application_id = source.application_id AND target.account_id = source.account_id
+        WHEN MATCHED THEN
+          UPDATE SET checked = @checked, checked_at = @checked_at, note = @note
+        WHEN NOT MATCHED THEN
+          INSERT (application_id, account_id, checked, checked_at, note)
+          VALUES (@application_id, @account_id, @checked, @checked_at, @note);
+      `)
+  }
+
   // 통계 조회
   static async getApplicationStats() {
     const dbPool = await getPool()
