@@ -9,19 +9,22 @@ import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Checkbox } from "@/components/ui/checkbox"
 import { ApplicationDetailModal } from "@/components/admin/application-detail-modal"
 import { ApprovalDialog } from "@/components/admin/approval-dialog"
 import {
   type Application,
   type ApplicationStatus,
   type ApplicationType,
-  type AccessArea, // Declare AccessArea type
+  type AccessArea,
   APPLICATION_STATUS_LABELS,
 } from "@/lib/types"
 import { useToast } from "@/hooks/use-toast"
 import { RefreshCw } from "lucide-react"
+import { useAdminAuth } from "@/hooks/use-admin-auth"
 
 export default function AdminRequestsPage() {
+  const { user, token } = useAdminAuth()
   const [filteredApplications, setFilteredApplications] = useState<Application[]>([])
   const [contacts, setContacts] = useState<{ name: string; department: string; mobile: string }[]>([])
   const [selectedApplication, setSelectedApplication] = useState<Application | null>(null)
@@ -31,6 +34,9 @@ export default function AdminRequestsPage() {
     application: Application
     action: "approve" | "reject"
   } | null>(null)
+  // 체크 상태 관리: { [applicationId]: boolean }
+  const [checkStates, setCheckStates] = useState<Record<string, boolean>>({})
+  const [checkLoading, setCheckLoading] = useState<Record<string, boolean>>({})
 
   // Filters
   const [activeTab, setActiveTab] = useState<ApplicationType | "ALL">("ALL")
@@ -74,8 +80,52 @@ export default function AdminRequestsPage() {
     applyFilters()
   }, [applications, activeTab, statusFilter, areaFilter, searchQuery, dateFrom, dateTo, sortField, sortDirection])
 
+  // 체크 상태 초기화 (applications 로드 시)
+  useEffect(() => {
+    if (applications.length > 0 && token) {
+      // 현재 로그인 유저의 체크 여부를 한번에 가져오기
+      applications.forEach((app) => {
+        fetch(`/api/admin/requests/check?application_id=${app.id}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+          .then((r) => r.json())
+          .then((data) => {
+            if (data.my_check) {
+              setCheckStates((prev) => ({ ...prev, [String(app.id)]: !!data.my_check.checked }))
+            }
+          })
+          .catch(() => {})
+      })
+    }
+  }, [applications, token])
+
+  const handleCheck = async (applicationId: string, checked: boolean) => {
+    if (!token) return
+    setCheckLoading((prev) => ({ ...prev, [applicationId]: true }))
+    try {
+      await fetch("/api/admin/requests/check", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ application_id: Number(applicationId), checked }),
+      })
+      setCheckStates((prev) => ({ ...prev, [applicationId]: checked }))
+    } catch {
+      toast({ title: "오류", description: "확인 처리 중 오류가 발생했습니다", variant: "destructive" })
+    } finally {
+      setCheckLoading((prev) => ({ ...prev, [applicationId]: false }))
+    }
+  }
+
   const applyFilters = () => {
     let filtered = applications
+
+    // 역할 기반 필터링: manager는 contact_name = 본인 이름인 것만
+    if (user?.role === "manager" && user?.name) {
+      filtered = filtered.filter((app) => {
+        const contactName = (app.contact_name || "").split(">")[0].trim()
+        return contactName === user.name
+      })
+    }
 
     // Type filter by receipt number prefix
     if (activeTab !== "ALL") {
@@ -473,6 +523,7 @@ export default function AdminRequestsPage() {
                               )}
                             </button>
                           </TableHead>
+                          <TableHead className="min-w-[70px] text-white/80 font-bold">확인</TableHead>
                           <TableHead className="min-w-[120px] text-white/80 font-bold">상세보기</TableHead>
                         </TableRow>
                       </TableHeader>
@@ -586,6 +637,18 @@ export default function AdminRequestsPage() {
                                     return label || originalStatus;
                                   })()}
                                 </span>
+                              </TableCell>
+                              <TableCell>
+                                <div className="flex items-center justify-center">
+                                  <Checkbox
+                                    checked={!!checkStates[String(application.id)]}
+                                    disabled={!!checkLoading[String(application.id)]}
+                                    onCheckedChange={(checked) =>
+                                      handleCheck(String(application.id), !!checked)
+                                    }
+                                    className="w-5 h-5 border-white/30 data-[state=checked]:bg-amber-500 data-[state=checked]:border-amber-500"
+                                  />
+                                </div>
                               </TableCell>
                               <TableCell>
                                 <div className="flex items-center gap-2">
