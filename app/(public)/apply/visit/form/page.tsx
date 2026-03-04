@@ -637,16 +637,6 @@ export default function VisitFormPage() {
           <h2 className="text-4xl md:text-5xl font-black mb-2 text-white">{t("방문 신청서 작성", "Visit Application Form")}</h2>
           <p className="text-white/40 text-sm mb-12">{t("방문 정보를 입력해주세요", "Please fill in your visit information")}</p>
 
-          {/* 상단 타이틀 섹션 */}
-          <div className="text-center mb-8">
-            <h2 className="text-4xl md:text-5xl font-black mb-3 text-white tracking-tight">
-              {t("방문 신청서 작성", "Visit Application Form")}
-            </h2>
-            <p className="text-white/40 text-base font-medium">
-              {t("방문 정보를 입력해주세요", "Please fill in your visit information")}
-            </p>
-          </div>
-
           {/* 개선된 필수 안내 섹션 (불필요한 라벨 제거 및 레이아웃 최적화) */}
           <div className="max-w-4xl mx-auto mb-12">
             <div className="relative overflow-hidden bg-blue-500/10 backdrop-blur-md border border-blue-400/30 rounded-[32px] p-8 md:p-10 group hover:border-blue-400/50 transition-all duration-500">
