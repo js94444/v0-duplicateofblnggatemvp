@@ -53,8 +53,8 @@ export function ApplicationDetailModal({ application, open, loading = false, onC
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      {/* 모달 사이즈 대폭 확장: max-w-[60vw] 및 최대 1600px 제한 */}
-      <DialogContent className="max-w-[60vw] xl:max-w-[1400px] max-h-[92vh] overflow-hidden flex flex-col bg-black/95 border border-white/20 text-white p-0 shadow-2xl backdrop-blur-2xl">
+      {/* 모달 사이즈 대폭 확장: max-w-[60vw] 및 최대 1200px 제한 */}
+      <DialogContent className="max-w-[60vw] xl:max-w-[1200px] max-h-[92vh] overflow-hidden flex flex-col bg-black/95 border border-white/20 text-white p-0 shadow-2xl backdrop-blur-2xl">
 
         {/* 헤더 섹션: 패딩 강화 */}
         <DialogHeader className="flex-shrink-0 border-b border-white/10 p-8 bg-white/5">
