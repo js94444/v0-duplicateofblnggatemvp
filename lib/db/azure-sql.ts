@@ -1542,7 +1542,7 @@ export class AzureSqlDB {
 
   // ─── QR 출입권 관리 ────────────────────────────────────
 
-  /** 고유����� pass_receipt (QR 코드) 생성 */
+  /** ���유����� pass_receipt (QR 코드) 생성 */
   static generatePassReceipt(): string {
     // 형식: QR-YYYYMMDD-XXXXXX (6글자 랜덤)
     const date = new Date()
@@ -1704,5 +1704,28 @@ export class AzureSqlDB {
         WHERE LOWER(scan_site) = LOWER(@scan_site) OR LOWER(@scan_site) = 'all'
       `)
     return result.recordset[0] || { total: 0, entryCount: 0, exitCount: 0, allowCount: 0, denyCount: 0 }
+  }
+
+  /** 보안담당자 계정의 전화번호 목록 조회 (role = 'security') */
+  static async getSecurityAccountPhones(): Promise<string[]> {
+    const dbPool = await getPool()
+    const result = await dbPool.request()
+      .query(`
+        SELECT phone FROM admin_accounts
+        WHERE role = 'security' AND is_active = 1 AND phone IS NOT NULL AND phone <> ''
+      `)
+    return result.recordset.map((r: any) => r.phone)
+  }
+
+  /** 신청 ID로 동행인 전화번호 목록 조회 */
+  static async getCompanionPhonesByApplicationId(applicationId: string): Promise<string[]> {
+    const dbPool = await getPool()
+    const result = await dbPool.request()
+      .input('application_id', sql.BigInt, applicationId)
+      .query(`
+        SELECT phone FROM visit_companions
+        WHERE application_id = @application_id AND phone IS NOT NULL AND phone <> ''
+      `)
+    return result.recordset.map((r: any) => r.phone)
   }
 }

@@ -17,32 +17,35 @@ export async function POST(request: Request) {
       submission_ip: clientIp
     })
 
-    // SMS 발송 (신청자에게 접수 확인 문자)
-    const visitorPhone = body.visitor_phone || body.contact_phone
-    if (visitorPhone) {
-      try {
-        const baseUrl = process.env.NEXT_PUBLIC_APP_URL || ""
-        const statusUrl = baseUrl ? `${baseUrl}/status/${result.application_number}` : ""
-        
-        const smsMessage = getSubmissionSmsText({
-          receipt: result.application_number || result.receipt || "N/A",
-          visitor_name: body.visitor_name || body.name || "",
-          visitor_phone: visitorPhone,
-          visitor_organization: body.visitor_organization || body.organization || "",
-          visit_start_date: body.visit_start_date || body.visit_datetime || "",
-          visit_end_date: body.visit_end_date || body.visit_datetime || "",
-          access_area: body.access_area || "",
-          visit_purpose: body.visit_purpose || body.purpose || "",
-          status: "pending",
-          companionsCount: body.companions?.length || 0,
-          statusUrl: statusUrl,
-        })
+    // SMS 발송 (보안담당자 + 담당자에게 접수 알림)
+    try {
+      const smsMessage = getSubmissionSmsText({
+        receipt: result.application_number || result.receipt || "N/A",
+        visitor_name: body.visitor_name || body.name || "",
+        visitor_phone: body.visitor_phone || body.contact_phone || "",
+        visitor_organization: body.visitor_organization || body.organization || "",
+        visit_start_date: body.visit_start_date || body.visit_datetime || "",
+        visit_end_date: body.visit_end_date || body.visit_datetime || "",
+        access_area: body.access_area || "",
+        visit_purpose: body.visit_purpose || body.purpose || "",
+        status: "pending",
+        companionsCount: body.companions?.length || 0,
+      })
 
-        await sendSMS({ to: visitorPhone, message: smsMessage })
-      } catch (smsError) {
-        console.error("[v0] SMS 발송 실패 (신청 접수는 정상 처리됨):", smsError)
-        // SMS 실패해도 신청 접수는 성공으로 처리
-      }
+      // 보안담당자 전화번호 목록 조회
+      const securityPhones = await AzureSqlDB.getSecurityAccountPhones()
+
+      // 담당자 전화번호 (contact_mobile 또는 contact_phone)
+      const contactPhone = body.contact_mobile || body.contact_phone
+      const recipients = new Set<string>([...securityPhones])
+      if (contactPhone) recipients.add(contactPhone)
+
+      // 수신자 전체에게 발송
+      await Promise.allSettled(
+        Array.from(recipients).map((phone) => sendSMS({ to: phone, message: smsMessage }))
+      )
+    } catch (smsError) {
+      console.error("[v0] SMS 발송 실패 (신청 접수는 정상 처리됨):", smsError)
     }
 
     return NextResponse.json(
