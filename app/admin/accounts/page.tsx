@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useMemo } from "react"
 import useSWR from "swr"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -8,10 +8,25 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { Checkbox } from "@/components/ui/checkbox"
 import { useAdminAuth } from "@/hooks/use-admin-auth"
 import { useToast } from "@/hooks/use-toast"
 import { useRouter } from "next/navigation"
-import { Plus, Pencil, Trash2, KeyRound, RefreshCw } from "lucide-react"
+import { Plus, Pencil, Trash2, KeyRound, RefreshCw, ShieldCheck } from "lucide-react"
+
+// 전체 페이지 목록
+const ALL_PAGES = [
+  { path: "/admin/dashboard", name: "대시보드" },
+  { path: "/admin/requests",  name: "신청 관리" },
+  { path: "/admin/calendar",  name: "방문 캘린더" },
+  { path: "/admin/qr",        name: "QR 출입현황" },
+  { path: "/admin/accounts",  name: "계정 관리" },
+]
+
+const EDITABLE_ROLES = [
+  { role: "security", label: "특수경비대" },
+  { role: "manager",  label: "담당자" },
+]
 
 const ROLE_LABELS: Record<string, string> = {
   super_admin: "슈퍼어드민",
@@ -51,16 +66,57 @@ export default function AdminAccountsPage() {
   const [newPassword, setNewPassword] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
 
+  const [permSaving, setPermSaving] = useState<string | null>(null)
+
   const fetcher = (url: string) =>
     fetch(url, { headers: { Authorization: `Bearer ${token}` } })
       .then((r) => r.json())
       .then((d) => d.data)
+
+  const permFetcher = (url: string) =>
+    fetch(url, { headers: { Authorization: `Bearer ${token}` } })
+      .then((r) => r.json())
+      .then((d) => d.permissions || [])
 
   const { data: accounts = [], isLoading, mutate } = useSWR<Account[]>(
     token ? "/api/admin/accounts" : null,
     fetcher,
     { revalidateOnFocus: false }
   )
+
+  const { data: permissions = [], mutate: mutatePerm } = useSWR<any[]>(
+    token ? ["/api/admin/permissions", token] : null,
+    ([url]: [string]) => permFetcher(url),
+    { revalidateOnFocus: false }
+  )
+
+  // 역할별 권한 맵: { security: { "/admin/dashboard": true, ... }, manager: { ... } }
+  const permMap = useMemo(() => {
+    const map: Record<string, Record<string, boolean>> = {}
+    for (const p of permissions) {
+      if (!map[p.role]) map[p.role] = {}
+      map[p.role][p.page_path] = !!p.allowed
+    }
+    return map
+  }, [permissions])
+
+  const handlePermChange = async (role: string, pagePath: string, allowed: boolean) => {
+    setPermSaving(`${role}:${pagePath}`)
+    try {
+      const res = await fetch("/api/admin/permissions", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ role, page_path: pagePath, allowed }),
+      })
+      if (!res.ok) throw new Error("권한 저장 실패")
+      mutatePerm()
+      toast({ title: "권한이 저장되었습니다" })
+    } catch (e: any) {
+      toast({ title: "저장 실패", description: e.message, variant: "destructive" })
+    } finally {
+      setPermSaving(null)
+    }
+  }
 
   if (user?.role !== "super_admin") {
     return (
@@ -184,6 +240,57 @@ export default function AdminAccountsPage() {
               <Plus size={16} className="mr-2" />
               계정 생성
             </Button>
+          </div>
+        </div>
+
+        {/* 역할별 페이지 접근 권한 설정 */}
+        <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-[40px] p-8 shadow-2xl">
+          <div className="flex items-center gap-3 mb-6">
+            <ShieldCheck size={20} className="text-amber-500" />
+            <div>
+              <h2 className="text-lg font-black text-white">역할별 페이지 접근 권한</h2>
+              <p className="text-xs text-white/40 mt-0.5">슈퍼어드민 권한은 항상 전체 접근이 허용됩니다</p>
+            </div>
+          </div>
+
+          <div className="overflow-x-auto rounded-2xl border border-white/10">
+            <Table>
+              <TableHeader className="bg-white/5">
+                <TableRow className="border-white/10 hover:bg-transparent">
+                  <TableHead className="text-white/80 font-bold min-w-[160px]">페이지</TableHead>
+                  <TableHead className="text-white/80 font-bold text-center">슈퍼어드민</TableHead>
+                  {EDITABLE_ROLES.map(({ role, label }) => (
+                    <TableHead key={role} className="text-white/80 font-bold text-center">{label}</TableHead>
+                  ))}
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {ALL_PAGES.map(({ path, name }) => (
+                  <TableRow key={path} className="border-white/5 hover:bg-white/5 transition-colors">
+                    <TableCell className="text-white font-semibold">{name}</TableCell>
+                    {/* 슈퍼어드민은 항상 허용, 비활성 체크박스 */}
+                    <TableCell className="text-center">
+                      <Checkbox checked disabled className="w-5 h-5 border-amber-500/50 data-[state=checked]:bg-amber-500 data-[state=checked]:border-amber-500 opacity-60" />
+                    </TableCell>
+                    {EDITABLE_ROLES.map(({ role }) => {
+                      const key = `${role}:${path}`
+                      const isChecked = permMap[role]?.[path] ?? false
+                      const isSaving = permSaving === key
+                      return (
+                        <TableCell key={role} className="text-center">
+                          <Checkbox
+                            checked={isChecked}
+                            disabled={isSaving}
+                            onCheckedChange={(checked) => handlePermChange(role, path, !!checked)}
+                            className="w-5 h-5 border-white/30 data-[state=checked]:bg-amber-500 data-[state=checked]:border-amber-500"
+                          />
+                        </TableCell>
+                      )
+                    })}
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
           </div>
         </div>
 

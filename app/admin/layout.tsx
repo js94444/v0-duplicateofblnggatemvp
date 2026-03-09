@@ -3,48 +3,86 @@
 import type React from "react"
 import Link from "next/link"
 import Image from "next/image"
-import { useEffect } from "react"
+import { useEffect, useMemo } from "react"
 import { useRouter, usePathname } from "next/navigation"
+import useSWR from "swr"
 import { AdminAuthProvider, useAdminAuth } from "@/hooks/use-admin-auth"
 import { Button } from "@/components/ui/button"
-import { Home, LogOut, LayoutDashboard, FileText, Calendar, Users } from "lucide-react"
+import { Home, LogOut, LayoutDashboard, FileText, Calendar, Users, QrCode } from "lucide-react"
 
 const bgStyle = {
   backgroundImage: "url('/images/lng-terminal-bg.jpg')",
-  filter: 'brightness(0.3) blur(5px)'
+  filter: "brightness(0.3) blur(5px)",
 }
 
+// 전체 페이지 목록 (아이콘, 경로, 이름 정의)
+const ALL_PAGES = [
+  { path: "/admin/dashboard", name: "대시보드",    icon: LayoutDashboard },
+  { path: "/admin/requests",  name: "신청 관리",   icon: FileText },
+  { path: "/admin/calendar",  name: "방문 캘린더", icon: Calendar },
+  { path: "/admin/qr",        name: "QR 출입현황", icon: QrCode },
+  { path: "/admin/accounts",  name: "계정 관리",   icon: Users },
+]
+
 function AdminLayoutContent({ children }: { children: React.ReactNode }) {
-  const { user, logout, isLoading } = useAdminAuth()
+  const { user, logout, isLoading, token } = useAdminAuth()
   const router = useRouter()
   const pathname = usePathname()
 
+  // 권한 목록 조회 (로그인 상태일 때만)
+  const { data: permData } = useSWR(
+    user && token ? ["/api/admin/permissions", token] : null,
+    ([url, t]) =>
+      fetch(url, { headers: { Authorization: `Bearer ${t}` } }).then((r) => r.json()),
+    { revalidateOnFocus: false }
+  )
+
+  // 허용된 페이지 경로 Set
+  const allowedPaths = useMemo(() => {
+    if (!user) return new Set<string>()
+    if (user.role === "super_admin") return new Set(ALL_PAGES.map((p) => p.path))
+    if (!permData?.permissions) return new Set<string>()
+    return new Set<string>(
+      permData.permissions
+        .filter((p: any) => p.allowed)
+        .map((p: any) => p.page_path as string)
+    )
+  }, [user, permData])
+
+  // 로그인 안 됐으면 로그인 페이지로
   useEffect(() => {
     if (!isLoading && !user && pathname !== "/admin/login") {
       router.push("/admin/login")
     }
   }, [user, isLoading, pathname, router])
 
+  // 권한 없는 페이지 직접 접근 시 대시보드로 리다이렉트
+  useEffect(() => {
+    if (!user || pathname === "/admin/login" || !permData) return
+    if (user.role === "super_admin") return
+    const isProtected = ALL_PAGES.some((p) => pathname.startsWith(p.path))
+    if (isProtected && !allowedPaths.has(pathname)) {
+      router.push("/admin/dashboard")
+    }
+  }, [user, pathname, allowedPaths, permData, router])
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-4 border-amber-500 border-t-transparent"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-4 border-amber-500 border-t-transparent" />
       </div>
     )
   }
 
-  if (!user && pathname !== "/admin/login") {
-    return null
-  }
+  if (!user && pathname !== "/admin/login") return null
+  if (pathname === "/admin/login") return <>{children}</>
 
-  if (pathname === "/admin/login") {
-    return <>{children}</>
-  }
+  // 허용된 페이지만 네비에 표시
+  const visiblePages = ALL_PAGES.filter((p) => allowedPaths.has(p.path))
 
   return (
     <div className="min-h-screen bg-black text-white font-sans relative overflow-hidden">
-      
-      {/* Background Layer */}
+      {/* Background */}
       <div className="fixed inset-0 z-0">
         <div className="absolute inset-0 bg-cover bg-center" style={bgStyle} />
         <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-transparent to-black/90" />
@@ -71,10 +109,14 @@ function AdminLayoutContent({ children }: { children: React.ReactNode }) {
             <div className="text-right hidden sm:block">
               <p className="text-sm font-bold text-white">{user?.name}</p>
               <p className="text-xs text-white/40">
-                {user?.role === "super_admin" ? "슈퍼어드민" : user?.role === "security" ? "특수경비대" : "담당자"}
+                {user?.role === "super_admin"
+                  ? "슈퍼어드민"
+                  : user?.role === "security"
+                  ? "특수경비대"
+                  : "담당자"}
               </p>
             </div>
-            <Button 
+            <Button
               onClick={logout}
               className="bg-white/10 hover:bg-white/20 border border-white/20 text-white font-bold px-4 py-2 rounded-xl transition-all"
             >
@@ -90,7 +132,7 @@ function AdminLayoutContent({ children }: { children: React.ReactNode }) {
         <div className="container mx-auto px-6">
           <div className="flex gap-2 py-3">
             <Link href="/">
-              <Button 
+              <Button
                 variant="ghost"
                 className="text-white/60 hover:text-white hover:bg-white/10 font-bold rounded-lg transition-all"
               >
@@ -98,60 +140,21 @@ function AdminLayoutContent({ children }: { children: React.ReactNode }) {
                 메인으로
               </Button>
             </Link>
-            <Link href="/admin/dashboard">
-              <Button 
-                variant="ghost"
-                className={`font-bold rounded-lg transition-all ${
-                  pathname === "/admin/dashboard" 
-                    ? "bg-amber-500 text-black hover:bg-amber-600 hover:text-black" 
-                    : "text-white/60 hover:text-white hover:bg-white/10"
-                }`}
-              >
-                <LayoutDashboard size={16} className="mr-2" />
-                대시보드
-              </Button>
-            </Link>
-            <Link href="/admin/requests">
-              <Button 
-                variant="ghost"
-                className={`font-bold rounded-lg transition-all ${
-                  pathname === "/admin/requests" 
-                    ? "bg-amber-500 text-black hover:bg-amber-600 hover:text-black" 
-                    : "text-white/60 hover:text-white hover:bg-white/10"
-                }`}
-              >
-                <FileText size={16} className="mr-2" />
-                신청 관리
-              </Button>
-            </Link>
-            <Link href="/admin/calendar">
-              <Button 
-                variant="ghost"
-                className={`font-bold rounded-lg transition-all ${
-                  pathname === "/admin/calendar" 
-                    ? "bg-amber-500 text-black hover:bg-amber-600 hover:text-black" 
-                    : "text-white/60 hover:text-white hover:bg-white/10"
-                }`}
-              >
-                <Calendar size={16} className="mr-2" />
-                방문 캘린더
-              </Button>
-            </Link>
-            {user?.role === "super_admin" && (
-              <Link href="/admin/accounts">
+            {visiblePages.map(({ path, name, icon: Icon }) => (
+              <Link key={path} href={path}>
                 <Button
                   variant="ghost"
                   className={`font-bold rounded-lg transition-all ${
-                    pathname === "/admin/accounts"
+                    pathname === path || pathname.startsWith(path + "/")
                       ? "bg-amber-500 text-black hover:bg-amber-600 hover:text-black"
                       : "text-white/60 hover:text-white hover:bg-white/10"
                   }`}
                 >
-                  <Users size={16} className="mr-2" />
-                  계정 관리
+                  <Icon size={16} className="mr-2" />
+                  {name}
                 </Button>
               </Link>
-            )}
+            ))}
           </div>
         </div>
       </nav>
