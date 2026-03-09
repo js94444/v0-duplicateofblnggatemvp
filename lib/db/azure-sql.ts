@@ -1367,7 +1367,7 @@ export class AzureSqlDB {
       `)
   }
 
-  /** 특정 역할이 특정 페이지에 접근 가능한지 확인 */
+  /** 특정 역할이 특정 페이지에 접근 가���한지 확인 */
   static async canRoleAccessPage(role: string, pagePath: string): Promise<boolean> {
     if (role === 'super_admin') return true
     const dbPool = await getPool()
@@ -1682,7 +1682,7 @@ export class AzureSqlDB {
           p.application_id
         FROM visit_pass_scans s
         LEFT JOIN visit_passes p ON s.pass_id = p.pass_id
-        WHERE s.scan_site = @scan_site OR @scan_site = 'ALL'
+        WHERE LOWER(s.scan_site) = LOWER(@scan_site) OR LOWER(@scan_site) = 'all'
         ORDER BY s.scanned_at DESC
       `)
     return result.recordset
@@ -1701,7 +1701,7 @@ export class AzureSqlDB {
           SUM(CASE WHEN result = 'ALLOW' THEN 1 ELSE 0 END) as allowCount,
           SUM(CASE WHEN result = 'DENY' THEN 1 ELSE 0 END) as denyCount
         FROM visit_pass_scans
-        WHERE scan_site = @scan_site OR @scan_site = 'ALL'
+        WHERE LOWER(scan_site) = LOWER(@scan_site) OR LOWER(@scan_site) = 'all'
       `)
     return result.recordset[0] || { total: 0, entryCount: 0, exitCount: 0, allowCount: 0, denyCount: 0 }
   }
