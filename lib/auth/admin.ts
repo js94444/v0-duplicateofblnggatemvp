@@ -48,7 +48,7 @@ export async function hashPassword(plain: string): Promise<string> {
   return bcrypt.hash(plain, 10)
 }
 
-/** AdminUser를 Base64 JWT 토큰으로 인코딩 (서명 포함) */
+/** AdminUser를 JSON 토큰으로 인코딩 — 한글 안전하게 encodeURIComponent 후 base64 */
 export function generateAdminToken(user: AdminUser): string {
   const payload = {
     id: user.id,
@@ -59,13 +59,14 @@ export function generateAdminToken(user: AdminUser): string {
     exp: Date.now() + TOKEN_EXPIRY_MS,
     sig: JWT_SECRET,
   }
-  return Buffer.from(JSON.stringify(payload), "utf8").toString("base64")
+  // encodeURIComponent로 한글 포함 모든 문자를 ASCII로 변환 후 base64
+  return Buffer.from(encodeURIComponent(JSON.stringify(payload))).toString("base64")
 }
 
 /** 토큰을 검증해 AdminUser 반환 (만료 또는 서명 불일치 시 null) */
 export function validateAdminToken(token: string): AdminUser | null {
   try {
-    const decoded = JSON.parse(Buffer.from(token, "base64").toString("utf8"))
+    const decoded = JSON.parse(decodeURIComponent(Buffer.from(token, "base64").toString()))
     if (decoded.exp < Date.now()) return null
     if (decoded.sig !== JWT_SECRET) return null
     return {

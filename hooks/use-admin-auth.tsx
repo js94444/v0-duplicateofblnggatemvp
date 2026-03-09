@@ -32,9 +32,9 @@ export function AdminAuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const savedToken = localStorage.getItem(STORAGE_KEY)
     if (savedToken) {
-      // 토큰에서 유저 정보 복원 (브라우저 환경: atob 사용)
+      // 토큰에서 유저 정보 복원 — encodeURIComponent 인코딩된 base64 디코딩
       try {
-        const decoded = JSON.parse(atob(savedToken))
+        const decoded = JSON.parse(decodeURIComponent(atob(savedToken)))
         if (decoded.exp > Date.now()) {
           setToken(savedToken)
           setUser({
