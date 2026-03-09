@@ -22,11 +22,9 @@ export async function validateAdminCredentials(
 ): Promise<AdminUser | null> {
   try {
     const account = await AzureSqlDB.getAccountByUsername(username)
-    console.log("[v0] account found:", account ? { username: account.username, role: account.role, hash_length: account.password_hash?.length } : null)
     if (!account) return null
 
     const isValid = await bcrypt.compare(password, account.password_hash)
-    console.log("[v0] bcrypt compare result:", isValid, "| hash:", account.password_hash?.substring(0, 20))
     if (!isValid) return null
 
     // 마지막 로그인 시각 업데이트

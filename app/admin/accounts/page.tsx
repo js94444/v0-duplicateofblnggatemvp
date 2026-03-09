@@ -90,7 +90,7 @@ export default function AdminAccountsPage() {
 
   const { data: permissions = [], mutate: mutatePerm } = useSWR<any[]>(
     token ? ["/api/admin/permissions", token] : null,
-    ([url]: [string]) => permFetcher(url),
+    ([url, t]: [string, string]) => fetch(url, { headers: { Authorization: `Bearer ${t}` } }).then((r) => r.json()).then((d) => d.permissions || []),
     { revalidateOnFocus: false }
   )
 
