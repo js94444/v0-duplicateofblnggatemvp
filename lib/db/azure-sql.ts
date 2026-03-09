@@ -76,12 +76,11 @@ async function createIndexesIfNotExists(p: sql.ConnectionPool): Promise<void> {
   console.log('[v0] Performance indexes verified/created')
 }
 
-// 한국 시간(UTC+9) 생성 함수
+// 한국 시간(Asia/Seoul, UTC+9) 생성 함수
 function getKoreaTime(): Date {
-  const now = new Date()
-  // UTC 시간에 9시간(한국 시간대) 추가
-  const koreaTime = new Date(now.getTime() + (9 * 60 * 60 * 1000))
-  return koreaTime
+  // Intl을 사용해 현재 시간을 한국 시간으로 변환
+  const koreaTimeStr = new Date().toLocaleString('en-US', { timeZone: 'Asia/Seoul' })
+  return new Date(koreaTimeStr)
 }
 
 // 접수번호 생성 함수
@@ -177,7 +176,7 @@ export class AzureSqlDB {
     const dbPool = await getPool()
     
     // 유형 분류 로직
-    // 1. 출입지역이 '항만' 또는 '부두'를 포함하면 항만출입 (동행인 여부 무관)
+    // 1. 출입지역이 '항만' 또는 '부두'를 포함하면 항만출입 (동행인 여부 ��관)
     // 2. 동행인이 있으면 단체방문신청
     // 3. 기본정보만 있으면 개인방문신청
     let applicationType: Type
