@@ -513,7 +513,6 @@ export default function AdminAccountsPage() {
                 <TableRow className="border-white/10 hover:bg-transparent">
                   <TableHead className="text-white/80 font-bold">아이디</TableHead>
                   <TableHead className="text-white/80 font-bold">이름</TableHead>
-                  <TableHead className="text-white/80 font-bold">전화번호</TableHead>
                   <TableHead className="text-white/80 font-bold">권한</TableHead>
                   <TableHead className="text-white/80 font-bold">상태</TableHead>
                   <TableHead className="text-white/80 font-bold">생성일</TableHead>
@@ -524,13 +523,13 @@ export default function AdminAccountsPage() {
               <TableBody>
                 {isLoading ? (
                   <TableRow>
-                    <TableCell colSpan={8} className="text-center py-12 text-white/40">
+                    <TableCell colSpan={7} className="text-center py-12 text-white/40">
                       불러오는 중...
                     </TableCell>
                   </TableRow>
                 ) : accounts.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={8} className="text-center py-12 text-white/40">
+                    <TableCell colSpan={7} className="text-center py-12 text-white/40">
                       계정이 없습니다
                     </TableCell>
                   </TableRow>
@@ -539,7 +538,6 @@ export default function AdminAccountsPage() {
                     <TableRow key={account.account_id} className="border-white/5 hover:bg-white/5 transition-colors">
                       <TableCell className="text-white font-mono">{account.username}</TableCell>
                       <TableCell className="text-white font-semibold">{account.name}</TableCell>
-                      <TableCell className="text-white/60">{account.phone || "-"}</TableCell>
                       <TableCell>
                         <span className={`inline-flex items-center px-3 py-1 rounded-lg text-xs font-bold border ${ROLE_COLORS[account.role] || ROLE_COLORS.manager}`}>
                           {ROLE_LABELS[account.role] || account.role}
