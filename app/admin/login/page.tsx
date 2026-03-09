@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useAdminAuth } from "@/hooks/use-admin-auth"
 import { useToast } from "@/hooks/use-toast"
-import { ArrowLeft, Eye, EyeOff, Shield, KeyRound } from "lucide-react"
+import { ArrowLeft, Eye, EyeOff, Shield, KeyRound, QrCode } from "lucide-react"
 
 const bgStyle = {
   backgroundImage: "url('/images/lng-terminal-bg.jpg')",
@@ -93,6 +93,13 @@ export default function AdminLoginPage() {
         <Link href="/" className="flex items-center gap-2 text-white/50 hover:text-amber-500 transition-colors group">
           <ArrowLeft size={20} className="group-hover:-translate-x-1 transition-transform" />
           <span className="text-sm font-bold tracking-widest uppercase">Back to Home</span>
+        </Link>
+      </div>
+
+      <div className="absolute top-8 right-8 z-20">
+        <Link href="/scanner" className="flex items-center gap-2 text-white/50 hover:text-amber-500 transition-colors group">
+          <QrCode size={20} className="group-hover:scale-110 transition-transform" />
+          <span className="text-sm font-bold tracking-widest uppercase">QR Scanner</span>
         </Link>
       </div>
 
