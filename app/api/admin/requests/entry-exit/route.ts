@@ -3,8 +3,29 @@ import { AzureSqlDB } from "@/lib/db/azure-sql"
 import { ApplicationStatus } from "@/lib/types"
 import { sendEmail } from "@/lib/email/sender"
 import { getApprovalEmailTemplate, getRejectionEmailTemplate } from "@/lib/email/templates"
-import { getApprovalSmsText, getRejectionSmsText } from "@/lib/sms/messages"
-import { sendSms, notifyAdminSmsFailure, normalizePhone } from "@/lib/sms/solapi"
+import { getApprovalSmsText, getRejectionSmsText } from "@/lib/messages/sms-templates"
+import { sendSMS } from "@/lib/services/solapi"
+
+// 전화번호 정규화 함수
+function normalizePhone(phone: string | null | undefined): string {
+  if (!phone) return ""
+  return phone.replace(/[^0-9]/g, "")
+}
+
+// SMS 실패 시 관리자 알림 (로그만 남김)
+async function notifyAdminSmsFailure(error: string, context: any) {
+  console.error("[v0] SMS 발송 실패:", error, context)
+}
+
+// SMS 발송 wrapper (기존 코드와 호환)
+async function sendSms(to: string, message: string): Promise<{ success: boolean; error?: string }> {
+  try {
+    await sendSMS({ to, message })
+    return { success: true }
+  } catch (e: any) {
+    return { success: false, error: e.message }
+  }
+}
 
 export const runtime = 'nodejs'
 
@@ -54,21 +75,22 @@ export async function POST(request: NextRequest) {
     }
 
     const app = updatedApplication as any
+    
     // 승인 시 QR 출입권(visit_passes) 발급
+    let passReceipt: string | null = null
     if (action === "approve") {
       try {
-        await AzureSqlDB.issueVisitPassForApplication(id, "admin")
+        passReceipt = AzureSqlDB.generatePassReceipt()
+        await AzureSqlDB.createPassForApplication(id, passReceipt)
       } catch (passError) {
         console.error("[v0] Failed to issue visit pass:", passError)
         // QR 발급 실패해도 승인/알림 플로우는 계속 진행
       }
-    }
 
-    if (action === "approve") {
       const baseUrl = (process.env.NEXT_PUBLIC_APP_URL || "").replace(/\/$/, "")
-      const qrPageUrl = baseUrl ? `${baseUrl}/qr/${encodeURIComponent(app.receipt)}` : ""
+      const qrPageUrl = passReceipt && baseUrl ? `${baseUrl}/qr/${encodeURIComponent(passReceipt)}` : ""
       const approvalText = getApprovalSmsText({
-        receipt: app.receipt,
+        receipt: app.receipt || passReceipt || "N/A",
         visit_start_date: app.visit_start_date ?? app.visit_datetime,
         visit_end_date: app.visit_end_date ?? app.visit_datetime,
         access_area: app.access_area ?? "",
@@ -76,7 +98,7 @@ export async function POST(request: NextRequest) {
       })
 
       // 신청자에게 승인 문자
-      const visitorPhone = app.visitor_phone
+      const visitorPhone = app.visitor_phone || app.contact_phone
       if (normalizePhone(visitorPhone).length >= 10) {
         const smsResult = await sendSms(visitorPhone, approvalText)
         if (!smsResult.success) {
@@ -84,35 +106,6 @@ export async function POST(request: NextRequest) {
             receipt: app.receipt,
             to: visitorPhone,
             recipientType: "신청자",
-            applicationId: id,
-          })
-        }
-      }
-
-      // 동행인에게도 승인 문자 (각자 전용 QR URL: 접수번호-1, 접수번호-2 ...)
-      const companionsWithReceipt = await AzureSqlDB.getCompanionsWithPassReceiptByApplicationId(id, app.receipt)
-      const sentPhones = new Set<string>()
-      if (normalizePhone(visitorPhone).length >= 10) {
-        sentPhones.add(normalizePhone(visitorPhone))
-      }
-      for (const { phone, passReceipt } of companionsWithReceipt) {
-        const normalized = normalizePhone(phone)
-        if (normalized.length < 10 || sentPhones.has(normalized)) continue
-        sentPhones.add(normalized)
-        const companionQrPageUrl = baseUrl ? `${baseUrl}/qr/${encodeURIComponent(passReceipt)}` : ""
-        const companionApprovalText = getApprovalSmsText({
-          receipt: app.receipt,
-          visit_start_date: app.visit_start_date ?? app.visit_datetime,
-          visit_end_date: app.visit_end_date ?? app.visit_datetime,
-          access_area: app.access_area ?? "",
-          qr_page_url: companionQrPageUrl || undefined,
-        })
-        const smsResult = await sendSms(phone, companionApprovalText)
-        if (!smsResult.success) {
-          await notifyAdminSmsFailure(smsResult.error ?? "알 수 없음", {
-            receipt: passReceipt,
-            to: phone,
-            recipientType: "동행인",
             applicationId: id,
           })
         }
