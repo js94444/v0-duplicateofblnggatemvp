@@ -78,7 +78,7 @@ export default function AdminRequestsPage() {
 
   useEffect(() => {
     applyFilters()
-  }, [applications, activeTab, statusFilter, areaFilter, searchQuery, dateFrom, dateTo, sortField, sortDirection])
+  }, [applications, activeTab, statusFilter, areaFilter, searchQuery, dateFrom, dateTo, sortField, sortDirection, user])
 
   // 체크 상태 초기화 (applications 로드 시)
   useEffect(() => {
@@ -119,11 +119,14 @@ export default function AdminRequestsPage() {
   const applyFilters = () => {
     let filtered = applications
 
-    // 역할 기반 필터링: manager는 contact_name = 본인 이름인 것만
+    // 역할 기반 필터링: manager는 contact_name에 본인 이름이 포함된 것만
     if (user?.role === "manager" && user?.name) {
+      const myName = user.name.trim()
       filtered = filtered.filter((app) => {
-        const contactName = (app.contact_name || "").split(">")[0].trim()
-        return contactName === user.name
+        const raw = (app.contact_name || "").trim()
+        // "김인호>기술혁신팀" 또는 "김인호" 형식 모두 대응
+        const namepart = raw.split(">")[0].trim()
+        return namepart === myName || raw === myName || raw.startsWith(myName + ">")
       })
     }
 

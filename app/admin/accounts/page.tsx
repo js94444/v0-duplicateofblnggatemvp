@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useMemo } from "react"
 import useSWR from "swr"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -8,10 +8,26 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { Checkbox } from "@/components/ui/checkbox"
 import { useAdminAuth } from "@/hooks/use-admin-auth"
 import { useToast } from "@/hooks/use-toast"
 import { useRouter } from "next/navigation"
-import { Plus, Pencil, Trash2, KeyRound, RefreshCw } from "lucide-react"
+import { Plus, Pencil, Trash2, KeyRound, RefreshCw, ShieldCheck, Upload, CheckCircle2, XCircle, AlertCircle } from "lucide-react"
+import { useRef } from "react"
+
+// 전체 페이지 목록
+const ALL_PAGES = [
+  { path: "/admin/dashboard", name: "대시보드" },
+  { path: "/admin/requests",  name: "신청 관리" },
+  { path: "/admin/calendar",  name: "방문 캘린더" },
+  { path: "/admin/qr",        name: "QR 출입현황" },
+  { path: "/admin/accounts",  name: "계정 관리" },
+]
+
+const EDITABLE_ROLES = [
+  { role: "security", label: "특수경비대" },
+  { role: "manager",  label: "담당자" },
+]
 
 const ROLE_LABELS: Record<string, string> = {
   super_admin: "슈퍼어드민",
@@ -51,6 +67,11 @@ export default function AdminAccountsPage() {
   const [newPassword, setNewPassword] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
 
+  const [permSaving, setPermSaving] = useState<string | null>(null)
+  const [bulkLoading, setBulkLoading] = useState(false)
+  const [bulkResult, setBulkResult] = useState<{ created: number; skipped: number; errors: number; results: any[] } | null>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
   const fetcher = (url: string) =>
     fetch(url, { headers: { Authorization: `Bearer ${token}` } })
       .then((r) => r.json())
@@ -61,6 +82,88 @@ export default function AdminAccountsPage() {
     fetcher,
     { revalidateOnFocus: false }
   )
+
+  const { data: permissions = [], mutate: mutatePerm } = useSWR<any[]>(
+    token ? ["/api/admin/permissions", token] : null,
+    ([url, t]: [string, string]) => fetch(url, { headers: { Authorization: `Bearer ${t}` } }).then((r) => r.json()).then((d) => d.permissions || []),
+    { revalidateOnFocus: false }
+  )
+
+  // 역할별 권한 맵: { security: { "/admin/dashboard": true, ... }, manager: { ... } }
+  const permMap = useMemo(() => {
+    const map: Record<string, Record<string, boolean>> = {}
+    if (!permissions || !Array.isArray(permissions)) return map
+    for (const p of permissions) {
+      if (!map[p.role]) map[p.role] = {}
+      map[p.role][p.page_path] = !!p.allowed
+    }
+    return map
+  }, [permissions])
+
+  const handleCsvUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file || !token) return
+    setBulkLoading(true)
+    setBulkResult(null)
+
+    const text = await file.text()
+    const lines = text.split("\n").map((l) => l.split(","))
+    const header = lines[0].map((h) => h.trim().toLowerCase())
+    const usernameIdx = header.indexOf("username")
+    const nameIdx     = header.indexOf("name")
+    const roleIdx     = header.indexOf("role")
+    const passwordIdx = header.indexOf("password")
+
+    if ([usernameIdx, nameIdx, roleIdx, passwordIdx].includes(-1)) {
+      toast({ title: "CSV 형식 오류", description: "username, name, role, password 컬럼이 필요합니다", variant: "destructive" })
+      setBulkLoading(false)
+      return
+    }
+
+    const accounts = lines.slice(1)
+      .filter((row) => row[usernameIdx]?.trim() && row[nameIdx]?.trim())
+      .map((row) => ({
+        username: row[usernameIdx]?.trim(),
+        name:     row[nameIdx]?.trim(),
+        role:     row[roleIdx]?.trim(),
+        password: row[passwordIdx]?.trim(),
+      }))
+
+    try {
+      const res = await fetch("/api/admin/accounts/bulk", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ accounts }),
+      })
+      const data = await res.json()
+      setBulkResult(data)
+      mutate()
+      toast({ title: `완료: ${data.created}개 생성, ${data.skipped}개 건너뜀` })
+    } catch (e: any) {
+      toast({ title: "오류", description: e.message, variant: "destructive" })
+    } finally {
+      setBulkLoading(false)
+      if (fileInputRef.current) fileInputRef.current.value = ""
+    }
+  }
+
+  const handlePermChange = async (role: string, pagePath: string, allowed: boolean) => {
+    setPermSaving(`${role}:${pagePath}`)
+    try {
+      const res = await fetch("/api/admin/permissions", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ role, page_path: pagePath, allowed }),
+      })
+      if (!res.ok) throw new Error("권한 저장 실패")
+      mutatePerm()
+      toast({ title: "권한이 저장되었습니다" })
+    } catch (e: any) {
+      toast({ title: "저장 실패", description: e.message, variant: "destructive" })
+    } finally {
+      setPermSaving(null)
+    }
+  }
 
   if (user?.role !== "super_admin") {
     return (
@@ -177,13 +280,118 @@ export default function AdminAccountsPage() {
               <RefreshCw size={15} className={`mr-2 ${isLoading ? "animate-spin" : ""}`} />
               새로고침
             </Button>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".csv"
+              className="hidden"
+              onChange={handleCsvUpload}
+            />
             <Button
-              onClick={() => setCreateOpen(true)}
-              className="bg-amber-500 hover:bg-amber-600 text-black font-bold px-5 py-2 rounded-xl transition-all shadow-[0_0_20px_rgba(245,158,11,0.2)]"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={bulkLoading}
+              className="bg-white/10 hover:bg-white/20 border border-white/20 text-white font-bold rounded-xl px-5 py-2.5 flex items-center gap-2"
             >
-              <Plus size={16} className="mr-2" />
-              계정 생성
+              <Upload size={18} />
+              {bulkLoading ? "처리 중..." : "CSV 일괄 업로드"}
             </Button>
+            <Button
+              onClick={() => { setForm({ username: "", name: "", password: "", role: "manager" }); setCreateOpen(true) }}
+              className="bg-amber-500 hover:bg-amber-400 text-black font-bold rounded-xl px-5 py-2.5 flex items-center gap-2"
+            >
+              <Plus size={18} />
+              계정 추가
+            </Button>
+          </div>
+        </div>
+
+        {/* CSV 업로드 결과 */}
+        {bulkResult && (
+          <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-[40px] p-8 shadow-2xl space-y-4">
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-black text-white">CSV 업로드 결과</h2>
+              <button onClick={() => setBulkResult(null)} className="text-white/40 hover:text-white transition-colors">
+                <XCircle size={18} />
+              </button>
+            </div>
+            <div className="flex gap-4 flex-wrap">
+              <div className="flex items-center gap-2 bg-green-500/10 border border-green-500/20 rounded-2xl px-5 py-3">
+                <CheckCircle2 size={16} className="text-green-400" />
+                <span className="text-green-300 font-bold">{bulkResult.created}개 생성</span>
+              </div>
+              <div className="flex items-center gap-2 bg-white/5 border border-white/10 rounded-2xl px-5 py-3">
+                <AlertCircle size={16} className="text-white/40" />
+                <span className="text-white/50 font-bold">{bulkResult.skipped}개 건너뜀</span>
+              </div>
+              {bulkResult.errors > 0 && (
+                <div className="flex items-center gap-2 bg-red-500/10 border border-red-500/20 rounded-2xl px-5 py-3">
+                  <XCircle size={16} className="text-red-400" />
+                  <span className="text-red-300 font-bold">{bulkResult.errors}개 오류</span>
+                </div>
+              )}
+            </div>
+            {/* 건너뜀/오류 항목만 표시 */}
+            {bulkResult.results.filter((r) => r.status !== "created").length > 0 && (
+              <div className="space-y-1 max-h-48 overflow-y-auto">
+                {bulkResult.results.filter((r) => r.status !== "created").map((r, i) => (
+                  <div key={i} className="flex items-center gap-3 text-sm px-2 py-1 rounded-lg bg-white/5">
+                    <span className={`font-mono font-bold ${r.status === "error" ? "text-red-400" : "text-white/40"}`}>{r.username}</span>
+                    <span className="text-white/30">{r.message}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* 역할별 페이지 접근 권한 설정 */}
+        <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-[40px] p-8 shadow-2xl">
+          <div className="flex items-center gap-3 mb-6">
+            <ShieldCheck size={20} className="text-amber-500" />
+            <div>
+              <h2 className="text-lg font-black text-white">역할별 페이지 접근 권한</h2>
+              <p className="text-xs text-white/40 mt-0.5">슈퍼어드민 권한은 항상 전체 접근이 허용됩니다</p>
+            </div>
+          </div>
+
+          <div className="overflow-x-auto rounded-2xl border border-white/10">
+            <Table>
+              <TableHeader className="bg-white/5">
+                <TableRow className="border-white/10 hover:bg-transparent">
+                  <TableHead className="text-white/80 font-bold min-w-[160px]">페이지</TableHead>
+                  <TableHead className="text-white/80 font-bold text-center">슈퍼어드민</TableHead>
+                  {EDITABLE_ROLES.map(({ role, label }) => (
+                    <TableHead key={role} className="text-white/80 font-bold text-center">{label}</TableHead>
+                  ))}
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {ALL_PAGES.map(({ path, name }) => (
+                  <TableRow key={path} className="border-white/5 hover:bg-white/5 transition-colors">
+                    <TableCell className="text-white font-semibold">{name}</TableCell>
+                    {/* 슈퍼어드민은 항상 허용, 비활성 체크박스 */}
+                    <TableCell className="text-center">
+                      <Checkbox checked disabled className="w-5 h-5 border-amber-500/50 data-[state=checked]:bg-amber-500 data-[state=checked]:border-amber-500 opacity-60" />
+                    </TableCell>
+                    {EDITABLE_ROLES.map(({ role }) => {
+                      const key = `${role}:${path}`
+                      const isChecked = permMap[role]?.[path] ?? false
+                      const isSaving = permSaving === key
+                      return (
+                        <TableCell key={role} className="text-center">
+                          <Checkbox
+                            checked={isChecked}
+                            disabled={isSaving}
+                            onCheckedChange={(checked) => handlePermChange(role, path, !!checked)}
+                            className="w-5 h-5 border-white/30 data-[state=checked]:bg-amber-500 data-[state=checked]:border-amber-500"
+                          />
+                        </TableCell>
+                      )
+                    })}
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
           </div>
         </div>
 

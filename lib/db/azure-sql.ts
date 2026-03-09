@@ -1320,6 +1320,67 @@ export class AzureSqlDB {
       `)
   }
 
+  // ─── 역할별 페이지 권한 ────────────────────────────────────
+
+  /** 특정 역할의 권한 목록 조회 */
+  static async getRolePermissions(role: string): Promise<any[]> {
+    const dbPool = await getPool()
+    const result = await dbPool.request()
+      .input('role', sql.NVarChar(50), role)
+      .query(`
+        SELECT id, role, page_path, page_name, allowed
+        FROM role_permissions
+        WHERE role = @role
+        ORDER BY page_path
+      `)
+    return result.recordset
+  }
+
+  /** 전체 역할 권한 목록 조회 (슈퍼어드민 관리용) */
+  static async getAllRolePermissions(): Promise<any[]> {
+    const dbPool = await getPool()
+    const result = await dbPool.request().query(`
+      SELECT id, role, page_path, page_name, allowed
+      FROM role_permissions
+      ORDER BY role, page_path
+    `)
+    return result.recordset
+  }
+
+  /** 역할별 특정 페이지 권한 업데이트 */
+  static async updateRolePermission(role: string, pagePath: string, allowed: boolean): Promise<void> {
+    const dbPool = await getPool()
+    await dbPool.request()
+      .input('role', sql.NVarChar(50), role)
+      .input('page_path', sql.NVarChar(200), pagePath)
+      .input('allowed', sql.Bit, allowed ? 1 : 0)
+      .query(`
+        MERGE role_permissions AS target
+        USING (SELECT @role AS role, @page_path AS page_path) AS source
+        ON target.role = source.role AND target.page_path = source.page_path
+        WHEN MATCHED THEN
+          UPDATE SET allowed = @allowed
+        WHEN NOT MATCHED THEN
+          INSERT (role, page_path, page_name, allowed)
+          VALUES (@role, @page_path, @page_path, @allowed);
+      `)
+  }
+
+  /** 특정 역할이 특정 페이지에 접근 가능한지 확인 */
+  static async canRoleAccessPage(role: string, pagePath: string): Promise<boolean> {
+    if (role === 'super_admin') return true
+    const dbPool = await getPool()
+    const result = await dbPool.request()
+      .input('role', sql.NVarChar(50), role)
+      .input('page_path', sql.NVarChar(200), pagePath)
+      .query(`
+        SELECT allowed FROM role_permissions
+        WHERE role = @role AND page_path = @page_path
+      `)
+    if (!result.recordset[0]) return false
+    return result.recordset[0].allowed === true
+  }
+
   // 통계 조회
   static async getApplicationStats() {
     const dbPool = await getPool()
