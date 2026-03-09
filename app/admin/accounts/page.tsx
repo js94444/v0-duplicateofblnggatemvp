@@ -12,7 +12,7 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { useAdminAuth } from "@/hooks/use-admin-auth"
 import { useToast } from "@/hooks/use-toast"
 import { useRouter } from "next/navigation"
-import { Plus, Pencil, Trash2, KeyRound, RefreshCw, ShieldCheck, Upload, CheckCircle2, XCircle, AlertCircle } from "lucide-react"
+import { Plus, Pencil, Trash2, KeyRound, RefreshCw, ShieldCheck, Upload, CheckCircle2, XCircle, AlertCircle, Phone } from "lucide-react"
 import { useRef } from "react"
 
 // 전체 페이지 목록
@@ -48,6 +48,7 @@ interface Account {
   role: string
   phone?: string
   is_active: boolean
+  is_security_contact?: boolean
   created_at: string
   last_login_at: string | null
 }
@@ -64,7 +65,7 @@ export default function AdminAccountsPage() {
 
   // 폼 상태
   const [form, setForm] = useState({ username: "", name: "", phone: "", password: "", role: "manager" })
-  const [editForm, setEditForm] = useState({ name: "", phone: "", role: "", is_active: true })
+  const [editForm, setEditForm] = useState({ name: "", role: "", is_active: true })
   const [newPassword, setNewPassword] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
 
@@ -89,6 +90,32 @@ export default function AdminAccountsPage() {
     ([url, t]: [string, string]) => fetch(url, { headers: { Authorization: `Bearer ${t}` } }).then((r) => r.json()).then((d) => d.permissions || []),
     { revalidateOnFocus: false }
   )
+
+  // 보안담당자 설정용: 슈퍼어드민 계정 목록
+  const superAdmins = useMemo(() => accounts.filter((a) => a.role === "super_admin"), [accounts])
+  const [securityContactSaving, setSecurityContactSaving] = useState<number | null>(null)
+
+  const handleSecurityContactChange = async (accountId: number, isContact: boolean, phone: string) => {
+    if (!phone && isContact) {
+      toast({ title: "전화번호를 먼저 입력해주세요", variant: "destructive" })
+      return
+    }
+    setSecurityContactSaving(accountId)
+    try {
+      const res = await fetch("/api/admin/security-contacts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ account_id: accountId, is_security_contact: isContact, phone }),
+      })
+      if (!res.ok) throw new Error("저장 실패")
+      toast({ title: isContact ? "보안담당자로 지정되었습니다" : "보안담당자에서 해제되었습니다" })
+      mutate()
+    } catch {
+      toast({ title: "저장 실패", variant: "destructive" })
+    } finally {
+      setSecurityContactSaving(null)
+    }
+  }
 
   // 역할별 권한 맵: { security: { "/admin/dashboard": true, ... }, manager: { ... } }
   const permMap = useMemo(() => {
@@ -396,6 +423,80 @@ export default function AdminAccountsPage() {
           </div>
         </div>
 
+        {/* 보안담당자 설정 */}
+        <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-[40px] p-8 shadow-2xl">
+          <div className="flex items-center gap-3 mb-6">
+            <Phone size={20} className="text-amber-500" />
+            <div>
+              <h2 className="text-lg font-black text-white">보안담당자 설정</h2>
+              <p className="text-xs text-white/40 mt-0.5">방문신청 제출 시 선택된 보안담당자에게 SMS가 발송됩니다</p>
+            </div>
+          </div>
+
+          <div className="overflow-x-auto rounded-2xl border border-white/10">
+            <Table>
+              <TableHeader className="bg-white/5">
+                <TableRow className="border-white/10 hover:bg-transparent">
+                  <TableHead className="text-white/80 font-bold w-16 text-center">지정</TableHead>
+                  <TableHead className="text-white/80 font-bold">이름</TableHead>
+                  <TableHead className="text-white/80 font-bold">아이디</TableHead>
+                  <TableHead className="text-white/80 font-bold">전화번호</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {superAdmins.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={4} className="text-center py-8 text-white/40">
+                      슈퍼어드민 계정이 없습니다
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  superAdmins.map((admin) => (
+                    <TableRow key={admin.account_id} className="border-white/5 hover:bg-white/5 transition-colors">
+                      <TableCell className="text-center">
+                        <Checkbox
+                          checked={!!admin.is_security_contact}
+                          disabled={securityContactSaving === admin.account_id}
+                          onCheckedChange={(checked) => handleSecurityContactChange(admin.account_id, !!checked, admin.phone || "")}
+                          className="w-5 h-5 border-white/30 data-[state=checked]:bg-amber-500 data-[state=checked]:border-amber-500"
+                        />
+                      </TableCell>
+                      <TableCell className="text-white font-semibold">{admin.name}</TableCell>
+                      <TableCell className="text-white/60 font-mono">{admin.username}</TableCell>
+                      <TableCell>
+                        <Input
+                          value={admin.phone || ""}
+                          placeholder="010-0000-0000"
+                          className="bg-white/5 border-white/10 text-white h-9 rounded-lg w-40"
+                          onChange={(e) => {
+                            // 로컬 상태 업데이트 (SWR 캐시 직접 수정)
+                            mutate(
+                              accounts.map((a) => a.account_id === admin.account_id ? { ...a, phone: e.target.value } : a),
+                              false
+                            )
+                          }}
+                          onBlur={async (e) => {
+                            // 포커스 아웃 시 저장
+                            if (e.target.value !== admin.phone) {
+                              try {
+                                await fetch("/api/admin/security-contacts", {
+                                  method: "POST",
+                                  headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+                                  body: JSON.stringify({ account_id: admin.account_id, phone: e.target.value }),
+                                })
+                              } catch {}
+                            }
+                          }}
+                        />
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </div>
+        </div>
+
         {/* Table */}
         <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-[40px] p-8 shadow-2xl">
           <div className="overflow-x-auto rounded-2xl border border-white/10">
@@ -451,7 +552,7 @@ export default function AdminAccountsPage() {
                         <div className="flex items-center gap-2">
                           <Button
                             size="icon"
-                            onClick={() => { setEditAccount(account); setEditForm({ name: account.name, phone: account.phone || "", role: account.role, is_active: account.is_active }) }}
+                            onClick={() => { setEditAccount(account); setEditForm({ name: account.name, role: account.role, is_active: account.is_active }) }}
                             className="w-8 h-8 bg-white/10 hover:bg-white/20 text-white/60 hover:text-white rounded-lg"
                             title="수정"
                           >
@@ -547,11 +648,6 @@ export default function AdminAccountsPage() {
               <Label className="text-white/60 text-sm font-bold">이름</Label>
               <Input value={editForm.name} onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
                 className="bg-white/5 border-white/10 text-white h-11 rounded-xl" />
-            </div>
-            <div className="space-y-2">
-              <Label className="text-white/60 text-sm font-bold">전화번호</Label>
-              <Input value={editForm.phone} onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })}
-                className="bg-white/5 border-white/10 text-white h-11 rounded-xl" placeholder="예: 010-1234-5678" />
             </div>
             <div className="space-y-2">
               <Label className="text-white/60 text-sm font-bold">권한</Label>

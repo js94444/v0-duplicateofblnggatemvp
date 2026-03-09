@@ -1706,13 +1706,13 @@ export class AzureSqlDB {
     return result.recordset[0] || { total: 0, entryCount: 0, exitCount: 0, allowCount: 0, denyCount: 0 }
   }
 
-  /** 보안담당자 계정의 전화번호 목록 조회 (role = 'security') */
+  /** 보안담당자 계정의 전화번호 목록 조회 (is_security_contact = 1) */
   static async getSecurityAccountPhones(): Promise<string[]> {
     const dbPool = await getPool()
     const result = await dbPool.request()
       .query(`
         SELECT phone FROM admin_accounts
-        WHERE role = 'security' AND is_active = 1 AND phone IS NOT NULL AND phone <> ''
+        WHERE is_security_contact = 1 AND is_active = 1 AND phone IS NOT NULL AND phone <> ''
       `)
     return result.recordset.map((r: any) => r.phone)
   }
@@ -1727,5 +1727,36 @@ export class AzureSqlDB {
         WHERE application_id = @application_id AND phone IS NOT NULL AND phone <> ''
       `)
     return result.recordset.map((r: any) => r.phone)
+  }
+
+  /** 보안담당자 지정/해제 및 전화번호 업데이트 */
+  static async updateSecurityContact(accountId: number, isSecurityContact?: boolean, phone?: string): Promise<void> {
+    const dbPool = await getPool()
+    const updates: string[] = []
+    const request = dbPool.request().input('account_id', sql.Int, accountId)
+
+    if (typeof isSecurityContact === 'boolean') {
+      updates.push('is_security_contact = @is_security_contact')
+      request.input('is_security_contact', sql.Bit, isSecurityContact ? 1 : 0)
+    }
+    if (typeof phone === 'string') {
+      updates.push('phone = @phone')
+      request.input('phone', sql.NVarChar(20), phone)
+    }
+
+    if (updates.length > 0) {
+      await request.query(`UPDATE admin_accounts SET ${updates.join(', ')} WHERE account_id = @account_id`)
+    }
+  }
+
+  /** 보안담당자 목록 조회 (is_security_contact = 1) */
+  static async getSecurityContacts(): Promise<any[]> {
+    const dbPool = await getPool()
+    const result = await dbPool.request().query(`
+      SELECT account_id, username, name, phone
+      FROM admin_accounts
+      WHERE is_security_contact = 1 AND is_active = 1
+    `)
+    return result.recordset
   }
 }
