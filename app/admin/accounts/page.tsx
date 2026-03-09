@@ -101,6 +101,13 @@ export default function AdminAccountsPage() {
       return
     }
     setSecurityContactSaving(accountId)
+    
+    // 즉시 로컬 상태 업데이트 (체크 표시 즉각 반영)
+    mutate(
+      accounts.map((a) => a.account_id === accountId ? { ...a, is_security_contact: isContact } : a),
+      false
+    )
+    
     try {
       const res = await fetch("/api/admin/security-contacts", {
         method: "POST",
@@ -109,9 +116,10 @@ export default function AdminAccountsPage() {
       })
       if (!res.ok) throw new Error("저장 실패")
       toast({ title: isContact ? "보안담당자로 지정되었습니다" : "보안담당자에서 해제되었습니다" })
-      mutate()
     } catch {
       toast({ title: "저장 실패", variant: "destructive" })
+      // 실패 시 원래 상태로 되돌림
+      mutate()
     } finally {
       setSecurityContactSaving(null)
     }
@@ -185,7 +193,7 @@ export default function AdminAccountsPage() {
       })
       if (!res.ok) throw new Error("권한 저장 실패")
       mutatePerm()
-      toast({ title: "권한이 저장되었습니다" })
+      toast({ title: "권��이 저장되었습니다" })
     } catch (e: any) {
       toast({ title: "저장 실패", description: e.message, variant: "destructive" })
     } finally {
