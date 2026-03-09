@@ -46,6 +46,7 @@ interface Account {
   username: string
   name: string
   role: string
+  phone?: string
   is_active: boolean
   created_at: string
   last_login_at: string | null
@@ -62,8 +63,8 @@ export default function AdminAccountsPage() {
   const [deleteAccount, setDeleteAccount] = useState<Account | null>(null)
 
   // 폼 상태
-  const [form, setForm] = useState({ username: "", name: "", password: "", role: "manager" })
-  const [editForm, setEditForm] = useState({ name: "", role: "", is_active: true })
+  const [form, setForm] = useState({ username: "", name: "", phone: "", password: "", role: "manager" })
+  const [editForm, setEditForm] = useState({ name: "", phone: "", role: "", is_active: true })
   const [newPassword, setNewPassword] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
 
@@ -190,7 +191,7 @@ export default function AdminAccountsPage() {
       if (!res.ok) throw new Error(data.message)
       toast({ title: "계정 생성 완료" })
       setCreateOpen(false)
-      setForm({ username: "", name: "", password: "", role: "manager" })
+      setForm({ username: "", name: "", phone: "", password: "", role: "manager" })
       mutate()
     } catch (e: any) {
       toast({ title: "생성 실패", description: e.message, variant: "destructive" })
@@ -296,7 +297,7 @@ export default function AdminAccountsPage() {
               {bulkLoading ? "처리 중..." : "CSV 일괄 업로드"}
             </Button>
             <Button
-              onClick={() => { setForm({ username: "", name: "", password: "", role: "manager" }); setCreateOpen(true) }}
+              onClick={() => { setForm({ username: "", name: "", phone: "", password: "", role: "manager" }); setCreateOpen(true) }}
               className="bg-amber-500 hover:bg-amber-400 text-black font-bold rounded-xl px-5 py-2.5 flex items-center gap-2"
             >
               <Plus size={18} />
@@ -403,6 +404,7 @@ export default function AdminAccountsPage() {
                 <TableRow className="border-white/10 hover:bg-transparent">
                   <TableHead className="text-white/80 font-bold">아이디</TableHead>
                   <TableHead className="text-white/80 font-bold">이름</TableHead>
+                  <TableHead className="text-white/80 font-bold">전화번호</TableHead>
                   <TableHead className="text-white/80 font-bold">권한</TableHead>
                   <TableHead className="text-white/80 font-bold">상태</TableHead>
                   <TableHead className="text-white/80 font-bold">생성일</TableHead>
@@ -413,13 +415,13 @@ export default function AdminAccountsPage() {
               <TableBody>
                 {isLoading ? (
                   <TableRow>
-                    <TableCell colSpan={7} className="text-center py-12 text-white/40">
+                    <TableCell colSpan={8} className="text-center py-12 text-white/40">
                       불러오는 중...
                     </TableCell>
                   </TableRow>
                 ) : accounts.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={7} className="text-center py-12 text-white/40">
+                    <TableCell colSpan={8} className="text-center py-12 text-white/40">
                       계정이 없습니다
                     </TableCell>
                   </TableRow>
@@ -428,6 +430,7 @@ export default function AdminAccountsPage() {
                     <TableRow key={account.account_id} className="border-white/5 hover:bg-white/5 transition-colors">
                       <TableCell className="text-white font-mono">{account.username}</TableCell>
                       <TableCell className="text-white font-semibold">{account.name}</TableCell>
+                      <TableCell className="text-white/60">{account.phone || "-"}</TableCell>
                       <TableCell>
                         <span className={`inline-flex items-center px-3 py-1 rounded-lg text-xs font-bold border ${ROLE_COLORS[account.role] || ROLE_COLORS.manager}`}>
                           {ROLE_LABELS[account.role] || account.role}
@@ -448,7 +451,7 @@ export default function AdminAccountsPage() {
                         <div className="flex items-center gap-2">
                           <Button
                             size="icon"
-                            onClick={() => { setEditAccount(account); setEditForm({ name: account.name, role: account.role, is_active: account.is_active }) }}
+                            onClick={() => { setEditAccount(account); setEditForm({ name: account.name, phone: account.phone || "", role: account.role, is_active: account.is_active }) }}
                             className="w-8 h-8 bg-white/10 hover:bg-white/20 text-white/60 hover:text-white rounded-lg"
                             title="수정"
                           >
@@ -501,6 +504,11 @@ export default function AdminAccountsPage() {
                 className="bg-white/5 border-white/10 text-white h-11 rounded-xl" placeholder="예: 홍길동" />
             </div>
             <div className="space-y-2">
+              <Label className="text-white/60 text-sm font-bold">전화번호</Label>
+              <Input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                className="bg-white/5 border-white/10 text-white h-11 rounded-xl" placeholder="예: 010-1234-5678" />
+            </div>
+            <div className="space-y-2">
               <Label className="text-white/60 text-sm font-bold">초기 비밀번호</Label>
               <Input type="password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })}
                 className="bg-white/5 border-white/10 text-white h-11 rounded-xl" placeholder="6자 이상" />
@@ -539,6 +547,11 @@ export default function AdminAccountsPage() {
               <Label className="text-white/60 text-sm font-bold">이름</Label>
               <Input value={editForm.name} onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
                 className="bg-white/5 border-white/10 text-white h-11 rounded-xl" />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-white/60 text-sm font-bold">전화번호</Label>
+              <Input value={editForm.phone} onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })}
+                className="bg-white/5 border-white/10 text-white h-11 rounded-xl" placeholder="예: 010-1234-5678" />
             </div>
             <div className="space-y-2">
               <Label className="text-white/60 text-sm font-bold">권한</Label>
