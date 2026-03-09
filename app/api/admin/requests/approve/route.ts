@@ -62,23 +62,27 @@ export async function POST(request: NextRequest) {
     }
 
     // 이메일 발송
-    try {
-      const emailTemplate =
-        action === "approve"
-          ? getApprovalEmailTemplate(updatedApplication)
-          : getRejectionEmailTemplate(updatedApplication, reason || "")
+    const visitorEmail = updatedApplication.visitor_email || updatedApplication.contactEmail
+    if (visitorEmail) {
+      try {
+        const emailTemplate =
+          action === "approve"
+            ? getApprovalEmailTemplate(updatedApplication)
+            : getRejectionEmailTemplate(updatedApplication, reason || "")
 
-      await sendEmail({
-        to: updatedApplication.contactEmail,
-        subject: emailTemplate.subject,
-        html: emailTemplate.html,
-      })
-    } catch (emailError) {
-      console.error("Failed to send approval/rejection email:", emailError)
+        await sendEmail({
+          to: visitorEmail,
+          subject: emailTemplate.subject,
+          html: emailTemplate.html,
+        })
+      } catch (emailError) {
+        console.error("Failed to send approval/rejection email:", emailError)
+      }
     }
 
     // SMS 발송 (연락처 있을 경우)
-    if (updatedApplication.contactPhone) {
+    const visitorPhone = updatedApplication.visitor_phone || updatedApplication.contactPhone
+    if (visitorPhone) {
       try {
         const smsMessage =
           action === "approve"
@@ -86,10 +90,10 @@ export async function POST(request: NextRequest) {
             : getRejectionSMSMessage(updatedApplication, reason || "")
 
         await sendSMS({
-          to: updatedApplication.contactPhone,
+          to: visitorPhone,
           message: smsMessage,
         })
-        console.log("[v0] SMS sent successfully to:", updatedApplication.contactPhone)
+        console.log("[v0] SMS sent successfully to:", visitorPhone)
       } catch (smsError) {
         console.error("Failed to send SMS:", smsError)
         // SMS 실패해도 진행
