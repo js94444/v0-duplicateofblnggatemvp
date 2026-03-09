@@ -172,3 +172,26 @@ export function getRejectionSmsText(payload: RejectionSmsPayload): string {
   }
   return lines.join("\n")
 }
+
+/** Approve API에서 호출용: pass_receipt와 application 객체로 SMS 메시지 생성 */
+export function getApprovalSMSMessage(pass_receipt: string | null, application: any): string {
+  const qrUrl = pass_receipt 
+    ? `${process.env.NEXT_PUBLIC_APP_URL || 'https://blink.com'}/qr/${pass_receipt}`
+    : null
+  
+  return getApprovalSmsText({
+    receipt: application.receipt || "N/A",
+    visit_start_date: application.visit_start_date,
+    visit_end_date: application.visit_end_date,
+    access_area: application.access_area || "N/A",
+    qr_page_url: qrUrl,
+  })
+}
+
+/** Approve API에서 호출용: 반려 메시지 생성 */
+export function getRejectionSMSMessage(application: any, rejection_reason: string): string {
+  return getRejectionSmsText({
+    receipt: application.receipt || "N/A",
+    rejection_reason,
+  })
+}

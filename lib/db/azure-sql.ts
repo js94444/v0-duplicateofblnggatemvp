@@ -1382,6 +1382,43 @@ export class AzureSqlDB {
     return result.recordset[0].allowed === true
   }
 
+  // ─── QR pass_receipt 관리 ────────────────────────────────────
+
+  /** 고유한 pass_receipt (QR 코드) 생성 */
+  static generatePassReceipt(): string {
+    // 형식: QR-YYYYMMDD-XXXXXX (6글자 랜덤)
+    const date = new Date()
+    const dateStr = date.toISOString().split('T')[0].replace(/-/g, '')
+    const random = Math.random().toString(36).substring(2, 8).toUpperCase()
+    return `QR-${dateStr}-${random}`
+  }
+
+  /** 신청 승인 시 pass_receipt 저장 */
+  static async createPassForApplication(applicationId: string, pass_receipt: string): Promise<void> {
+    const dbPool = await getPool()
+    await dbPool.request()
+      .input('application_id', sql.BigInt, applicationId)
+      .input('pass_receipt', sql.NVarChar(50), pass_receipt)
+      .query(`
+        INSERT INTO visit_passes (application_id, pass_receipt, status)
+        VALUES (@application_id, @pass_receipt, 'active')
+      `)
+  }
+
+  /** pass_receipt로 신청 조회 */
+  static async getApplicationByPassReceipt(pass_receipt: string): Promise<any> {
+    const dbPool = await getPool()
+    const result = await dbPool.request()
+      .input('pass_receipt', sql.NVarChar(50), pass_receipt)
+      .query(`
+        SELECT a.*, p.pass_receipt
+        FROM visit_applications a
+        INNER JOIN visit_passes p ON a.id = p.application_id
+        WHERE p.pass_receipt = @pass_receipt
+      `)
+    return result.recordset[0] || null
+  }
+
   // 통계 조회
   static async getApplicationStats() {
     const dbPool = await getPool()
