@@ -663,6 +663,8 @@ export default function AdminRequestsPage() {
                                     👁️ 보기
                                   </Button>
                                   {(() => {
+                                    // 슈퍼어드민만 승인/반려 가능
+                                    if (user?.role !== "super_admin") return null
                                     const statusUpper = String(application.status).toUpperCase()
                                     return statusUpper === "PENDING" || statusUpper === "UNDER_REVIEW" ? (
                                       <>

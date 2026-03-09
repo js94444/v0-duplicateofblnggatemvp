@@ -3,6 +3,8 @@ import { AzureSqlDB } from "@/lib/db/azure-sql"
 import { ApplicationStatus } from "@/lib/types"
 import { sendEmail } from "@/lib/email/sender"
 import { getApprovalEmailTemplate, getRejectionEmailTemplate } from "@/lib/email/templates"
+import { sendSMS } from "@/lib/services/solapi"
+import { getApprovalSMSMessage, getRejectionSMSMessage } from "@/lib/messages/sms-templates"
 
 export const runtime = 'nodejs'
 
@@ -51,6 +53,15 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // 승인 시 QR pass_receipt 생성
+    let pass_receipt: string | null = null
+    if (action === "approve") {
+      pass_receipt = AzureSqlDB.generatePassReceipt()
+      await AzureSqlDB.createPassForApplication(id, pass_receipt)
+      console.log("[v0] Created pass_receipt:", pass_receipt)
+    }
+
+    // 이메일 발송
     try {
       const emailTemplate =
         action === "approve"
@@ -64,7 +75,25 @@ export async function POST(request: NextRequest) {
       })
     } catch (emailError) {
       console.error("Failed to send approval/rejection email:", emailError)
-      // Continue with the response even if email fails
+    }
+
+    // SMS 발송 (연락처 있을 경우)
+    if (updatedApplication.contactPhone) {
+      try {
+        const smsMessage =
+          action === "approve"
+            ? getApprovalSMSMessage(pass_receipt, updatedApplication)
+            : getRejectionSMSMessage(updatedApplication, reason || "")
+
+        await sendSMS({
+          to: updatedApplication.contactPhone,
+          message: smsMessage,
+        })
+        console.log("[v0] SMS sent successfully to:", updatedApplication.contactPhone)
+      } catch (smsError) {
+        console.error("Failed to send SMS:", smsError)
+        // SMS 실패해도 진행
+      }
     }
 
     return NextResponse.json({

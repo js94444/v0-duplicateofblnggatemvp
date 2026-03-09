@@ -76,11 +76,12 @@ async function createIndexesIfNotExists(p: sql.ConnectionPool): Promise<void> {
   console.log('[v0] Performance indexes verified/created')
 }
 
-// 한국 시간(UTC+9) 생성 함수
+// 한국 시간(Asia/Seoul, UTC+9) 생성 함수
 function getKoreaTime(): Date {
   const now = new Date()
-  // UTC 시간에 9시간(한국 시간대) 추가
-  const koreaTime = new Date(now.getTime() + (9 * 60 * 60 * 1000))
+  // 서버 타임존과 무관하게 UTC 기준으로 한국 시간(UTC+9) 계산
+  const utcTime = now.getTime() + (now.getTimezoneOffset() * 60 * 1000)
+  const koreaTime = new Date(utcTime + (9 * 60 * 60 * 1000))
   return koreaTime
 }
 
@@ -177,7 +178,7 @@ export class AzureSqlDB {
     const dbPool = await getPool()
     
     // 유형 분류 로직
-    // 1. 출입지역이 '항만' 또는 '부두'를 포함하면 항만출입 (동행인 여부 무관)
+    // 1. 출입지역이 '항만' 또는 '부두'를 포함하면 항만출입 (동행인 여부 ��관)
     // 2. 동행인이 있으면 단체방문신청
     // 3. 기본정보만 있으면 개인방문신청
     let applicationType: Type
@@ -1381,6 +1382,43 @@ export class AzureSqlDB {
     return result.recordset[0].allowed === true
   }
 
+  // ─── QR pass_receipt 관리 ────────────────────────────────────
+
+  /** 고유한 pass_receipt (QR 코드) 생성 */
+  static generatePassReceipt(): string {
+    // 형식: QR-YYYYMMDD-XXXXXX (6글자 랜덤)
+    const date = new Date()
+    const dateStr = date.toISOString().split('T')[0].replace(/-/g, '')
+    const random = Math.random().toString(36).substring(2, 8).toUpperCase()
+    return `QR-${dateStr}-${random}`
+  }
+
+  /** 신청 승인 시 pass_receipt 저장 */
+  static async createPassForApplication(applicationId: string, pass_receipt: string): Promise<void> {
+    const dbPool = await getPool()
+    await dbPool.request()
+      .input('application_id', sql.BigInt, applicationId)
+      .input('pass_receipt', sql.NVarChar(50), pass_receipt)
+      .query(`
+        INSERT INTO visit_passes (application_id, pass_receipt, status)
+        VALUES (@application_id, @pass_receipt, 'active')
+      `)
+  }
+
+  /** pass_receipt로 신청 조회 */
+  static async getApplicationByPassReceipt(pass_receipt: string): Promise<any> {
+    const dbPool = await getPool()
+    const result = await dbPool.request()
+      .input('pass_receipt', sql.NVarChar(50), pass_receipt)
+      .query(`
+        SELECT a.*, p.pass_receipt
+        FROM visit_applications a
+        INNER JOIN visit_passes p ON a.id = p.application_id
+        WHERE p.pass_receipt = @pass_receipt
+      `)
+    return result.recordset[0] || null
+  }
+
   // 통계 조회
   static async getApplicationStats() {
     const dbPool = await getPool()
@@ -1500,5 +1538,119 @@ export class AzureSqlDB {
       monthlyStats,
       organizationStats,
     }
+  }
+
+  // ─── QR 출입권 관리 ────────────────────────────────────
+
+  /** 고유한 pass_receipt (QR 코드) 생성 */
+  static generatePassReceipt(): string {
+    // 형식: QR-YYYYMMDD-XXXXXX (6글자 랜덤)
+    const date = new Date()
+    const dateStr = date.toISOString().split('T')[0].replace(/-/g, '')
+    const random = Math.random().toString(36).substring(2, 8).toUpperCase()
+    return `QR-${dateStr}-${random}`
+  }
+
+  /** 신청 승인 시 pass_receipt 저장 */
+  static async createPassForApplication(applicationId: string, pass_receipt: string): Promise<void> {
+    const dbPool = await getPool()
+    await dbPool.request()
+      .input('application_id', sql.BigInt, applicationId)
+      .input('pass_receipt', sql.NVarChar(50), pass_receipt)
+      .query(`
+        INSERT INTO visit_passes (application_id, pass_receipt, status)
+        VALUES (@application_id, @pass_receipt, 'active')
+      `)
+  }
+
+  /** pass_receipt로 신청 조회 */
+  static async getApplicationByPassReceipt(pass_receipt: string): Promise<any> {
+    const dbPool = await getPool()
+    const result = await dbPool.request()
+      .input('pass_receipt', sql.NVarChar(50), pass_receipt)
+      .query(`
+        SELECT a.*, p.pass_id, p.pass_receipt
+        FROM visit_applications a
+        INNER JOIN visit_passes p ON a.application_id = p.application_id
+        WHERE p.pass_receipt = @pass_receipt
+      `)
+    return result.recordset[0] || null
+  }
+
+  /** QR 입/퇴장 검증 및 기록 */
+  static async verifyVisitPassByReceiptWithDirection(
+    receipt: string,
+    direction: "ENTRY" | "EXIT",
+    device_id: string,
+    scanned_ip: string | null,
+    user_agent: string | null,
+    scan_site: string = "MAIN"
+  ): Promise<{ result: string; message: string; denyReason?: string }> {
+    const dbPool = await getPool()
+    
+    // pass_receipt로 신청 조회
+    const appResult = await dbPool.request()
+      .input('pass_receipt', sql.NVarChar(50), receipt)
+      .query(`
+        SELECT a.application_id, a.visitor_name, a.visit_start_date, a.visit_end_date, a.status, p.pass_id
+        FROM visit_applications a
+        INNER JOIN visit_passes p ON a.application_id = p.application_id
+        WHERE p.pass_receipt = @pass_receipt
+      `)
+    
+    if (!appResult.recordset[0]) {
+      return { result: "DENY", message: "승인된 출입권이 없습니다", denyReason: "NOT_FOUND" }
+    }
+
+    const app = appResult.recordset[0]
+    if (app.status !== 'approved') {
+      return { result: "DENY", message: "승인되지 않은 신청입니다", denyReason: "NOT_APPROVED" }
+    }
+
+    const now = getKoreaTime()
+    
+    // 방문 기간 확인
+    if (app.visit_start_date && now < new Date(app.visit_start_date)) {
+      return { result: "DENY", message: "방문 예정 시간이 아닙니다", denyReason: "NOT_YET" }
+    }
+    if (app.visit_end_date && now > new Date(app.visit_end_date)) {
+      return { result: "DENY", message: "방문 기간이 만료되었습니다", denyReason: "EXPIRED" }
+    }
+
+    // 스캔 기록 저장
+    try {
+      await dbPool.request()
+        .input('pass_id', sql.BigInt, app.pass_id)
+        .input('direction', sql.NVarChar(10), direction)
+        .input('device_id', sql.NVarChar(100), device_id)
+        .input('scanned_ip', sql.NVarChar(50), scanned_ip)
+        .input('user_agent', sql.NVarChar(500), user_agent)
+        .input('scan_site', sql.NVarChar(50), scan_site)
+        .input('scanned_at', sql.DateTime2, now)
+        .query(`
+          INSERT INTO visit_pass_scans (pass_id, direction, device_id, scanned_ip, user_agent, scan_site, scanned_at)
+          VALUES (@pass_id, @direction, @device_id, @scanned_ip, @user_agent, @scan_site, @scanned_at)
+        `)
+    } catch (e) {
+      console.error('[v0] Failed to record scan:', e)
+    }
+
+    return { result: "ALLOW", message: `${direction === 'ENTRY' ? '입장' : '퇴장'} 처리되었습니다` }
+  }
+
+  /** 휴대폰 번호로 승인된 신청 조회 */
+  static async getApprovedApplicationsByPhone(phone: string): Promise<any[]> {
+    const dbPool = await getPool()
+    const result = await dbPool.request()
+      .input('phone', sql.NVarChar(20), phone)
+      .query(`
+        SELECT a.application_id, a.application_number, a.visitor_name, a.visit_start_date, 
+               a.visit_end_date, a.access_area, a.status, p.pass_receipt
+        FROM visit_applications a
+        INNER JOIN visit_passes p ON a.application_id = p.application_id
+        WHERE a.visitor_phone = @phone AND a.status = 'approved'
+        ORDER BY a.created_at DESC
+      `)
+    return result.recordset
   }
 }
