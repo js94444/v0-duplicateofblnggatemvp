@@ -1,9 +1,11 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { useRouter } from "next/navigation"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
+import { useAdminAuth } from "@/hooks/use-admin-auth"
 
 interface ScanRow {
   scan_id: string
@@ -36,12 +38,29 @@ type TabKind = "main" | "pier"
 type PierKind = "1부두" | "2부두"
 
 export default function AdminQrScanPage() {
+  const router = useRouter()
+  const { user, loading: authLoading } = useAdminAuth()
   const [activeTab, setActiveTab] = useState<TabKind>("main")
   const [pierTab, setPierTab] = useState<PierKind>("1부두")
   const [loading, setLoading] = useState(true)
   const [scans, setScans] = useState<ScanRow[]>([])
   const [stats, setStats] = useState<ScanStats | null>(null)
   const [error, setError] = useState<string | null>(null)
+
+  // 슈퍼어드민만 접근 가능
+  useEffect(() => {
+    if (!authLoading && user?.role !== "super_admin") {
+      router.push("/admin/dashboard")
+    }
+  }, [user, authLoading, router])
+
+  if (authLoading) {
+    return <div className="flex items-center justify-center h-screen">로딩 중...</div>
+  }
+
+  if (user?.role !== "super_admin") {
+    return null
+  }
 
   const scanSiteParam =
     activeTab === "main" ? "main" : pierTab === "1부두" ? "pier_1" : "pier_2"
