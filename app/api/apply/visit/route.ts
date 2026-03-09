@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server"
 import { AzureSqlDB } from "@/lib/db/azure-sql"
+import { sendSMS } from "@/lib/services/solapi"
+import { getSubmissionSmsText } from "@/lib/messages/sms-templates"
 
 export async function POST(request: Request) {
   try {
@@ -9,15 +11,42 @@ export async function POST(request: Request) {
     const forwarded = request.headers.get("x-forwarded-for")
     const realIp = request.headers.get("x-real-ip")
     const clientIp = forwarded ? forwarded.split(',')[0].trim() : realIp || 'unknown'
-    
-    console.log("[v0] POST /api/apply/visit - Creating new application:", body)
-    console.log("[v0] Client IP:", clientIp)
 
     const result = await AzureSqlDB.createVisitApplication({
       ...body,
       submission_ip: clientIp
     })
-    console.log("[v0] Application created with ID:", result.application_id)
+
+    // SMS 발송 (보안담당자 + 담당자에게 접수 알림)
+    try {
+      const smsMessage = getSubmissionSmsText({
+        receipt: result.application_number || result.receipt || "N/A",
+        visitor_name: body.visitor_name || body.name || "",
+        visitor_phone: body.visitor_phone || body.contact_phone || "",
+        visitor_organization: body.visitor_organization || body.organization || "",
+        visit_start_date: body.visit_start_date || body.visit_datetime || "",
+        visit_end_date: body.visit_end_date || body.visit_datetime || "",
+        access_area: body.access_area || "",
+        visit_purpose: body.visit_purpose || body.purpose || "",
+        status: "pending",
+        companionsCount: body.companions?.length || 0,
+      })
+
+      // 보안담당자 전화번호 목록 조회
+      const securityPhones = await AzureSqlDB.getSecurityAccountPhones()
+
+      // 담당자 전화번호 (contact_mobile 또는 contact_phone)
+      const contactPhone = body.contact_mobile || body.contact_phone
+      const recipients = new Set<string>([...securityPhones])
+      if (contactPhone) recipients.add(contactPhone)
+
+      // 수신자 전체에게 발송
+      await Promise.allSettled(
+        Array.from(recipients).map((phone) => sendSMS({ to: phone, message: smsMessage }))
+      )
+    } catch (smsError) {
+      console.error("[v0] SMS 발송 실패 (신청 접수는 정상 처리됨):", smsError)
+    }
 
     return NextResponse.json(
       {

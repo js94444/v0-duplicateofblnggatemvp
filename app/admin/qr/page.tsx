@@ -119,7 +119,7 @@ export default function AdminQrScanPage() {
       }
     >()
     for (const row of scans) {
-      const key = row.pass_id
+      const key = row.pass_id || row.scan_id || `scan-${Math.random()}`
       if (!byPass.has(key)) {
         byPass.set(key, {
           pass_id: row.pass_id,
@@ -176,13 +176,13 @@ export default function AdminQrScanPage() {
     })
   }
 
-  const currentStats: ScanStats = stats || {
-    totalScans: scans.length,
-    allowScans: scans.filter((s) => s.result === "ALLOW").length,
-    denyScans: scans.filter((s) => s.result === "DENY").length,
-    entryCount: scans.filter((s) => s.result === "ALLOW" && s.direction === "ENTRY").length,
-    exitCount: scans.filter((s) => s.result === "ALLOW" && s.direction === "EXIT").length,
-    applicationCount: new Set(scans.map((s) => s.application_id)).size,
+  const currentStats: ScanStats = {
+    totalScans: stats?.totalScans ?? stats?.total ?? scans.length,
+    allowScans: stats?.allowScans ?? stats?.allowCount ?? scans.filter((s) => s.result === "ALLOW").length,
+    denyScans: stats?.denyScans ?? stats?.denyCount ?? scans.filter((s) => s.result === "DENY").length,
+    entryCount: stats?.entryCount ?? scans.filter((s) => s.result === "ALLOW" && s.direction === "ENTRY").length,
+    exitCount: stats?.exitCount ?? scans.filter((s) => s.result === "ALLOW" && s.direction === "EXIT").length,
+    applicationCount: stats?.applicationCount ?? new Set(scans.map((s) => s.application_id)).size,
   }
   const entryCount = currentStats.entryCount ?? 0
   const exitCount = currentStats.exitCount ?? 0

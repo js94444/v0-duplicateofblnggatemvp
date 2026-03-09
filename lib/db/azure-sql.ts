@@ -1367,7 +1367,7 @@ export class AzureSqlDB {
       `)
   }
 
-  /** 특정 역할이 특정 페이지에 접근 가능한지 확인 */
+  /** 특정 역할이 특정 페이지에 접근 가���한지 확인 */
   static async canRoleAccessPage(role: string, pagePath: string): Promise<boolean> {
     if (role === 'super_admin') return true
     const dbPool = await getPool()
@@ -1542,7 +1542,7 @@ export class AzureSqlDB {
 
   // ─── QR 출입권 관리 ────────────────────────────────────
 
-  /** 고유����� pass_receipt (QR 코드) 생성 */
+  /** ���유����� pass_receipt (QR 코드) 생성 */
   static generatePassReceipt(): string {
     // 형식: QR-YYYYMMDD-XXXXXX (6글자 랜덤)
     const date = new Date()
@@ -1682,7 +1682,7 @@ export class AzureSqlDB {
           p.application_id
         FROM visit_pass_scans s
         LEFT JOIN visit_passes p ON s.pass_id = p.pass_id
-        WHERE s.scan_site = @scan_site OR @scan_site = 'ALL'
+        WHERE LOWER(s.scan_site) = LOWER(@scan_site) OR LOWER(@scan_site) = 'all'
         ORDER BY s.scanned_at DESC
       `)
     return result.recordset
@@ -1701,8 +1701,62 @@ export class AzureSqlDB {
           SUM(CASE WHEN result = 'ALLOW' THEN 1 ELSE 0 END) as allowCount,
           SUM(CASE WHEN result = 'DENY' THEN 1 ELSE 0 END) as denyCount
         FROM visit_pass_scans
-        WHERE scan_site = @scan_site OR @scan_site = 'ALL'
+        WHERE LOWER(scan_site) = LOWER(@scan_site) OR LOWER(@scan_site) = 'all'
       `)
     return result.recordset[0] || { total: 0, entryCount: 0, exitCount: 0, allowCount: 0, denyCount: 0 }
+  }
+
+  /** 보안담당자 계정의 전화번호 목록 조회 (is_security_contact = 1) */
+  static async getSecurityAccountPhones(): Promise<string[]> {
+    const dbPool = await getPool()
+    const result = await dbPool.request()
+      .query(`
+        SELECT phone FROM admin_accounts
+        WHERE is_security_contact = 1 AND is_active = 1 AND phone IS NOT NULL AND phone <> ''
+      `)
+    return result.recordset.map((r: any) => r.phone)
+  }
+
+  /** 신청 ID로 동행인 전화번호 목록 조회 */
+  static async getCompanionPhonesByApplicationId(applicationId: string): Promise<string[]> {
+    const dbPool = await getPool()
+    const result = await dbPool.request()
+      .input('application_id', sql.BigInt, applicationId)
+      .query(`
+        SELECT phone FROM visit_companions
+        WHERE application_id = @application_id AND phone IS NOT NULL AND phone <> ''
+      `)
+    return result.recordset.map((r: any) => r.phone)
+  }
+
+  /** 보안담당자 지정/해제 및 전화번호 업데이트 */
+  static async updateSecurityContact(accountId: number, isSecurityContact?: boolean, phone?: string): Promise<void> {
+    const dbPool = await getPool()
+    const updates: string[] = []
+    const request = dbPool.request().input('account_id', sql.Int, accountId)
+
+    if (typeof isSecurityContact === 'boolean') {
+      updates.push('is_security_contact = @is_security_contact')
+      request.input('is_security_contact', sql.Bit, isSecurityContact ? 1 : 0)
+    }
+    if (typeof phone === 'string') {
+      updates.push('phone = @phone')
+      request.input('phone', sql.NVarChar(20), phone)
+    }
+
+    if (updates.length > 0) {
+      await request.query(`UPDATE admin_accounts SET ${updates.join(', ')} WHERE account_id = @account_id`)
+    }
+  }
+
+  /** 보안담당자 목록 조회 (is_security_contact = 1) */
+  static async getSecurityContacts(): Promise<any[]> {
+    const dbPool = await getPool()
+    const result = await dbPool.request().query(`
+      SELECT account_id, username, name, phone
+      FROM admin_accounts
+      WHERE is_security_contact = 1 AND is_active = 1
+    `)
+    return result.recordset
   }
 }

@@ -8,13 +8,14 @@ export async function GET(request: NextRequest) {
     const url = new URL(request.url)
     const scanSite = url.searchParams.get("scan_site") || "main"
     
-    // scan_site 매핑: main -> MAIN, pier_1 -> PIER_1, pier_2 -> PIER_2
-    const scanSiteUpper = scanSite === "pier_1" ? "PIER_1" 
-                        : scanSite === "pier_2" ? "PIER_2" 
-                        : "MAIN"
+    // 정문(main)은 모든 scan_site 필터링 없이 전체 데이터 반환
+    // 부두는 pier_1 또는 pier_2로 필터링
+    const scanSiteFilter = scanSite === "main" ? "ALL" 
+                          : scanSite === "pier_1" ? "PIER_1" 
+                          : "PIER_2"
 
-    const data = await AzureSqlDB.getQrScanLogs(scanSiteUpper)
-    const stats = await AzureSqlDB.getQrScanStats(scanSiteUpper)
+    const data = await AzureSqlDB.getQrScanLogs(scanSiteFilter)
+    const stats = await AzureSqlDB.getQrScanStats(scanSiteFilter)
 
     return NextResponse.json({ data, stats })
   } catch (error) {

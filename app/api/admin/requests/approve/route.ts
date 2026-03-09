@@ -62,38 +62,59 @@ export async function POST(request: NextRequest) {
     }
 
     // 이메일 발송
-    try {
-      const emailTemplate =
-        action === "approve"
-          ? getApprovalEmailTemplate(updatedApplication)
-          : getRejectionEmailTemplate(updatedApplication, reason || "")
+    const visitorEmail = updatedApplication.visitor_email || updatedApplication.contactEmail
+    if (visitorEmail) {
+      try {
+        const emailTemplate =
+          action === "approve"
+            ? getApprovalEmailTemplate(updatedApplication)
+            : getRejectionEmailTemplate(updatedApplication, reason || "")
 
-      await sendEmail({
-        to: updatedApplication.contactEmail,
-        subject: emailTemplate.subject,
-        html: emailTemplate.html,
-      })
-    } catch (emailError) {
-      console.error("Failed to send approval/rejection email:", emailError)
+        await sendEmail({
+          to: visitorEmail,
+          subject: emailTemplate.subject,
+          html: emailTemplate.html,
+        })
+      } catch (emailError) {
+        console.error("Failed to send approval/rejection email:", emailError)
+      }
     }
 
-    // SMS 발송 (연락처 있을 경우)
-    if (updatedApplication.contactPhone) {
-      try {
-        const smsMessage =
-          action === "approve"
-            ? getApprovalSMSMessage(pass_receipt, updatedApplication)
-            : getRejectionSMSMessage(updatedApplication, reason || "")
+    // SMS 발송
+    try {
+      const visitorPhone = updatedApplication.visitor_phone || updatedApplication.contactPhone
+      const contactPhone = updatedApplication.contact_mobile || updatedApplication.contact_phone
 
-        await sendSMS({
-          to: updatedApplication.contactPhone,
-          message: smsMessage,
-        })
-        console.log("[v0] SMS sent successfully to:", updatedApplication.contactPhone)
-      } catch (smsError) {
-        console.error("Failed to send SMS:", smsError)
-        // SMS 실패해도 진행
+      if (action === "approve") {
+        // 승인 시: 신청자 + 동행인에게 QR 포함 문자
+        const approvalMsg = getApprovalSMSMessage(pass_receipt, updatedApplication)
+        const companionPhones = await AzureSqlDB.getCompanionPhonesByApplicationId(id)
+        const approvalRecipients = new Set<string>()
+        if (visitorPhone) approvalRecipients.add(visitorPhone)
+        companionPhones.forEach((p) => approvalRecipients.add(p))
+
+        await Promise.allSettled(
+          Array.from(approvalRecipients).map((phone) => sendSMS({ to: phone, message: approvalMsg }))
+        )
+
+        // 승인 시: 담당자에게 승인 완료 알림
+        if (contactPhone) {
+          const contactMsg = `[B-Link] 방문 신청이 승인되었습니다.\n신청자: ${updatedApplication.visitor_name || ""}\n접수번호: ${updatedApplication.application_number || updatedApplication.receipt || ""}`
+          await sendSMS({ to: contactPhone, message: contactMsg }).catch(() => {})
+        }
+      } else {
+        // 반려 시: 신청자 + 담당자에게 반려 문자
+        const rejectionMsg = getRejectionSMSMessage(updatedApplication, reason || "")
+        const rejectionRecipients = new Set<string>()
+        if (visitorPhone) rejectionRecipients.add(visitorPhone)
+        if (contactPhone) rejectionRecipients.add(contactPhone)
+
+        await Promise.allSettled(
+          Array.from(rejectionRecipients).map((phone) => sendSMS({ to: phone, message: rejectionMsg }))
+        )
       }
+    } catch (smsError) {
+      console.error("Failed to send SMS:", smsError)
     }
 
     return NextResponse.json({
