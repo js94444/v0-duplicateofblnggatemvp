@@ -32,7 +32,7 @@ function AdminLayoutContent({ children }: { children: React.ReactNode }) {
   // 권한 목록 조회 (로그인 상태일 때만)
   const { data: permData } = useSWR(
     user && token ? ["/api/admin/permissions", token] : null,
-    ([url, t]) =>
+    ([url, t]: [string, string]) =>
       fetch(url, { headers: { Authorization: `Bearer ${t}` } }).then((r) => r.json()),
     { revalidateOnFocus: false }
   )

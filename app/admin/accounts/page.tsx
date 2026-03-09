@@ -77,11 +77,6 @@ export default function AdminAccountsPage() {
       .then((r) => r.json())
       .then((d) => d.data)
 
-  const permFetcher = (url: string) =>
-    fetch(url, { headers: { Authorization: `Bearer ${token}` } })
-      .then((r) => r.json())
-      .then((d) => d.permissions || [])
-
   const { data: accounts = [], isLoading, mutate } = useSWR<Account[]>(
     token ? "/api/admin/accounts" : null,
     fetcher,
