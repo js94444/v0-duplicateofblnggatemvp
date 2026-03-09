@@ -301,7 +301,7 @@ export default function AdminAccountsPage() {
               {bulkLoading ? "처리 중..." : "CSV 일괄 업로드"}
             </Button>
             <Button
-              onClick={() => { setEditingAccount(null); setFormData({ username: "", name: "", role: "manager", password: "" }); setDialogOpen(true) }}
+              onClick={() => { setForm({ username: "", name: "", password: "", role: "manager" }); setCreateOpen(true) }}
               className="bg-amber-500 hover:bg-amber-400 text-black font-bold rounded-xl px-5 py-2.5 flex items-center gap-2"
             >
               <Plus size={18} />
