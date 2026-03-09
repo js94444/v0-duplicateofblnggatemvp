@@ -78,9 +78,11 @@ async function createIndexesIfNotExists(p: sql.ConnectionPool): Promise<void> {
 
 // 한국 시간(Asia/Seoul, UTC+9) 생성 함수
 function getKoreaTime(): Date {
-  // Intl을 사용해 현재 시간을 한국 시간으로 변환
-  const koreaTimeStr = new Date().toLocaleString('en-US', { timeZone: 'Asia/Seoul' })
-  return new Date(koreaTimeStr)
+  const now = new Date()
+  // 서버 타임존과 무관하게 UTC 기준으로 한국 시간(UTC+9) 계산
+  const utcTime = now.getTime() + (now.getTimezoneOffset() * 60 * 1000)
+  const koreaTime = new Date(utcTime + (9 * 60 * 60 * 1000))
+  return koreaTime
 }
 
 // 접수번호 생성 함수
