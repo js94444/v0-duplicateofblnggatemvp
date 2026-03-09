@@ -1542,7 +1542,7 @@ export class AzureSqlDB {
 
   // ─── QR 출입권 관리 ────────────────────────────────────
 
-  /** 고유한 pass_receipt (QR 코드) 생성 */
+  /** 고유��� pass_receipt (QR 코드) 생성 */
   static generatePassReceipt(): string {
     // 형식: QR-YYYYMMDD-XXXXXX (6글자 랜덤)
     const date = new Date()
@@ -1554,12 +1554,16 @@ export class AzureSqlDB {
   /** 신청 승인 시 pass_receipt 저장 */
   static async createPassForApplication(applicationId: string, pass_receipt: string): Promise<void> {
     const dbPool = await getPool()
+    // token 생성 (임시 토큰: UUID 대신 랜덤 스트링)
+    const token = `TOKEN-${Date.now()}-${Math.random().toString(36).substring(2, 10).toUpperCase()}`
+    
     await dbPool.request()
       .input('application_id', sql.BigInt, applicationId)
       .input('pass_receipt', sql.NVarChar(50), pass_receipt)
+      .input('token', sql.NVarChar(100), token)
       .query(`
-        INSERT INTO visit_passes (application_id, pass_receipt, status)
-        VALUES (@application_id, @pass_receipt, 'active')
+        INSERT INTO visit_passes (application_id, pass_receipt, token, status)
+        VALUES (@application_id, @pass_receipt, @token, 'active')
       `)
   }
 
