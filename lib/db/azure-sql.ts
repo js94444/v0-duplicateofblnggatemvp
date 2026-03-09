@@ -1542,7 +1542,7 @@ export class AzureSqlDB {
 
   // ─── QR 출입권 관리 ────────────────────────────────────
 
-  /** 고유한 pass_receipt (QR 코드) 생성 */
+  /** 고유����� pass_receipt (QR 코드) 생성 */
   static generatePassReceipt(): string {
     // 형식: QR-YYYYMMDD-XXXXXX (6글자 랜덤)
     const date = new Date()
@@ -1554,12 +1554,16 @@ export class AzureSqlDB {
   /** 신청 승인 시 pass_receipt 저장 */
   static async createPassForApplication(applicationId: string, pass_receipt: string): Promise<void> {
     const dbPool = await getPool()
+    // token 생성 (임시 토큰: UUID 대신 랜덤 스트링)
+    const token = `TOKEN-${Date.now()}-${Math.random().toString(36).substring(2, 10).toUpperCase()}`
+    
     await dbPool.request()
       .input('application_id', sql.BigInt, applicationId)
       .input('pass_receipt', sql.NVarChar(50), pass_receipt)
+      .input('token', sql.NVarChar(100), token)
       .query(`
-        INSERT INTO visit_passes (application_id, pass_receipt, status)
-        VALUES (@application_id, @pass_receipt, 'active')
+        INSERT INTO visit_passes (application_id, pass_receipt, token, status)
+        VALUES (@application_id, @pass_receipt, @token, 'active')
       `)
   }
 
@@ -1652,5 +1656,53 @@ export class AzureSqlDB {
         ORDER BY a.created_at DESC
       `)
     return result.recordset
+  }
+
+  /** QR 스캔 로그 조회 (출입현황) */
+  static async getQrScanLogs(scanSite: string): Promise<any[]> {
+    const dbPool = await getPool()
+    const result = await dbPool.request()
+      .input('scan_site', sql.NVarChar(50), scanSite)
+      .query(`
+        SELECT 
+          s.scan_id,
+          s.pass_id,
+          s.direction,
+          s.scanned_at,
+          s.device_id,
+          s.scanned_ip,
+          s.scan_site,
+          s.result,
+          s.deny_reason,
+          s.visitor_name,
+          s.visitor_org,
+          s.contact_name,
+          s.access_area,
+          s.vehicle_number,
+          p.application_id
+        FROM visit_pass_scans s
+        LEFT JOIN visit_passes p ON s.pass_id = p.pass_id
+        WHERE s.scan_site = @scan_site OR @scan_site = 'ALL'
+        ORDER BY s.scanned_at DESC
+      `)
+    return result.recordset
+  }
+
+  /** QR 스캔 통계 조회 */
+  static async getQrScanStats(scanSite: string): Promise<any> {
+    const dbPool = await getPool()
+    const result = await dbPool.request()
+      .input('scan_site', sql.NVarChar(50), scanSite)
+      .query(`
+        SELECT 
+          COUNT(*) as total,
+          SUM(CASE WHEN direction = 'ENTRY' THEN 1 ELSE 0 END) as entryCount,
+          SUM(CASE WHEN direction = 'EXIT' THEN 1 ELSE 0 END) as exitCount,
+          SUM(CASE WHEN result = 'ALLOW' THEN 1 ELSE 0 END) as allowCount,
+          SUM(CASE WHEN result = 'DENY' THEN 1 ELSE 0 END) as denyCount
+        FROM visit_pass_scans
+        WHERE scan_site = @scan_site OR @scan_site = 'ALL'
+      `)
+    return result.recordset[0] || { total: 0, entryCount: 0, exitCount: 0, allowCount: 0, denyCount: 0 }
   }
 }
