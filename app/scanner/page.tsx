@@ -2,8 +2,9 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
-import Link from "next/link"
-import { Home, QrCode, Smartphone, LogIn, LogOut, DoorOpen } from "lucide-react"
+import { QrCode, Smartphone, LogIn, LogOut, DoorOpen } from "lucide-react"
+import { PublicHeader } from "@/components/public/public-header"
+import { PublicFooter } from "@/components/public/public-footer"
 
 type AuthMethod = "qr" | "phone" | null
 type Direction = "ENTRY" | "EXIT"
@@ -25,26 +26,10 @@ export default function ScannerMainPage() {
   }
 
   return (
-    <div className="min-h-screen bg-neutral-950 text-white flex flex-col">
-      <header className="px-6 py-4 border-b border-white/10 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg bg-amber-500/10 border border-amber-500/30 flex items-center justify-center">
-            <span className="text-amber-500 text-xs font-black">B</span>
-          </div>
-          <span className="text-sm font-bold tracking-widest uppercase text-white/50">
-            B-LINK · 출입 권한 인증
-          </span>
-        </div>
-        <Link
-          href="/"
-          className="flex items-center gap-2 px-3 py-2 rounded-xl border border-white/20 text-white/70 text-sm font-medium hover:bg-white/10 hover:text-white transition-colors"
-        >
-          <Home size={18} />
-          메인
-        </Link>
-      </header>
+    <div className="min-h-screen bg-black text-white flex flex-col">
+      <PublicHeader initialScrolled />
 
-      <main className="flex-1 flex flex-col items-center justify-center p-6 max-w-md mx-auto w-full">
+      <main className="flex-1 flex flex-col items-center justify-center p-6 max-w-md mx-auto w-full pt-24">
         <h1 className="text-xl font-black text-white mb-2">출입 권한 인증</h1>
         <p className="text-sm text-white/50 mb-8">인증 방식과 출입 방향을 선택하세요</p>
 
@@ -119,9 +104,7 @@ export default function ScannerMainPage() {
         )}
       </main>
 
-      <footer className="px-6 py-4 text-center text-[10px] text-white/20 tracking-widest uppercase border-t border-white/5">
-        © BORYEONG LNG Terminal Management System
-      </footer>
+      <PublicFooter />
     </div>
   )
 }
