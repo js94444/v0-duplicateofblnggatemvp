@@ -294,8 +294,7 @@ export default function AdminAccountsPage() {
             <Button
               onClick={() => fileInputRef.current?.click()}
               disabled={bulkLoading}
-              variant="outline"
-              className="border-white/20 text-white/70 hover:bg-white/10 hover:text-white font-bold rounded-xl px-5 py-2.5 flex items-center gap-2"
+              className="bg-white/10 hover:bg-white/20 border border-white/20 text-white font-bold rounded-xl px-5 py-2.5 flex items-center gap-2"
             >
               <Upload size={18} />
               {bulkLoading ? "처리 중..." : "CSV 일괄 업로드"}
