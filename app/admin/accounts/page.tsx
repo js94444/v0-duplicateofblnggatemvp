@@ -92,6 +92,7 @@ export default function AdminAccountsPage() {
   // 역할별 권한 맵: { security: { "/admin/dashboard": true, ... }, manager: { ... } }
   const permMap = useMemo(() => {
     const map: Record<string, Record<string, boolean>> = {}
+    if (!permissions || !Array.isArray(permissions)) return map
     for (const p of permissions) {
       if (!map[p.role]) map[p.role] = {}
       map[p.role][p.page_path] = !!p.allowed
