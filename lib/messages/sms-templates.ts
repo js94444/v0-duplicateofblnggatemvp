@@ -69,8 +69,8 @@ export function getSubmissionSmsText(payload: SubmissionSmsPayload, recipientTyp
   const recipientLabel = recipientType === 'security' ? '[보안담당자용]' : '[담당자용]'
 
   const firstLine = payload.isChangeResubmission
-    ? `${recipientLabel} B-Link 신청 내용 수정사항이 발생하여, 재접수되었습니다.`
-    : `${recipientLabel} B-Link 방문 신청이 접수되었습니다.`
+    ? `${recipientLabel} 보령LNG터미널 신청 내용 수정사항이 발생하여, 재접수되었습니다.`
+    : `${recipientLabel} 보령LNG터미널 방문 신청이 접수되었습니다.`
 
   return [
     firstLine,
@@ -109,7 +109,7 @@ export function getCancelSmsText(payload: CancelSmsPayload): string {
   const statusLabel = getStatusLabel("cancelled")
 
   return [
-    "B-Link 방문 신청이 취소 되었습니다.",
+    "보령LNG터미널 방문 신청이 취소 되었습니다.",
     "",
     `유형 : ${typeLabel}`,
     `신청자 이름 : ${applicantName}`,
@@ -144,7 +144,7 @@ export function getApprovalSmsText(payload: ApprovalSmsPayload, recipientType: '
   const recipientLabel = recipientType === 'companion' ? '[동행인용]' : '[신청자용]'
 
   const lines = [
-    `${recipientLabel} B-Link 방문 신청이 승인되었습니다.`,
+    `${recipientLabel} 보령LNG터미널 방문 신청이 승인되었습니다.`,
     "",
     `방문기간 : ${period}`,
     `출입지역 : ${payload.access_area || "-"}`,
@@ -165,9 +165,9 @@ export interface RejectionSmsPayload {
 
 export function getRejectionSmsText(payload: RejectionSmsPayload, recipientType: 'applicant' | 'contact' = 'applicant'): string {
   const recipientLabel = recipientType === 'contact' ? '[담당자용]' : '[신청자용]'
-  
+
   const lines = [
-    `${recipientLabel} B-Link 방문 신청이 반려되었습니다.`,
+    `${recipientLabel} 보령LNG터미널 방문 신청이 반려되었습니다.`,
     "",
     `접수번호 : ${payload.receipt}`,
   ]
@@ -179,13 +179,13 @@ export function getRejectionSmsText(payload: RejectionSmsPayload, recipientType:
 
 /** Approve API에서 호출용: pass_receipt와 application 객체로 SMS 메시지 생성 */
 export function getApprovalSMSMessage(pass_receipt: string | null, application: any, recipientType: 'applicant' | 'companion' = 'applicant'): string {
-  const qrUrl = pass_receipt 
+  const qrUrl = pass_receipt
     ? `${process.env.NEXT_PUBLIC_APP_URL || 'https://blink.com'}/qr/${pass_receipt}`
     : null
-  
+
   // 동행인의 경우 pass_receipt를 접수번호로 사용 (PA-20260310-904-1 형식)
   const receiptNumber = pass_receipt || application.receipt || "N/A"
-  
+
   return getApprovalSmsText({
     receipt: receiptNumber,
     visit_start_date: application.visit_start_date,

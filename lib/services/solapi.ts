@@ -41,7 +41,7 @@ export async function sendSms(to: string, text: string): Promise<SmsResult> {
       from: FROM,
       text,
       type: "LMS",
-      subject: "B-Link 방문 안내",
+      subject: "보령LNG터미널 방문 안내",
     })
     return { success: true }
   } catch (err: unknown) {
