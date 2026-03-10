@@ -1191,7 +1191,7 @@ export class AzureSqlDB {
   static async getAllAccounts(): Promise<any[]> {
     const dbPool = await getPool()
     const result = await dbPool.request().query(`
-      SELECT account_id, username, name, role, is_active, created_at, last_login_at
+      SELECT account_id, username, name, role, phone, is_active, is_security_contact, created_at, last_login_at
       FROM admin_accounts
       ORDER BY created_at DESC
     `)
