@@ -17,7 +17,29 @@ export async function GET(request: NextRequest) {
     const data = await AzureSqlDB.getQrScanLogs(scanSiteFilter)
     const stats = await AzureSqlDB.getQrScanStats(scanSiteFilter)
 
-    return NextResponse.json({ data, stats })
+    // 고유 application_id 목록 추출
+    const applicationIds = [...new Set(data.map((d: any) => d.application_id).filter(Boolean))]
+    
+    // 각 application_id별 항만이수증 파일 조회
+    const portCertMap = new Map<number, Array<{ file_url: string; file_name: string }>>()
+    if (applicationIds.length > 0) {
+      const portCertFiles = await AzureSqlDB.getPortCertFilesByApplicationIds(applicationIds as number[])
+      for (const file of portCertFiles) {
+        const appId = file.application_id
+        if (!portCertMap.has(appId)) {
+          portCertMap.set(appId, [])
+        }
+        portCertMap.get(appId)!.push({ file_url: file.file_url, file_name: file.file_name })
+      }
+    }
+
+    // 각 스캔 데이터에 portCertFiles 추가
+    const dataWithCerts = data.map((d: any) => ({
+      ...d,
+      portCertFiles: d.application_id ? (portCertMap.get(d.application_id) || []) : []
+    }))
+
+    return NextResponse.json({ data: dataWithCerts, stats })
   } catch (error) {
     console.error("[v0] Failed to get QR scan logs:", error)
     return NextResponse.json(

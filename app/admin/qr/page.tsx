@@ -30,6 +30,7 @@ interface ScanRow {
   vehicle_model: string | null
   visitor_birth_date: string | null
   spark_arrestor: string | null
+  portCertFiles: Array<{ file_url: string; file_name: string }>
 }
 
 interface ScanStats {
@@ -56,6 +57,7 @@ export default function AdminQrScanPage() {
   const [selectedApplicationId, setSelectedApplicationId] = useState<number | null>(null)
   const [selectedApplication, setSelectedApplication] = useState<Application | null>(null)
   const [modalLoading, setModalLoading] = useState(false)
+  const [portCertModal, setPortCertModal] = useState<{ open: boolean; files: Array<{ file_url: string; file_name: string }>; visitorName: string }>({ open: false, files: [], visitorName: "" })
 
   // 슈퍼어드민만 접근 가능
   useEffect(() => {
@@ -145,7 +147,7 @@ export default function AdminQrScanPage() {
         vehicle_model: string | null
         visitor_birth_date: string | null
         spark_arrestor: string | null
-        portCertFiles: Array<{ file_url: string; file_name: string }> | null
+        portCertFiles: Array<{ file_url: string; file_name: string }>
         lastEntryAt: string | null
         lastExitAt: string | null
         lastEventAt: number
@@ -166,7 +168,7 @@ export default function AdminQrScanPage() {
           vehicle_model: row.vehicle_model,
           visitor_birth_date: row.visitor_birth_date,
           spark_arrestor: row.spark_arrestor,
-          portCertFiles: null,
+          portCertFiles: row.portCertFiles || [],
           lastEntryAt: null,
           lastExitAt: null,
           lastEventAt: 0,
@@ -356,67 +358,67 @@ export default function AdminQrScanPage() {
                           key={row.pass_id}
                           className={`border-white/5 hover:bg-white/5 transition-colors ${recentClass}`}
                         >
-                          <TableCell
-                            className={`text-sm cursor-pointer ${row.portCertFiles?.length ? 'text-blue-400 hover:underline' : 'text-white/80'}`}
-                            onClick={() => {
-                              if (row.portCertFiles?.length) {
-                                setSelectedApplicationId(row.application_id)
-                              }
-                            }}
-                          >
-                            {row.visitor_name || "-"}
-                          </TableCell>
-                          <TableCell className="text-sm text-white/80">
-                            {row.visitor_birth_date ? new Date(row.visitor_birth_date).toLocaleDateString("ko-KR") : "-"}
-                          </TableCell>
-                          <TableCell className="text-sm text-white/60 max-w-[140px] truncate">
-                            {row.visitor_org || "-"}
-                          </TableCell>
-                          <TableCell className="max-w-[140px]">
-                            <div className="flex flex-col gap-0.5">
-                              <span className="text-sm truncate text-white/80">
-                                {row.contact_name || "-"}
-                              </span>
-                              <span className="text-xs text-white/40">
-                                {row.contact_mobile || "-"}
-                              </span>
-                            </div>
-                          </TableCell>
-                          <TableCell className="text-sm text-white/80">
-                            {row.access_area || "-"}
-                          </TableCell>
-                          <TableCell className="text-sm text-white/80">
-                            {formatDateTime(row.lastEntryAt)}
-                          </TableCell>
-                          <TableCell className="text-sm text-white/80">
-                            {formatDateTime(row.lastExitAt)}
-                          </TableCell>
-                          <TableCell className="text-sm text-white/80">
-                            {row.vehicle_number || "-"}
-                          </TableCell>
-                          <TableCell className="text-sm text-white/80">
-                            {row.vehicle_model || "-"}
-                          </TableCell>
-                          <TableCell className="text-sm text-center text-white/80">
-                            {row.spark_arrestor || "-"}
-                          </TableCell>
-                          <TableCell>
-                            <Button
-                              size="sm"
-                              onClick={() => setSelectedApplicationId(row.application_id)}
-                              className="bg-white/10 hover:bg-white/20 border border-white/20 text-white rounded-lg text-xs px-2 py-1"
-                            >
-                              보기
-                            </Button>
-                          </TableCell>
-                        </TableRow>
-                      )
-                    })}
-                  </TableBody>
-                </Table>
-              </div>
-            )}
-          </>
+                      <TableCell 
+                        className={`text-sm ${row.portCertFiles?.length ? 'text-blue-400 cursor-pointer hover:underline' : 'text-white/80'}`}
+                        onClick={() => {
+                          if (row.portCertFiles?.length) {
+                            setPortCertModal({ open: true, files: row.portCertFiles, visitorName: row.visitor_name || "" })
+                          }
+                        }}
+                      >
+                        {row.visitor_name || "-"}
+                      </TableCell>
+                      <TableCell className="text-sm text-white/80">
+                        {row.visitor_birth_date ? new Date(row.visitor_birth_date).toLocaleDateString("ko-KR") : "-"}
+                      </TableCell>
+                      <TableCell className="text-sm text-white/60 max-w-[140px] truncate">
+                        {row.visitor_org || "-"}
+                      </TableCell>
+                      <TableCell className="max-w-[140px]">
+                        <div className="flex flex-col gap-0.5">
+                          <span className="text-sm truncate text-white/80">
+                            {row.contact_name || "-"}
+                          </span>
+                          <span className="text-xs text-white/40">
+                            {row.contact_mobile || "-"}
+                          </span>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-sm text-white/80">
+                        {row.access_area || "-"}
+                      </TableCell>
+                      <TableCell className="text-sm text-white/80">
+                        {formatDateTime(row.lastEntryAt)}
+                      </TableCell>
+                      <TableCell className="text-sm text-white/80">
+                        {formatDateTime(row.lastExitAt)}
+                      </TableCell>
+                      <TableCell className="text-sm text-white/80">
+                        {row.vehicle_number || "-"}
+                      </TableCell>
+                      <TableCell className="text-sm text-white/80">
+                        {row.vehicle_model || "-"}
+                      </TableCell>
+                      <TableCell className="text-sm text-center text-white/80">
+                        {row.spark_arrestor || "-"}
+                      </TableCell>
+                      <TableCell>
+                        <Button
+                          size="sm"
+                          onClick={() => setSelectedApplicationId(row.application_id)}
+                          className="bg-white/10 hover:bg-white/20 border border-white/20 text-white rounded-lg text-xs px-2 py-1"
+                        >
+                          보기
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  )
+                })}
+              </TableBody>
+            </Table>
+          </div>
+        )}
+        </>
         )}
 
         {activeTab === "pier" && (
@@ -484,10 +486,10 @@ export default function AdminQrScanPage() {
                           className={`border-white/5 hover:bg-white/5 transition-colors ${recentClass}`}
                         >
                           <TableCell
-                            className={`text-sm cursor-pointer ${row.portCertFiles?.length ? 'text-blue-400 hover:underline' : 'text-white/80'}`}
+                            className={`text-sm ${row.portCertFiles?.length ? 'text-blue-400 cursor-pointer hover:underline' : 'text-white/80'}`}
                             onClick={() => {
                               if (row.portCertFiles?.length) {
-                                setSelectedApplicationId(row.application_id)
+                                setPortCertModal({ open: true, files: row.portCertFiles, visitorName: row.visitor_name || "" })
                               }
                             }}
                           >
@@ -558,6 +560,40 @@ export default function AdminQrScanPage() {
             setSelectedApplication(null)
           }}
         />
+      )}
+
+      {/* 항만이수증 모달 */}
+      {portCertModal.open && (
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm"
+          onClick={() => setPortCertModal({ open: false, files: [], visitorName: "" })}
+        >
+          <div 
+            className="bg-zinc-900 border border-white/10 rounded-2xl p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-bold text-white">{portCertModal.visitorName} - 항만이수증</h3>
+              <button 
+                onClick={() => setPortCertModal({ open: false, files: [], visitorName: "" })}
+                className="text-white/60 hover:text-white text-2xl"
+              >
+                &times;
+              </button>
+            </div>
+            <div className="grid grid-cols-1 gap-4">
+              {portCertModal.files.map((file, idx) => (
+                <div key={idx} className="border border-white/10 rounded-lg overflow-hidden">
+                  <img 
+                    src={file.file_url} 
+                    alt={file.file_name} 
+                    className="w-full h-auto object-contain"
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
       )}
     </div>
   )
