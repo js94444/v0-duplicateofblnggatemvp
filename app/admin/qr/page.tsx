@@ -514,15 +514,17 @@ export default function AdminQrScanPage() {
       </div>
 
       {/* 상세보기 모달 */}
-      <ApplicationDetailModal
-        application={selectedApplication}
-        open={!!selectedApplicationId}
-        onClose={() => {
-          setSelectedApplicationId(null)
-          setSelectedApplication(null)
-        }}
-        loading={modalLoading}
-      />
+      {selectedApplication && (
+        <ApplicationDetailModal
+          application={selectedApplication}
+          open={!!selectedApplication}
+          loading={modalLoading}
+          onClose={() => {
+            setSelectedApplicationId(null)
+            setSelectedApplication(null)
+          }}
+        />
+      )}
     </div>
   )
 }
