@@ -61,15 +61,16 @@ export interface SubmissionSmsPayload {
   isChangeResubmission?: boolean
 }
 
-export function getSubmissionSmsText(payload: SubmissionSmsPayload): string {
+export function getSubmissionSmsText(payload: SubmissionSmsPayload, recipientType: 'security' | 'contact' = 'security'): string {
   const typeLabel = getTypeLabel(payload.receipt)
   const applicantName = formatApplicantName(payload.visitor_name, payload.companionsCount ?? 0)
   const period = `${formatDate(payload.visit_start_date)} ~ ${formatDate(payload.visit_end_date)}`
   const statusLabel = getStatusLabel(payload.status)
+  const recipientLabel = recipientType === 'security' ? '[보안담당자용]' : '[담당자용]'
 
   const firstLine = payload.isChangeResubmission
-    ? "B-Link 신청 내용 수정사항이 발생하여, 재접수되었습니다."
-    : "B-Link 방문 신청이 접수되었습니다."
+    ? `${recipientLabel} B-Link 신청 내용 수정사항이 발생하여, 재접수되었습니다.`
+    : `${recipientLabel} B-Link 방문 신청이 접수되었습니다.`
 
   return [
     firstLine,
@@ -138,11 +139,12 @@ const APPROVAL_NOTES = [
   "안전수칙을 준수해 주세요.",
 ]
 
-export function getApprovalSmsText(payload: ApprovalSmsPayload): string {
+export function getApprovalSmsText(payload: ApprovalSmsPayload, recipientType: 'applicant' | 'companion' = 'applicant'): string {
   const period = `${formatDate(payload.visit_start_date)} ~ ${formatDate(payload.visit_end_date)}`
+  const recipientLabel = recipientType === 'companion' ? '[동행인용]' : '[신청자용]'
 
   const lines = [
-    "B-Link 방문 신청이 승인되었습니다.",
+    `${recipientLabel} B-Link 방문 신청이 승인되었습니다.`,
     "",
     `방문기간 : ${period}`,
     `출입지역 : ${payload.access_area || "-"}`,
@@ -161,9 +163,11 @@ export interface RejectionSmsPayload {
   rejection_reason?: string
 }
 
-export function getRejectionSmsText(payload: RejectionSmsPayload): string {
+export function getRejectionSmsText(payload: RejectionSmsPayload, recipientType: 'applicant' | 'contact' = 'applicant'): string {
+  const recipientLabel = recipientType === 'contact' ? '[담당자용]' : '[신청자용]'
+  
   const lines = [
-    "B-Link 방문 신청이 반려되었습니다.",
+    `${recipientLabel} B-Link 방문 신청이 반려되었습니다.`,
     "",
     `접수번호 : ${payload.receipt}`,
   ]
@@ -174,7 +178,7 @@ export function getRejectionSmsText(payload: RejectionSmsPayload): string {
 }
 
 /** Approve API에서 호출용: pass_receipt와 application 객체로 SMS 메시지 생성 */
-export function getApprovalSMSMessage(pass_receipt: string | null, application: any): string {
+export function getApprovalSMSMessage(pass_receipt: string | null, application: any, recipientType: 'applicant' | 'companion' = 'applicant'): string {
   const qrUrl = pass_receipt 
     ? `${process.env.NEXT_PUBLIC_APP_URL || 'https://blink.com'}/qr/${pass_receipt}`
     : null
@@ -185,13 +189,13 @@ export function getApprovalSMSMessage(pass_receipt: string | null, application: 
     visit_end_date: application.visit_end_date,
     access_area: application.access_area || "N/A",
     qr_page_url: qrUrl,
-  })
+  }, recipientType)
 }
 
 /** Approve API에서 호출용: 반려 메시지 생성 */
-export function getRejectionSMSMessage(application: any, rejection_reason: string): string {
+export function getRejectionSMSMessage(application: any, rejection_reason: string, recipientType: 'applicant' | 'contact' = 'applicant'): string {
   return getRejectionSmsText({
     receipt: application.receipt || "N/A",
     rejection_reason,
-  })
+  }, recipientType)
 }

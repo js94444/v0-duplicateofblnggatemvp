@@ -19,7 +19,16 @@ export async function POST(request: Request) {
 
     // SMS 발송 (보안담당자 + 담당자에게 접수 알림)
     try {
-      const smsMessage = getSubmissionSmsText({
+      // 보안담당자 전화번호 목록 조회
+      const securityPhones = await AzureSqlDB.getSecurityAccountPhones()
+      console.log("[v0] 보안담당자 전화번호 목록:", securityPhones)
+
+      // 담당자 전화번호 (contact_mobile 또는 contact_phone)
+      const contactPhone = body.contact_mobile || body.contact_phone
+      console.log("[v0] 담당자 전화번호:", contactPhone)
+      
+      // 보안담당자용 메시지
+      const securitySmsMessage = getSubmissionSmsText({
         receipt: result.application_number || result.receipt || "N/A",
         visitor_name: body.visitor_name || body.name || "",
         visitor_phone: body.visitor_phone || body.contact_phone || "",
@@ -30,25 +39,36 @@ export async function POST(request: Request) {
         visit_purpose: body.visit_purpose || body.purpose || "",
         status: "pending",
         companionsCount: body.companions?.length || 0,
-      })
+        statusUrl: "",
+      }, 'security')
 
-      // 보안담당자 전화번호 목록 조회
-      const securityPhones = await AzureSqlDB.getSecurityAccountPhones()
-      console.log("[v0] 보안담당자 전화번호 목록:", securityPhones)
+      // 담당자용 메시지
+      const contactSmsMessage = getSubmissionSmsText({
+        receipt: result.application_number || result.receipt || "N/A",
+        visitor_name: body.visitor_name || body.name || "",
+        visitor_phone: body.visitor_phone || body.contact_phone || "",
+        visitor_organization: body.visitor_organization || body.organization || "",
+        visit_start_date: body.visit_start_date || body.visit_datetime || "",
+        visit_end_date: body.visit_end_date || body.visit_datetime || "",
+        access_area: body.access_area || "",
+        visit_purpose: body.visit_purpose || body.purpose || "",
+        status: "pending",
+        companionsCount: body.companions?.length || 0,
+        statusUrl: "",
+      }, 'contact')
 
-      // 담당자 전화번호 (contact_mobile 또는 contact_phone)
-      const contactPhone = body.contact_mobile || body.contact_phone
-      console.log("[v0] 담당자 전화번호:", contactPhone)
-      
-      const recipients = new Set<string>([...securityPhones])
-      if (contactPhone) recipients.add(contactPhone)
-      console.log("[v0] SMS 발송 대상:", Array.from(recipients))
-
-      // 수신자 전체에게 발송
+      // 보안담당자들에게 발송
       const smsResults = await Promise.allSettled(
-        Array.from(recipients).map((phone) => sendSms(phone, smsMessage))
+        securityPhones.map((phone) => sendSms(phone, securitySmsMessage))
       )
-      console.log("[v0] SMS 발송 결과:", smsResults)
+      console.log("[v0] 보안담당자 SMS 발송 결과:", smsResults)
+
+      // 담당자에게도 발송
+      if (contactPhone) {
+        await sendSms(contactPhone, contactSmsMessage).catch((err) => {
+          console.error("[v0] 담당자 SMS 발송 실패:", err)
+        })
+      }
     } catch (smsError) {
       console.error("[v0] SMS 발송 실패 (신청 접수는 정상 처리됨):", smsError)
     }

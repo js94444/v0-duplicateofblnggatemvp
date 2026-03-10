@@ -87,31 +87,47 @@ export async function POST(request: NextRequest) {
 
       if (action === "approve") {
         // 승인 시: 신청자 + 동행인에게 QR 포함 문자
-        const approvalMsg = getApprovalSMSMessage(pass_receipt, updatedApplication)
         const companionPhones = await AzureSqlDB.getCompanionPhonesByApplicationId(id)
         const approvalRecipients = new Set<string>()
-        if (visitorPhone) approvalRecipients.add(visitorPhone)
-        companionPhones.forEach((p) => approvalRecipients.add(p))
+        
+        // 신청자에게 발송 (신청자용 라벨)
+        if (visitorPhone) {
+          const applicantMsg = getApprovalSMSMessage(pass_receipt, updatedApplication, 'applicant')
+          await sendSms(visitorPhone, applicantMsg).catch((err) => {
+            console.error("[v0] 신청자 SMS 발송 실패:", err)
+          })
+        }
 
-        await Promise.allSettled(
-          Array.from(approvalRecipients).map((phone) => sendSms(phone, approvalMsg))
-        )
+        // 동행인들에게 발송 (동행인용 라벨)
+        if (companionPhones.length > 0) {
+          const companionMsg = getApprovalSMSMessage(pass_receipt, updatedApplication, 'companion')
+          await Promise.allSettled(
+            companionPhones.map((phone) => sendSms(phone, companionMsg))
+          )
+        }
 
         // 승인 시: 담당자에게 승인 완료 알림
         if (contactPhone) {
-          const contactMsg = `[B-Link] 방문 신청이 승인되었습니다.\n신청자: ${updatedApplication.visitor_name || ""}\n접수번호: ${updatedApplication.application_number || updatedApplication.receipt || ""}`
+          const contactMsg = `[담당자용] [B-Link] 방문 신청이 승인되었습니다.\n신청자: ${updatedApplication.visitor_name || ""}\n접수번호: ${updatedApplication.application_number || updatedApplication.receipt || ""}`
           await sendSms(contactPhone, contactMsg).catch(() => {})
         }
       } else {
         // 반려 시: 신청자 + 담당자에게 반려 문자
-        const rejectionMsg = getRejectionSMSMessage(updatedApplication, reason || "")
-        const rejectionRecipients = new Set<string>()
-        if (visitorPhone) rejectionRecipients.add(visitorPhone)
-        if (contactPhone) rejectionRecipients.add(contactPhone)
+        // 신청자에게 발송 (신청자용 라벨)
+        if (visitorPhone) {
+          const applicantMsg = getRejectionSMSMessage(updatedApplication, reason || "", 'applicant')
+          await sendSms(visitorPhone, applicantMsg).catch((err) => {
+            console.error("[v0] 신청자 반려 SMS 발송 실패:", err)
+          })
+        }
 
-        await Promise.allSettled(
-          Array.from(rejectionRecipients).map((phone) => sendSms(phone, rejectionMsg))
-        )
+        // 담당자에게 발송 (담당자용 라벨)
+        if (contactPhone) {
+          const contactMsg = getRejectionSMSMessage(updatedApplication, reason || "", 'contact')
+          await sendSms(contactPhone, contactMsg).catch((err) => {
+            console.error("[v0] 담당자 반려 SMS 발송 실패:", err)
+          })
+        }
       }
     } catch (smsError) {
       console.error("Failed to send SMS:", smsError)
