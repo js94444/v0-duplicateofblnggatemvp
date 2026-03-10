@@ -549,10 +549,19 @@ export default function AdminAccountsPage() {
                         </span>
                       </TableCell>
                       <TableCell className="text-white/60 text-sm">
-                        {account.created_at ? new Date(account.created_at).toLocaleDateString("ko-KR") : "-"}
+                        {account.created_at ? (() => {
+                          const d = new Date(account.created_at)
+                          return `${d.getUTCFullYear()}-${(d.getUTCMonth()+1).toString().padStart(2,'0')}-${d.getUTCDate().toString().padStart(2,'0')}`
+                        })() : "-"}
                       </TableCell>
                       <TableCell className="text-white/60 text-sm">
-                        {account.last_login_at ? new Date(account.last_login_at).toLocaleString("ko-KR") : "미접속"}
+                        {account.last_login_at ? (() => {
+                          const d = new Date(account.last_login_at)
+                          const hour = d.getUTCHours()
+                          const ampm = hour < 12 ? '오전' : '오후'
+                          const hour12 = hour % 12 || 12
+                          return `${d.getUTCFullYear()}-${(d.getUTCMonth()+1).toString().padStart(2,'0')}-${d.getUTCDate().toString().padStart(2,'0')} ${ampm} ${hour12}:${d.getUTCMinutes().toString().padStart(2,'0')}`
+                        })() : "미접속"}
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2">
