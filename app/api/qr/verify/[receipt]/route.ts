@@ -3,6 +3,55 @@ import { AzureSqlDB } from "@/lib/db/azure-sql"
 
 export const runtime = "nodejs"
 
+export async function GET(
+  request: NextRequest,
+  { params }: { params: Promise<{ receipt: string }> }
+) {
+  try {
+    const { receipt } = await params
+    const { searchParams } = new URL(request.url)
+    const direction = searchParams.get("direction") === "EXIT" ? "EXIT" : "ENTRY"
+    const gate = searchParams.get("gate") ?? "main"
+    
+    console.log("[v0] QR Verify GET - receipt:", receipt, "direction:", direction, "gate:", gate)
+
+    if (!receipt || receipt.trim() === "") {
+      return NextResponse.json(
+        { result: "DENY", message: "접수번호가 필요합니다." },
+        { status: 400 }
+      )
+    }
+
+    // 스캔 기록 저장 및 검증
+    const result = await AzureSqlDB.verifyVisitPassByReceiptWithDirection(
+      receipt,
+      direction,
+      "WEB",
+      null,
+      request.headers.get("user-agent"),
+      gate
+    )
+    
+    console.log("[v0] QR Verify result:", result)
+
+    return NextResponse.json({
+      result: result.result,
+      message: result.message,
+      visitor_name: result.visitor_name,
+      visitor_org: result.visitor_org,
+      access_area: result.access_area,
+      visit_start_date: result.visit_start_date,
+      visit_end_date: result.visit_end_date,
+    })
+  } catch (e) {
+    console.error("[v0] QR Verify GET error:", e)
+    return NextResponse.json(
+      { result: "DENY", message: "서버 오류가 발생했습니다." },
+      { status: 500 }
+    )
+  }
+}
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json().catch(() => ({}))

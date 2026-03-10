@@ -1569,7 +1569,8 @@ export class AzureSqlDB {
     const appResult = await dbPool.request()
       .input('pass_receipt', sql.NVarChar(50), receipt)
       .query(`
-        SELECT a.application_id, a.visitor_name, a.visit_start_date, a.visit_end_date, a.status, p.pass_id
+        SELECT a.application_id, a.visitor_name, a.visitor_organization as visitor_org, 
+               a.access_area, a.visit_start_date, a.visit_end_date, a.status, p.pass_id
         FROM visit_applications a
         INNER JOIN visit_passes p ON a.application_id = p.application_id
         WHERE p.pass_receipt = @pass_receipt
@@ -1612,7 +1613,15 @@ export class AzureSqlDB {
       console.error('[v0] Failed to record scan:', e)
     }
 
-    return { result: "ALLOW", message: `${direction === 'ENTRY' ? '입장' : '퇴장'} 처리되었습니다` }
+    return { 
+      result: "ALLOW", 
+      message: `${direction === 'ENTRY' ? '입장' : '퇴장'} 처리되었습니다`,
+      visitor_name: app.visitor_name,
+      visitor_org: app.visitor_org,
+      access_area: app.access_area,
+      visit_start_date: app.visit_start_date,
+      visit_end_date: app.visit_end_date,
+    }
   }
 
   /** 휴대폰 번호로 승인된 신청 조회 */
