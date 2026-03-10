@@ -53,7 +53,8 @@ export default function ScannerQrPage() {
       try {
         setError(null)
         const stream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: "environment", width: { ideal: 1280 }, height: { ideal: 720 } },
+          // facingMode를 "user"로 변경하여 전면 카메라(셀카 모드) 사용
+          video: { facingMode: "user", width: { ideal: 1280 }, height: { ideal: 720 } },
         })
         streamRef.current = stream
         const video = videoRef.current
@@ -88,6 +89,11 @@ export default function ScannerQrPage() {
       }
       canvas.width = video.videoWidth
       canvas.height = video.videoHeight
+
+      // 좌우 반전 처리가 필요한 경우 아래 주석을 해제하세요 (셀카 모드 느낌)
+      // ctx.translate(canvas.width, 0);
+      // ctx.scale(-1, 1);
+
       ctx.drawImage(video, 0, 0)
       const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height)
       const code = jsQR(imageData.data, imageData.width, imageData.height)
@@ -170,7 +176,8 @@ export default function ScannerQrPage() {
         >
           <video
             ref={videoRef}
-            className="absolute inset-0 w-full h-full object-cover"
+            // 전면 카메라 사용 시 화면 좌우 반전을 위해 scale-x-[-1] 추가
+            className="absolute inset-0 w-full h-full object-cover scale-x-[-1]"
             playsInline
             muted
           />
