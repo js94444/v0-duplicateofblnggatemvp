@@ -9,7 +9,7 @@ import { type Application, APPLICATION_STATUS_LABELS } from "@/lib/types"
 import { X, Download, FileText, ZoomIn } from "lucide-react"
 
 interface ApplicationDetailModalProps {
-  application: Application
+  application: Application | null
   open: boolean
   loading?: boolean
   onClose: () => void
@@ -186,7 +186,11 @@ function AttachmentSection({ title, files }: { title: string; files: any[] }) {
 }
 
 export function ApplicationDetailModal({ application, open, loading = false, onClose }: ApplicationDetailModalProps) {
+  // application이 null일 때 로딩 상태로 처리
   const app = application as any
+  
+  // 모달이 열리고 데이터 로딩 중이거나 application이 없으면 로딩 UI 표시
+  const isLoading = loading || !application
 
   const getStatusColor = (status: string) => {
     const statusUpper = status?.toUpperCase() || ""
@@ -249,9 +253,9 @@ export function ApplicationDetailModal({ application, open, loading = false, onC
           </div>
         </DialogHeader>
 
-        {/* 본문 */}
-        <div className="flex-1 overflow-y-auto p-8 space-y-8 custom-scrollbar">
-          {loading ? (
+{/* 본문 */}
+  <div className="flex-1 overflow-y-auto p-8 space-y-8 custom-scrollbar">
+{isLoading ? (
             <div className="space-y-6">
               <Skeleton className="h-48 w-full rounded-3xl bg-white/5" />
               <Skeleton className="h-48 w-full rounded-3xl bg-white/5" />
@@ -277,7 +281,7 @@ export function ApplicationDetailModal({ application, open, loading = false, onC
                       <InfoField label="소속" value={app.visitor_organization} />
                       <InfoField label="직책" value={app.visitor_position} />
                       <InfoField label="이메일" value={app.visitor_email || app.contact_email} />
-                      <InfoField label="회사주소" value={app.visitor_address} />
+                      <InfoField label="��사주소" value={app.visitor_address} />
                       <InfoField label="차량번호" value={app.vehicle_number} />
                       <InfoField label="차종" value={app.vehicle_model} />
                     </div>
