@@ -1382,43 +1382,6 @@ export class AzureSqlDB {
     return result.recordset[0].allowed === true
   }
 
-  // ─── QR pass_receipt 관리 ────────────────────────────────────
-
-  /** 고유한 pass_receipt (QR 코드) 생성 */
-  static generatePassReceipt(): string {
-    // 형식: QR-YYYYMMDD-XXXXXX (6글자 랜덤)
-    const date = new Date()
-    const dateStr = date.toISOString().split('T')[0].replace(/-/g, '')
-    const random = Math.random().toString(36).substring(2, 8).toUpperCase()
-    return `QR-${dateStr}-${random}`
-  }
-
-  /** 신청 승인 시 pass_receipt 저장 */
-  static async createPassForApplication(applicationId: string, pass_receipt: string): Promise<void> {
-    const dbPool = await getPool()
-    await dbPool.request()
-      .input('application_id', sql.BigInt, applicationId)
-      .input('pass_receipt', sql.NVarChar(50), pass_receipt)
-      .query(`
-        INSERT INTO visit_passes (application_id, pass_receipt, status)
-        VALUES (@application_id, @pass_receipt, 'active')
-      `)
-  }
-
-  /** pass_receipt로 신청 조회 */
-  static async getApplicationByPassReceipt(pass_receipt: string): Promise<any> {
-    const dbPool = await getPool()
-    const result = await dbPool.request()
-      .input('pass_receipt', sql.NVarChar(50), pass_receipt)
-      .query(`
-        SELECT a.*, p.pass_receipt
-        FROM visit_applications a
-        INNER JOIN visit_passes p ON a.id = p.application_id
-        WHERE p.pass_receipt = @pass_receipt
-      `)
-    return result.recordset[0] || null
-  }
-
   // 통계 조회
   static async getApplicationStats() {
     const dbPool = await getPool()
@@ -1542,7 +1505,7 @@ export class AzureSqlDB {
 
   // ─── QR 출입권 관리 ────────────────────────────────────
 
-  /** ���유����� pass_receipt (QR 코드) 생성 */
+  /** �����유����� pass_receipt (QR 코드) 생성 */
   static generatePassReceipt(): string {
     // 형식: QR-YYYYMMDD-XXXXXX (6글자 랜덤)
     const date = new Date()
@@ -1557,21 +1520,23 @@ export class AzureSqlDB {
     // token 생성 (임시 토큰: UUID 대신 랜덤 스트링)
     const token = `TOKEN-${Date.now()}-${Math.random().toString(36).substring(2, 10).toUpperCase()}`
     
-    // 신청 정보에서 방문 시작일 가져오기
+    // 신청 정보에서 방문 기간 가져오기
     const appResult = await dbPool.request()
       .input('app_id', sql.BigInt, applicationId)
-      .query(`SELECT visit_start_date FROM visit_applications WHERE application_id = @app_id`)
+      .query(`SELECT visit_start_date, visit_end_date FROM visit_applications WHERE application_id = @app_id`)
     
     const validFrom = appResult.recordset[0]?.visit_start_date || new Date()
+    const validTo = appResult.recordset[0]?.visit_end_date || new Date()
     
     await dbPool.request()
       .input('application_id', sql.BigInt, applicationId)
       .input('pass_receipt', sql.NVarChar(50), pass_receipt)
       .input('token', sql.NVarChar(100), token)
       .input('valid_from', sql.DateTime, validFrom)
+      .input('valid_to', sql.DateTime, validTo)
       .query(`
-        INSERT INTO visit_passes (application_id, pass_receipt, token, status, valid_from)
-        VALUES (@application_id, @pass_receipt, @token, 'active', @valid_from)
+        INSERT INTO visit_passes (application_id, pass_receipt, token, status, valid_from, valid_to)
+        VALUES (@application_id, @pass_receipt, @token, 'active', @valid_from, @valid_to)
       `)
   }
 
@@ -1766,5 +1731,17 @@ export class AzureSqlDB {
       WHERE is_security_contact = 1 AND is_active = 1
     `)
     return result.recordset
+  }
+
+  /** pass_receipt로 visit_passes 조회 */
+  static async getPassByReceipt(passReceipt: string): Promise<any | null> {
+    const dbPool = await getPool()
+    const result = await dbPool.request()
+      .input('pass_receipt', sql.NVarChar(50), passReceipt)
+      .query(`
+        SELECT * FROM visit_passes
+        WHERE pass_receipt = @pass_receipt
+      `)
+    return result.recordset[0] || null
   }
 }
