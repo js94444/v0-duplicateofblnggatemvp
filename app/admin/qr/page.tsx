@@ -240,7 +240,7 @@ export default function AdminQrScanPage() {
                   : "text-white/60 hover:text-white hover:bg-white/10"
               }`}
             >
-              ��두 출입현황
+              부두 출입현황
             </button>
           </div>
           <p className="text-xs uppercase tracking-[0.2em] text-white/40 font-bold">
