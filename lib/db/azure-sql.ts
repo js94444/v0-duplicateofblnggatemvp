@@ -1670,8 +1670,11 @@ export class AzureSqlDB {
           s.contact_name,
           s.access_area,
           s.vehicle_number,
-          s.application_id
+          s.application_id,
+          a.contact_mobile,
+          a.visitor_birth_date
         FROM visit_pass_scans s
+        LEFT JOIN visit_applications a ON s.application_id = a.application_id
         ${isAll ? '' : 'WHERE s.scan_site = @scan_site'}
         ORDER BY s.scanned_at DESC
       `)

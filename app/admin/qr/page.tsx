@@ -7,6 +7,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Button } from "@/components/ui/button"
 import { RefreshCw } from "lucide-react"
 import { useAdminAuth } from "@/hooks/use-admin-auth"
+import { ApplicationDetailModal } from "@/components/admin/application-detail-modal"
+import { Application } from "@/lib/types"
 
 interface ScanRow {
   scan_id: string
@@ -22,8 +24,10 @@ interface ScanRow {
   visitor_name: string | null
   visitor_org: string | null
   contact_name: string | null
+  contact_mobile: string | null
   access_area: string | null
   vehicle_number: string | null
+  visitor_birth_date: string | null
 }
 
 interface ScanStats {
@@ -47,6 +51,9 @@ export default function AdminQrScanPage() {
   const [scans, setScans] = useState<ScanRow[]>([])
   const [stats, setStats] = useState<ScanStats | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [selectedApplicationId, setSelectedApplicationId] = useState<number | null>(null)
+  const [selectedApplication, setSelectedApplication] = useState<Application | null>(null)
+  const [modalLoading, setModalLoading] = useState(false)
 
   // 슈퍼어드민만 접근 가능
   useEffect(() => {
@@ -98,6 +105,26 @@ export default function AdminQrScanPage() {
     loadData()
   }, [activeTab, pierTab])
 
+  // 상세보기 모달용 application 조회
+  useEffect(() => {
+    if (!selectedApplicationId) return
+    const fetchApplication = async () => {
+      setModalLoading(true)
+      try {
+        const res = await fetch(`/api/admin/applications/${selectedApplicationId}`)
+        if (res.ok) {
+          const data = await res.json()
+          setSelectedApplication(data)
+        }
+      } catch (e) {
+        console.error("Failed to fetch application:", e)
+      } finally {
+        setModalLoading(false)
+      }
+    }
+    fetchApplication()
+  }, [selectedApplicationId])
+
   const TEN_MINUTES_MS = 10 * 60 * 1000
 
   // pass_id별로 묶어 1인 1행 (입장/퇴장 열 분리). 신청자+동행자 각각 행으로 표시
@@ -110,10 +137,10 @@ export default function AdminQrScanPage() {
         visitor_name: string | null
         visitor_org: string | null
         contact_name: string | null
+        contact_mobile: string | null
         access_area: string | null
         vehicle_number: string | null
-        device_id: string | null
-        scanned_ip: string | null
+        visitor_birth_date: string | null
         lastEntryAt: string | null
         lastExitAt: string | null
         lastEventAt: number
@@ -128,10 +155,10 @@ export default function AdminQrScanPage() {
           visitor_name: row.visitor_name,
           visitor_org: row.visitor_org,
           contact_name: row.contact_name,
+          contact_mobile: row.contact_mobile,
           access_area: row.access_area,
           vehicle_number: row.vehicle_number,
-          device_id: row.device_id,
-          scanned_ip: row.scanned_ip,
+          visitor_birth_date: row.visitor_birth_date,
           lastEntryAt: null,
           lastExitAt: null,
           lastEventAt: 0,
@@ -213,7 +240,7 @@ export default function AdminQrScanPage() {
                   : "text-white/60 hover:text-white hover:bg-white/10"
               }`}
             >
-              부두 출입현황
+              ��두 출입현황
             </button>
           </div>
           <p className="text-xs uppercase tracking-[0.2em] text-white/40 font-bold">
@@ -302,14 +329,15 @@ export default function AdminQrScanPage() {
             <Table>
               <TableHeader className="bg-white/5">
                 <TableRow className="border-white/10 hover:bg-transparent">
-                  <TableHead className="text-white/70 min-w-[140px]">방문자</TableHead>
-                  <TableHead className="text-white/70 min-w-[160px]">소속</TableHead>
+                  <TableHead className="text-white/70 min-w-[100px]">방문자</TableHead>
+                  <TableHead className="text-white/70 min-w-[100px]">생년월일</TableHead>
+                  <TableHead className="text-white/70 min-w-[140px]">소속</TableHead>
                   <TableHead className="text-white/70 min-w-[140px]">담당자</TableHead>
-                  <TableHead className="text-white/70 min-w-[120px]">출입 구역</TableHead>
+                  <TableHead className="text-white/70 min-w-[100px]">출입 구역</TableHead>
                   <TableHead className="text-white/70 min-w-[140px]">입장 시각</TableHead>
                   <TableHead className="text-white/70 min-w-[140px]">퇴장 시각</TableHead>
-                  <TableHead className="text-white/70 min-w-[120px]">차량 번호</TableHead>
-                  <TableHead className="text-white/70 min-w-[160px]">기기 / IP</TableHead>
+                  <TableHead className="text-white/70 min-w-[100px]">차량 번호</TableHead>
+                  <TableHead className="text-white/70 min-w-[80px]">상세</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -323,11 +351,21 @@ export default function AdminQrScanPage() {
                       <TableCell className="text-sm text-white/80">
                         {row.visitor_name || "-"}
                       </TableCell>
-                      <TableCell className="text-sm text-white/60 max-w-[180px] truncate">
+                      <TableCell className="text-sm text-white/80">
+                        {row.visitor_birth_date ? new Date(row.visitor_birth_date).toLocaleDateString("ko-KR") : "-"}
+                      </TableCell>
+                      <TableCell className="text-sm text-white/60 max-w-[140px] truncate">
                         {row.visitor_org || "-"}
                       </TableCell>
-                      <TableCell className="text-sm text-white/70 max-w-[160px] truncate">
-                        {row.contact_name || "-"}
+                      <TableCell className="max-w-[140px]">
+                        <div className="flex flex-col gap-0.5">
+                          <span className="text-sm truncate text-white/80">
+                            {row.contact_name || "-"}
+                          </span>
+                          <span className="text-xs text-white/40">
+                            {row.contact_mobile || "-"}
+                          </span>
+                        </div>
                       </TableCell>
                       <TableCell className="text-sm text-white/80">
                         {row.access_area || "-"}
@@ -341,9 +379,14 @@ export default function AdminQrScanPage() {
                       <TableCell className="text-sm text-white/80">
                         {row.vehicle_number || "-"}
                       </TableCell>
-                      <TableCell className="text-xs text-white/50 max-w-[220px] truncate">
-                        {row.device_id || "WEB"}{" "}
-                        {row.scanned_ip ? `· ${row.scanned_ip}` : ""}
+                      <TableCell>
+                        <Button
+                          size="sm"
+                          onClick={() => setSelectedApplicationId(row.application_id)}
+                          className="bg-white/10 hover:bg-white/20 border border-white/20 text-white rounded-lg text-xs px-2 py-1"
+                        >
+                          보기
+                        </Button>
                       </TableCell>
                     </TableRow>
                   )
@@ -400,14 +443,15 @@ export default function AdminQrScanPage() {
             <Table>
               <TableHeader className="bg-white/5">
                 <TableRow className="border-white/10 hover:bg-transparent">
-                  <TableHead className="text-white/70 min-w-[140px]">방문자</TableHead>
-                  <TableHead className="text-white/70 min-w-[160px]">소속</TableHead>
+                  <TableHead className="text-white/70 min-w-[100px]">방문자</TableHead>
+                  <TableHead className="text-white/70 min-w-[100px]">생년월일</TableHead>
+                  <TableHead className="text-white/70 min-w-[140px]">소속</TableHead>
                   <TableHead className="text-white/70 min-w-[140px]">담당자</TableHead>
-                  <TableHead className="text-white/70 min-w-[120px]">출입 구역</TableHead>
+                  <TableHead className="text-white/70 min-w-[100px]">출입 구역</TableHead>
                   <TableHead className="text-white/70 min-w-[140px]">입장 시각</TableHead>
                   <TableHead className="text-white/70 min-w-[140px]">퇴장 시각</TableHead>
-                  <TableHead className="text-white/70 min-w-[120px]">차량 번호</TableHead>
-                  <TableHead className="text-white/70 min-w-[160px]">기기 / IP</TableHead>
+                  <TableHead className="text-white/70 min-w-[100px]">차량 번호</TableHead>
+                  <TableHead className="text-white/70 min-w-[80px]">상세</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -421,11 +465,21 @@ export default function AdminQrScanPage() {
                       <TableCell className="text-sm text-white/80">
                         {row.visitor_name || "-"}
                       </TableCell>
-                      <TableCell className="text-sm text-white/60 max-w-[180px] truncate">
+                      <TableCell className="text-sm text-white/80">
+                        {row.visitor_birth_date ? new Date(row.visitor_birth_date).toLocaleDateString("ko-KR") : "-"}
+                      </TableCell>
+                      <TableCell className="text-sm text-white/60 max-w-[140px] truncate">
                         {row.visitor_org || "-"}
                       </TableCell>
-                      <TableCell className="text-sm text-white/70 max-w-[160px] truncate">
-                        {row.contact_name || "-"}
+                      <TableCell className="max-w-[140px]">
+                        <div className="flex flex-col gap-0.5">
+                          <span className="text-sm truncate text-white/80">
+                            {row.contact_name || "-"}
+                          </span>
+                          <span className="text-xs text-white/40">
+                            {row.contact_mobile || "-"}
+                          </span>
+                        </div>
                       </TableCell>
                       <TableCell className="text-sm text-white/80">
                         {row.access_area || "-"}
@@ -439,9 +493,14 @@ export default function AdminQrScanPage() {
                       <TableCell className="text-sm text-white/80">
                         {row.vehicle_number || "-"}
                       </TableCell>
-                      <TableCell className="text-xs text-white/50 max-w-[220px] truncate">
-                        {row.device_id || "WEB"}{" "}
-                        {row.scanned_ip ? `· ${row.scanned_ip}` : ""}
+                      <TableCell>
+                        <Button
+                          size="sm"
+                          onClick={() => setSelectedApplicationId(row.application_id)}
+                          className="bg-white/10 hover:bg-white/20 border border-white/20 text-white rounded-lg text-xs px-2 py-1"
+                        >
+                          보기
+                        </Button>
                       </TableCell>
                     </TableRow>
                   )
@@ -453,6 +512,17 @@ export default function AdminQrScanPage() {
         </>
         )}
       </div>
+
+      {/* 상세보기 모달 */}
+      <ApplicationDetailModal
+        application={selectedApplication}
+        open={!!selectedApplicationId}
+        onClose={() => {
+          setSelectedApplicationId(null)
+          setSelectedApplication(null)
+        }}
+        loading={modalLoading}
+      />
     </div>
   )
 }
