@@ -908,8 +908,11 @@ export class AzureSqlDB {
       visitor_organization: row.visitor_organization,
       visitor_position: row.visitor_position,
       visit_datetime: new Date(row.visit_start_date),
+      visit_start_date: row.visit_start_date,
+      visit_end_date: row.visit_end_date,
       visit_purpose: row.visit_purpose,
       contact_name: row.contact_name,
+      contact_mobile: row.contact_mobile,
       contact_email: row.visitor_email,
       access_area: row.access_area as AccessArea,
       vehicle_number: row.vehicle_number,
@@ -1188,7 +1191,7 @@ export class AzureSqlDB {
   static async getAllAccounts(): Promise<any[]> {
     const dbPool = await getPool()
     const result = await dbPool.request().query(`
-      SELECT account_id, username, name, role, is_active, created_at, last_login_at
+      SELECT account_id, username, name, role, phone, is_active, is_security_contact, created_at, last_login_at
       FROM admin_accounts
       ORDER BY created_at DESC
     `)
@@ -1565,14 +1568,16 @@ export class AzureSqlDB {
   ): Promise<{ result: string; message: string; denyReason?: string }> {
     const dbPool = await getPool()
     
-    // pass_receipt로 신청 조회
+    // pass_receipt로 신청 조회 (동행인 QR인 경우 동행인 이름 사용)
     const appResult = await dbPool.request()
       .input('pass_receipt', sql.NVarChar(50), receipt)
       .query(`
         SELECT a.application_id, a.visitor_name, a.visitor_organization as visitor_org, 
-               a.contact_name, a.access_area, a.visit_start_date, a.visit_end_date, a.status, p.pass_id
+               a.contact_name, a.access_area, a.visit_start_date, a.visit_end_date, a.status, 
+               p.pass_id, p.companion_id, c.name as companion_name
         FROM visit_applications a
         INNER JOIN visit_passes p ON a.application_id = p.application_id
+        LEFT JOIN visit_companions c ON p.companion_id = c.companion_id
         WHERE p.pass_receipt = @pass_receipt
       `)
     
@@ -1581,6 +1586,8 @@ export class AzureSqlDB {
     }
 
     const app = appResult.recordset[0]
+    // 동행인 QR인 경우 동행인 이름 사용, 아니면 신청자 이름 사용
+    const displayName = app.companion_id ? app.companion_name : app.visitor_name
     if (app.status !== 'approved') {
       return { result: "DENY", message: "승인되지 않은 신청입니다", denyReason: "NOT_APPROVED" }
     }
@@ -1605,7 +1612,7 @@ export class AzureSqlDB {
         .input('result', sql.NVarChar(10), 'ALLOW')
         .input('scanned_ip', sql.NVarChar(50), scanned_ip)
         .input('user_agent', sql.NVarChar(500), user_agent)
-        .input('visitor_name', sql.NVarChar(100), app.visitor_name)
+        .input('visitor_name', sql.NVarChar(100), displayName)
         .input('visitor_org', sql.NVarChar(100), app.visitor_org)
         .input('contact_name', sql.NVarChar(100), app.contact_name)
         .input('access_area', sql.NVarChar(100), app.access_area)
@@ -1622,11 +1629,12 @@ export class AzureSqlDB {
     return { 
       result: "ALLOW", 
       message: `${direction === 'ENTRY' ? '입장' : '퇴장'} 처리되었습니다`,
-      visitor_name: app.visitor_name,
+      visitor_name: displayName,
       visitor_org: app.visitor_org,
       access_area: app.access_area,
       visit_start_date: app.visit_start_date,
       visit_end_date: app.visit_end_date,
+      is_companion: !!app.companion_id,
     }
   }
 
@@ -1722,6 +1730,45 @@ export class AzureSqlDB {
         WHERE application_id = @application_id AND phone IS NOT NULL AND phone <> ''
       `)
     return result.recordset.map((r: any) => r.phone)
+  }
+
+  /** 동행인 목록 조회 (id, phone 포함) */
+  static async getCompanionsWithIdByApplicationId(applicationId: string): Promise<{ companion_id: number; name: string; phone: string }[]> {
+    const dbPool = await getPool()
+    const result = await dbPool.request()
+      .input('application_id', sql.BigInt, applicationId)
+      .query(`
+        SELECT companion_id, name, phone FROM visit_companions
+        WHERE application_id = @application_id
+        ORDER BY companion_id ASC
+      `)
+    return result.recordset
+  }
+
+  /** 동행인 QR pass 생성 */
+  static async createPassForCompanion(applicationId: string, companionId: number, pass_receipt: string): Promise<void> {
+    const dbPool = await getPool()
+    const token = `TOKEN-${Date.now()}-${Math.random().toString(36).substring(2, 10).toUpperCase()}`
+    
+    // 신청 정보에서 방문 기간 가져오기
+    const appResult = await dbPool.request()
+      .input('app_id', sql.BigInt, applicationId)
+      .query(`SELECT visit_start_date, visit_end_date FROM visit_applications WHERE application_id = @app_id`)
+    
+    const validFrom = appResult.recordset[0]?.visit_start_date || new Date()
+    const validTo = appResult.recordset[0]?.visit_end_date || new Date()
+    
+    await dbPool.request()
+      .input('application_id', sql.BigInt, applicationId)
+      .input('companion_id', sql.BigInt, companionId)
+      .input('pass_receipt', sql.NVarChar(50), pass_receipt)
+      .input('token', sql.NVarChar(100), token)
+      .input('valid_from', sql.DateTime, validFrom)
+      .input('valid_to', sql.DateTime, validTo)
+      .query(`
+        INSERT INTO visit_passes (application_id, companion_id, pass_receipt, token, status, valid_from, valid_to)
+        VALUES (@application_id, @companion_id, @pass_receipt, @token, 'active', @valid_from, @valid_to)
+      `)
   }
 
   /** 보안담당자 지정/해제 및 전화번호 업데이트 */

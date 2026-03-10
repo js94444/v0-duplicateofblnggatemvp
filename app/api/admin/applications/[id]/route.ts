@@ -17,7 +17,9 @@ export async function GET(
       )
     }
 
-    const application = await AzureSqlDB.getApplicationById(id)
+    // getAllApplications에서 동행인, 첨부파일 등 전체 정보가 포함된 데이터 사용
+    const applications = await AzureSqlDB.getAllApplications()
+    const application = applications.find(app => app.id === id)
 
     if (!application) {
       return NextResponse.json(
@@ -26,13 +28,7 @@ export async function GET(
       )
     }
 
-    // 동행인 정보 조회
-    const companions = await AzureSqlDB.getCompanionsByApplicationId(id)
-
-    return NextResponse.json({
-      ...application,
-      companions: companions || [],
-    })
+    return NextResponse.json(application)
   } catch (error) {
     console.error("Failed to fetch application:", error)
     return NextResponse.json(

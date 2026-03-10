@@ -192,16 +192,18 @@ export default function AdminQrScanPage() {
 
   const formatDateTime = (iso: string | null) => {
     if (!iso) return "-"
+    // DB에 이미 한국시간으로 저장되어 있으므로 UTC로 파싱하여 그대로 표시
     const d = new Date(iso)
     if (Number.isNaN(d.getTime())) return "-"
-    return d.toLocaleString("ko-KR", {
-      year: "2-digit",
-      month: "2-digit",
-      day: "2-digit",
-      hour: "2-digit",
-      minute: "2-digit",
-      timeZone: "Asia/Seoul",
-    })
+    // UTC 시간 그대로 사용 (DB 저장값이 이미 KST)
+    const year = d.getUTCFullYear().toString().slice(-2)
+    const month = (d.getUTCMonth() + 1).toString().padStart(2, '0')
+    const day = d.getUTCDate().toString().padStart(2, '0')
+    const hour = d.getUTCHours()
+    const minute = d.getUTCMinutes().toString().padStart(2, '0')
+    const ampm = hour < 12 ? '오전' : '오후'
+    const hour12 = hour % 12 || 12
+    return `${year}. ${month}. ${day}. ${ampm} ${hour12}:${minute}`
   }
 
   const currentStats: ScanStats = {
@@ -240,7 +242,7 @@ export default function AdminQrScanPage() {
                   : "text-white/60 hover:text-white hover:bg-white/10"
               }`}
             >
-              ��두 출입현황
+              부두 출입현황
             </button>
           </div>
           <p className="text-xs uppercase tracking-[0.2em] text-white/40 font-bold">
@@ -514,15 +516,17 @@ export default function AdminQrScanPage() {
       </div>
 
       {/* 상세보기 모달 */}
-      <ApplicationDetailModal
-        application={selectedApplication}
-        open={!!selectedApplicationId}
-        onClose={() => {
-          setSelectedApplicationId(null)
-          setSelectedApplication(null)
-        }}
-        loading={modalLoading}
-      />
+      {selectedApplication && (
+        <ApplicationDetailModal
+          application={selectedApplication}
+          open={!!selectedApplication}
+          loading={modalLoading}
+          onClose={() => {
+            setSelectedApplicationId(null)
+            setSelectedApplication(null)
+          }}
+        />
+      )}
     </div>
   )
 }

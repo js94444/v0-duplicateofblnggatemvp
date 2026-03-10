@@ -53,12 +53,31 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // 승인 시 QR pass_receipt 생성
+    // 승인 시 QR pass_receipt 생성 (신청자 + 동행인 각각)
     let pass_receipt: string | null = null
+    let companionPasses: { companion_id: number; name: string; phone: string; pass_receipt: string }[] = []
+    
     if (action === "approve") {
-      pass_receipt = AzureSqlDB.generatePassReceipt()
+      // 신청자 QR 생성 - application_number 사용
+      const applicationNumber = updatedApplication.application_number || updatedApplication.receipt || AzureSqlDB.generatePassReceipt()
+      pass_receipt = applicationNumber
       await AzureSqlDB.createPassForApplication(id, pass_receipt)
-      console.log("[v0] Created pass_receipt:", pass_receipt)
+      console.log("[v0] Created applicant pass_receipt:", pass_receipt)
+      
+      // 동행인 QR 생성 - application_number-1, -2 형식
+      const companions = await AzureSqlDB.getCompanionsWithIdByApplicationId(id)
+      for (let i = 0; i < companions.length; i++) {
+        const companion = companions[i]
+        const companionPassReceipt = `${applicationNumber}-${i + 1}`
+        await AzureSqlDB.createPassForCompanion(id, companion.companion_id, companionPassReceipt)
+        companionPasses.push({
+          companion_id: companion.companion_id,
+          name: companion.name,
+          phone: companion.phone,
+          pass_receipt: companionPassReceipt
+        })
+        console.log("[v0] Created companion pass_receipt:", companionPassReceipt, "for:", companion.name)
+      }
     }
 
     // 이메일 발송
@@ -86,10 +105,7 @@ export async function POST(request: NextRequest) {
       const contactPhone = updatedApplication.contact_mobile || updatedApplication.contact_phone
 
       if (action === "approve") {
-        // 승인 시: 신청자 + 동행인에게 QR 포함 문자
-        const companionPhones = await AzureSqlDB.getCompanionPhonesByApplicationId(id)
-        
-        // 신청자에게 발송 (신청자용 라벨)
+        // 승인 시: 신청자에게 본인 QR 발송
         if (visitorPhone) {
           const applicantMsg = getApprovalSMSMessage(pass_receipt, updatedApplication, 'applicant')
           await sendSms(visitorPhone, applicantMsg).catch((err) => {
@@ -97,17 +113,19 @@ export async function POST(request: NextRequest) {
           })
         }
 
-        // 동행인들에게 발송 (동행인용 라벨)
-        if (companionPhones.length > 0) {
-          const companionMsg = getApprovalSMSMessage(pass_receipt, updatedApplication, 'companion')
-          await Promise.allSettled(
-            companionPhones.map((phone) => sendSms(phone, companionMsg))
-          )
+        // 동행인들에게 각자의 QR 발송
+        for (const companion of companionPasses) {
+          if (companion.phone) {
+            const companionMsg = getApprovalSMSMessage(companion.pass_receipt, updatedApplication, 'companion')
+            await sendSms(companion.phone, companionMsg).catch((err) => {
+              console.error("[v0] 동행인 SMS 발송 실패:", companion.name, err)
+            })
+          }
         }
 
         // 승인 시: 담당자에게 승인 완료 알림
         if (contactPhone) {
-          const contactMsg = `[담당자용] [B-Link] 방문 신청이 승인되었습니다.\n신청자: ${updatedApplication.visitor_name || ""}\n접수번호: ${updatedApplication.application_number || updatedApplication.receipt || ""}`
+          const contactMsg = `[담당자용] [B-Link] 방문 신청이 승인되었습니다.\n신청자: ${updatedApplication.visitor_name || ""}\n접수번호: ${updatedApplication.application_number || updatedApplication.receipt || ""}\n동행인: ${companionPasses.length}명`
           await sendSms(contactPhone, contactMsg).catch(() => {})
         }
       } else {
