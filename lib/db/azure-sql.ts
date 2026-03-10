@@ -218,6 +218,7 @@ export class AzureSqlDB {
       .input('access_area', sql.NVarChar(100), data.access_area || null)
       .input('vehicle_number', sql.NVarChar(50), data.vehicle_number || null)
       .input('vehicle_model', sql.NVarChar(100), data.vehicle_model || null)
+      .input('spark_arrestor', sql.NVarChar(1), data.spark_arrestor || null)
       .input('is_admin_submission', sql.Bit, data.is_admin_mode ? 1 : 0)
       .input('submission_ip', sql.NVarChar(50), data.submission_ip || null)
       .input('status', sql.NVarChar(20), 'pending')
@@ -227,7 +228,7 @@ export class AzureSqlDB {
           application_number, visitor_name, visitor_phone, visitor_birth_date,
           visitor_organization, visitor_position, visitor_address, visitor_email,
           contact_name, contact_mobile, visit_purpose, detailed_purpose, visit_start_date, visit_end_date,
-          access_area, vehicle_number, vehicle_model,
+          access_area, vehicle_number, vehicle_model, spark_arrestor,
           is_admin_submission, submission_ip, status, created_at, updated_at
         )
         OUTPUT INSERTED.application_id
@@ -235,7 +236,7 @@ export class AzureSqlDB {
           @application_number, @visitor_name, @visitor_phone, @visitor_birth_date,
           @visitor_organization, @visitor_position, @visitor_address, @visitor_email,
           @contact_name, @contact_mobile, @visit_purpose, @detailed_purpose, @visit_start_date, @visit_end_date,
-          @access_area, @vehicle_number, @vehicle_model,
+          @access_area, @vehicle_number, @vehicle_model, @spark_arrestor,
           @is_admin_submission, @submission_ip, @status, @created_at, @updated_at
         )
       `)
@@ -621,6 +622,7 @@ export class AzureSqlDB {
         access_area: row.access_area as AccessArea,
         vehicle_number: row.vehicle_number,
         vehicle_model: row.vehicle_model,
+        spark_arrestor: row.spark_arrestor,
         visit_start_time: "09:00",
         visit_end_time: "18:00",
         // Add date fields for all types
@@ -782,6 +784,7 @@ export class AzureSqlDB {
       access_area: row.access_area as AccessArea,
       vehicle_number: row.vehicle_number,
       vehicle_model: row.vehicle_model,
+      spark_arrestor: row.spark_arrestor,
       visit_start_time: "09:00",
       visit_end_time: "18:00",
       visit_start_date: new Date(row.visit_start_date),
@@ -871,6 +874,7 @@ export class AzureSqlDB {
         personnel,
         vehicle_number: row.vehicle_number,
         vehicle_model: row.vehicle_model,
+        spark_arrestor: row.spark_arrestor,
         visit_start_time: row.visit_start_time,
         visit_end_time: row.visit_end_time,
         created_at: new Date(row.created_at),
@@ -917,6 +921,7 @@ export class AzureSqlDB {
       access_area: row.access_area as AccessArea,
       vehicle_number: row.vehicle_number,
       vehicle_model: row.vehicle_model,
+      spark_arrestor: row.spark_arrestor,
       visit_start_time: "09:00",
       visit_end_time: "18:00",
       created_at: new Date(row.created_at),
@@ -1058,6 +1063,7 @@ export class AzureSqlDB {
         access_area: row.access_area as AccessArea,
         vehicle_number: row.vehicle_number,
         vehicle_model: row.vehicle_model,
+        spark_arrestor: row.spark_arrestor,
         visit_start_time: "09:00",
         visit_end_time: "18:00",
         created_at: new Date(row.created_at),
@@ -1699,7 +1705,8 @@ export class AzureSqlDB {
           s.vehicle_number,
           s.application_id,
           a.contact_mobile,
-          a.visitor_birth_date
+          a.visitor_birth_date,
+          a.spark_arrestor
         FROM visit_pass_scans s
         LEFT JOIN visit_applications a ON s.application_id = a.application_id
         ${isAll ? '' : 'WHERE s.scan_site = @scan_site'}

@@ -28,6 +28,7 @@ interface ScanRow {
   access_area: string | null
   vehicle_number: string | null
   visitor_birth_date: string | null
+  spark_arrestor: string | null
 }
 
 interface ScanStats {
@@ -141,6 +142,7 @@ export default function AdminQrScanPage() {
         access_area: string | null
         vehicle_number: string | null
         visitor_birth_date: string | null
+        spark_arrestor: string | null
         lastEntryAt: string | null
         lastExitAt: string | null
         lastEventAt: number
@@ -159,6 +161,7 @@ export default function AdminQrScanPage() {
           access_area: row.access_area,
           vehicle_number: row.vehicle_number,
           visitor_birth_date: row.visitor_birth_date,
+          spark_arrestor: row.spark_arrestor,
           lastEntryAt: null,
           lastExitAt: null,
           lastEventAt: 0,
@@ -339,6 +342,7 @@ export default function AdminQrScanPage() {
                   <TableHead className="text-white/70 min-w-[140px]">입장 시각</TableHead>
                   <TableHead className="text-white/70 min-w-[140px]">퇴장 시각</TableHead>
                   <TableHead className="text-white/70 min-w-[100px]">차량 번호</TableHead>
+                  <TableHead className="text-white/70 min-w-[70px]">불꽃방지망</TableHead>
                   <TableHead className="text-white/70 min-w-[80px]">상세</TableHead>
                 </TableRow>
               </TableHeader>
@@ -380,6 +384,9 @@ export default function AdminQrScanPage() {
                       </TableCell>
                       <TableCell className="text-sm text-white/80">
                         {row.vehicle_number || "-"}
+                      </TableCell>
+                      <TableCell className="text-sm text-center text-white/80">
+                        {row.spark_arrestor || "-"}
                       </TableCell>
                       <TableCell>
                         <Button
@@ -453,6 +460,7 @@ export default function AdminQrScanPage() {
                   <TableHead className="text-white/70 min-w-[140px]">입장 시각</TableHead>
                   <TableHead className="text-white/70 min-w-[140px]">퇴장 시각</TableHead>
                   <TableHead className="text-white/70 min-w-[100px]">차량 번호</TableHead>
+                  <TableHead className="text-white/70 min-w-[70px]">불꽃방지망</TableHead>
                   <TableHead className="text-white/70 min-w-[80px]">상세</TableHead>
                 </TableRow>
               </TableHeader>
@@ -494,6 +502,9 @@ export default function AdminQrScanPage() {
                       </TableCell>
                       <TableCell className="text-sm text-white/80">
                         {row.vehicle_number || "-"}
+                      </TableCell>
+                      <TableCell className="text-sm text-center text-white/80">
+                        {row.spark_arrestor || "-"}
                       </TableCell>
                       <TableCell>
                         <Button
