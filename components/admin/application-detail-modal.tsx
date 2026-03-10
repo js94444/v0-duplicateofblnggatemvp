@@ -219,10 +219,10 @@ export function ApplicationDetailModal({ application, open, loading = false, onC
     </div>
   )
 
-  // 신청자 본인 항만이수증
-  const applicantPortCerts: any[] = app.portCertFiles || []
+  // 신청자 본인 항만이수증 - isLoading 후에 정의
+  const applicantPortCerts: any[] = !isLoading && app ? (app.portCertFiles || []) : []
   // 일반 첨부파일 (기존 GENERAL 타입)
-  const generalFiles: any[] = (app.files || []).filter((f: any) => f.attachment_type !== 'PORT_CERT')
+  const generalFiles: any[] = !isLoading && app ? ((app.files || []).filter((f: any) => f.attachment_type !== 'PORT_CERT')) : []
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
@@ -235,11 +235,11 @@ export function ApplicationDetailModal({ application, open, loading = false, onC
               <div className="flex items-center gap-3">
                 <DialogTitle className="text-3xl font-black text-white tracking-tight">신청 상세정보</DialogTitle>
               </div>
-              <p className="text-sm font-mono text-white/40">RECEIPT NO: {app.receipt}</p>
+              <p className="text-sm font-mono text-white/40">RECEIPT NO: {app?.receipt || "-"}</p>
             </div>
             <div className="flex items-center gap-4">
-              <Badge className={`${getStatusColor(app.status)} font-black px-6 py-2.5 text-sm border-2 rounded-full shadow-lg`}>
-                {APPLICATION_STATUS_LABELS[app.status] || app.status}
+              <Badge className={`${app ? getStatusColor(app.status) : 'bg-white/10'} font-black px-6 py-2.5 text-sm border-2 rounded-full shadow-lg`}>
+                {app ? (APPLICATION_STATUS_LABELS[app.status] || app.status) : "로딩 중"}
               </Badge>
               <Button
                 onClick={onClose}
