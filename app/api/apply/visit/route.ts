@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 import { AzureSqlDB } from "@/lib/db/azure-sql"
-import { sendSMS } from "@/lib/services/solapi"
+import { sendSms } from "@/lib/services/solapi"
 import { getSubmissionSmsText } from "@/lib/messages/sms-templates"
 
 export async function POST(request: Request) {
@@ -34,16 +34,21 @@ export async function POST(request: Request) {
 
       // 보안담당자 전화번호 목록 조회
       const securityPhones = await AzureSqlDB.getSecurityAccountPhones()
+      console.log("[v0] 보안담당자 전화번호 목록:", securityPhones)
 
       // 담당자 전화번호 (contact_mobile 또는 contact_phone)
       const contactPhone = body.contact_mobile || body.contact_phone
+      console.log("[v0] 담당자 전화번호:", contactPhone)
+      
       const recipients = new Set<string>([...securityPhones])
       if (contactPhone) recipients.add(contactPhone)
+      console.log("[v0] SMS 발송 대상:", Array.from(recipients))
 
       // 수신자 전체에게 발송
-      await Promise.allSettled(
-        Array.from(recipients).map((phone) => sendSMS({ to: phone, message: smsMessage }))
+      const smsResults = await Promise.allSettled(
+        Array.from(recipients).map((phone) => sendSms(phone, smsMessage))
       )
+      console.log("[v0] SMS 발송 결과:", smsResults)
     } catch (smsError) {
       console.error("[v0] SMS 발송 실패 (신청 접수는 정상 처리됨):", smsError)
     }
