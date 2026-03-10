@@ -9,6 +9,7 @@ export async function GET(
 ) {
   try {
     const { receipt } = await params
+    console.log("[v0] QR Verify API called with receipt:", receipt)
 
     if (!receipt || receipt.trim() === "") {
       return NextResponse.json(
@@ -19,6 +20,7 @@ export async function GET(
 
     // visit_passes 테이블에서 pass_receipt로 조회
     const passData = await AzureSqlDB.getPassByReceipt(receipt)
+    console.log("[v0] Pass data found:", passData ? `ID: ${passData.application_id}` : "NOT FOUND")
 
     if (!passData) {
       return NextResponse.json(
@@ -29,6 +31,7 @@ export async function GET(
 
     // 연결된 visit_applications 정보 조회
     const application = await AzureSqlDB.getApplicationById(String(passData.application_id))
+    console.log("[v0] Application found:", application ? `Name: ${application.visitor_name}` : "NOT FOUND")
 
     if (!application) {
       return NextResponse.json(
