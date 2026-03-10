@@ -145,6 +145,7 @@ export default function AdminQrScanPage() {
         vehicle_model: string | null
         visitor_birth_date: string | null
         spark_arrestor: string | null
+        portCertFiles: Array<{ file_url: string; file_name: string }> | null
         lastEntryAt: string | null
         lastExitAt: string | null
         lastEventAt: number
@@ -165,6 +166,7 @@ export default function AdminQrScanPage() {
           vehicle_model: row.vehicle_model,
           visitor_birth_date: row.visitor_birth_date,
           spark_arrestor: row.spark_arrestor,
+          portCertFiles: null,
           lastEntryAt: null,
           lastExitAt: null,
           lastEventAt: 0,
@@ -314,15 +316,13 @@ export default function AdminQrScanPage() {
 
       <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-[40px] p-8 shadow-2xl">
         {activeTab === "main" && (
-        <>
-        <div className="mb-6 flex items-center justify-between">
-          <div>
+          <>
+          <div className="mb-6">
             <h2 className="text-2xl font-black text-white">정문 출입 이력 (인원별 {rowsByPerson.length}명)</h2>
             <p className="text-sm text-white/40 mt-1">
               신청자·동행인별로 한 행씩, 입장/퇴장 시각을 열로 표시합니다. 최근 10분 이내 행은 색으로 강조됩니다.
             </p>
           </div>
-        </div>
 
         {error && (
           <div className="mb-4 px-4 py-3 rounded-xl bg-red-500/20 border border-red-500/40 text-red-200 text-sm">
@@ -358,7 +358,14 @@ export default function AdminQrScanPage() {
                       key={row.pass_id}
                       className={`border-white/5 hover:bg-white/5 transition-colors ${recentClass}`}
                     >
-                      <TableCell className="text-sm text-white/80">
+                      <TableCell 
+                        className={`text-sm cursor-pointer ${row.portCertFiles?.length ? 'text-blue-400 hover:underline' : 'text-white/80'}`}
+                        onClick={() => {
+                          if (row.portCertFiles?.length) {
+                            setSelectedApplicationId(row.application_id)
+                          }
+                        }}
+                      >
                         {row.visitor_name || "-"}
                       </TableCell>
                       <TableCell className="text-sm text-white/80">
@@ -480,7 +487,14 @@ export default function AdminQrScanPage() {
                       key={row.pass_id}
                       className={`border-white/5 hover:bg-white/5 transition-colors ${recentClass}`}
                     >
-                      <TableCell className="text-sm text-white/80">
+                      <TableCell 
+                        className={`text-sm cursor-pointer ${row.portCertFiles?.length ? 'text-blue-400 hover:underline' : 'text-white/80'}`}
+                        onClick={() => {
+                          if (row.portCertFiles?.length) {
+                            setSelectedApplicationId(row.application_id)
+                          }
+                        }}
+                      >
                         {row.visitor_name || "-"}
                       </TableCell>
                       <TableCell className="text-sm text-white/80">
