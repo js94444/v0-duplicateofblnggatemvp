@@ -1570,7 +1570,7 @@ export class AzureSqlDB {
       .input('pass_receipt', sql.NVarChar(50), receipt)
       .query(`
         SELECT a.application_id, a.visitor_name, a.visitor_organization as visitor_org, 
-               a.access_area, a.visit_start_date, a.visit_end_date, a.status, p.pass_id
+               a.contact_name, a.access_area, a.visit_start_date, a.visit_end_date, a.status, p.pass_id
         FROM visit_applications a
         INNER JOIN visit_passes p ON a.application_id = p.application_id
         WHERE p.pass_receipt = @pass_receipt
@@ -1607,14 +1607,14 @@ export class AzureSqlDB {
         .input('user_agent', sql.NVarChar(500), user_agent)
         .input('visitor_name', sql.NVarChar(100), app.visitor_name)
         .input('visitor_org', sql.NVarChar(100), app.visitor_org)
+        .input('contact_name', sql.NVarChar(100), app.contact_name)
         .input('access_area', sql.NVarChar(100), app.access_area)
         .input('scan_site', sql.NVarChar(50), scan_site)
         .input('scanned_at', sql.DateTime2, now)
         .query(`
-          INSERT INTO visit_pass_scans (pass_id, application_id, direction, device_id, result, scanned_ip, user_agent, visitor_name, visitor_org, access_area, scan_site, scanned_at)
-          VALUES (@pass_id, @application_id, @direction, @device_id, @result, @scanned_ip, @user_agent, @visitor_name, @visitor_org, @access_area, @scan_site, @scanned_at)
+          INSERT INTO visit_pass_scans (pass_id, application_id, direction, device_id, result, scanned_ip, user_agent, visitor_name, visitor_org, contact_name, access_area, scan_site, scanned_at)
+          VALUES (@pass_id, @application_id, @direction, @device_id, @result, @scanned_ip, @user_agent, @visitor_name, @visitor_org, @contact_name, @access_area, @scan_site, @scanned_at)
         `)
-      console.log('[v0] Scan record saved successfully for application_id:', app.application_id)
     } catch (e) {
       console.error('[v0] Failed to record scan:', e)
     }
