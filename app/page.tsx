@@ -84,8 +84,7 @@ export default function HomePage() {
           © BORYEONG LNG Terminal Management System
         </div>
         <div className="flex gap-8 font-bold">
-          <Link href="/privacy" className="hover:text-amber-500 transition-colors">Privacy Policy</Link>
-          <Link href="#" className="hover:text-amber-500 transition-colors">Terms of Use</Link>
+          <a href="/docs/privacy-policy.pdf" target="_blank" rel="noopener noreferrer" className="hover:text-amber-500 transition-colors">Privacy Policy</a>
           <Link href="/contact" className="hover:text-amber-500 transition-colors">Contact Us</Link>
         </div>
       </footer>
