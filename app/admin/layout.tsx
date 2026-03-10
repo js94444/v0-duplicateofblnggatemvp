@@ -66,7 +66,8 @@ function AdminLayoutContent({ children }: { children: React.ReactNode }) {
     }
   }, [user, pathname, allowedPaths, permData, router])
 
-  if (isLoading) {
+  // 로딩 중이거나 로그인 안 된 상태에서는 로딩 UI만 표시 (컨텐츠 노출 방지)
+  if (isLoading || (!user && pathname !== "/admin/login")) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-4 border-amber-500 border-t-transparent" />
@@ -74,7 +75,6 @@ function AdminLayoutContent({ children }: { children: React.ReactNode }) {
     )
   }
 
-  if (!user && pathname !== "/admin/login") return null
   if (pathname === "/admin/login") return <>{children}</>
 
   // 허용된 페이지만 네비에 표시
