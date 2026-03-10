@@ -572,7 +572,7 @@ export default function AdminQrScanPage() {
           onClick={() => setPortCertModal({ open: false, files: [], visitorName: "" })}
         >
           <div 
-            className="bg-zinc-900 border border-white/10 rounded-2xl p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto"
+            className="bg-zinc-900 border border-white/10 rounded-2xl p-6 max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between mb-4">
@@ -584,14 +584,27 @@ export default function AdminQrScanPage() {
                 &times;
               </button>
             </div>
-            <div className="grid grid-cols-1 gap-4">
+            <div className="grid grid-cols-1 gap-6">
               {portCertModal.files.map((file, idx) => (
-                <div key={idx} className="border border-white/10 rounded-lg overflow-hidden">
+                <div 
+                  key={idx} 
+                  className="border border-white/20 rounded-lg overflow-hidden bg-black/40 p-2"
+                  onLoad={() => console.log("[v0] Image loaded:", file.file_name)}
+                  onError={() => console.log("[v0] Image failed to load:", file.file_url)}
+                >
                   <img 
                     src={file.file_url} 
                     alt={file.file_name} 
-                    className="w-full h-auto object-contain"
+                    className="w-full h-auto object-contain max-h-[600px] rounded"
+                    onError={(e) => {
+                      console.log("[v0] Image load error:", file.file_name, file.file_url)
+                      e.currentTarget.style.display = "none"
+                      e.currentTarget.parentElement!.innerHTML += `<div class="text-white/60 p-4 text-center">이미지를 불러올 수 없습니다.<br/><small>${file.file_name}</small></div>`
+                    }}
                   />
+                  <div className="text-white/50 text-xs p-2 break-words">
+                    {file.file_name}
+                  </div>
                 </div>
               ))}
             </div>
