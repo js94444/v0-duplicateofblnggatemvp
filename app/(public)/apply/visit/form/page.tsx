@@ -26,6 +26,7 @@ import { Label } from "@/components/ui/label"
 import { ContactSelector } from "@/components/contact-selector"
 import { ArrowLeft, Plus, Trash2 } from "lucide-react"
 import { PublicHeader } from "@/components/public/public-header"
+import { PublicFooter } from "@/components/public/public-footer"
 import { useLang } from "@/lib/language-context"
 
 interface ElectronicDevice {
@@ -1276,17 +1277,7 @@ export default function VisitFormPage() {
         </div>
       </main>
 
-      {/* Footer */}
-      <footer className="relative z-10 py-6 px-12 flex flex-col md:flex-row justify-between items-center text-[10px] text-white/30 tracking-widest uppercase border-t border-white/5">
-        <div className="mb-4 md:mb-0">
-          © BORYEONG LNG Terminal Management System
-        </div>
-        <div className="flex gap-8 font-bold">
-          <Link href="/privacy" className="hover:text-amber-500 transition-colors">Privacy Policy</Link>
-          <Link href="#" className="hover:text-amber-500 transition-colors">Terms of Use</Link>
-          <Link href="#" className="hover:text-amber-500 transition-colors">Contact Us</Link>
-        </div>
-      </footer>
+      <PublicFooter />
 
 
 
