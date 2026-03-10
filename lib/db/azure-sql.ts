@@ -1769,4 +1769,16 @@ export class AzureSqlDB {
     `)
     return result.recordset
   }
+
+  /** pass_receipt로 visit_passes 조회 */
+  static async getPassByReceipt(passReceipt: string): Promise<any | null> {
+    const dbPool = await getPool()
+    const result = await dbPool.request()
+      .input('pass_receipt', sql.NVarChar(50), passReceipt)
+      .query(`
+        SELECT * FROM visit_passes
+        WHERE pass_receipt = @pass_receipt
+      `)
+    return result.recordset[0] || null
+  }
 }
