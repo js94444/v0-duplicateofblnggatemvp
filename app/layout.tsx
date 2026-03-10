@@ -16,6 +16,9 @@ export const metadata: Metadata = {
   title: "보령LNG 통합 출입 관리 시스템",
   description: "B-LINK - 보령LNG 시설 출입 신청 및 관리 시스템",
   generator: "v0.app",
+  icons: {
+    icon: "/favicon.ico",
+  },
 }
 
 export default function RootLayout({
