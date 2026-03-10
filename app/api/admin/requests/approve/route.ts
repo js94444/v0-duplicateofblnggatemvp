@@ -88,7 +88,6 @@ export async function POST(request: NextRequest) {
       if (action === "approve") {
         // 승인 시: 신청자 + 동행인에게 QR 포함 문자
         const companionPhones = await AzureSqlDB.getCompanionPhonesByApplicationId(id)
-        const approvalRecipients = new Set<string>()
         
         // 신청자에게 발송 (신청자용 라벨)
         if (visitorPhone) {

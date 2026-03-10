@@ -1557,13 +1557,21 @@ export class AzureSqlDB {
     // token 생성 (임시 토큰: UUID 대신 랜덤 스트링)
     const token = `TOKEN-${Date.now()}-${Math.random().toString(36).substring(2, 10).toUpperCase()}`
     
+    // 신청 정보에서 방문 시작일 가져오기
+    const appResult = await dbPool.request()
+      .input('app_id', sql.BigInt, applicationId)
+      .query(`SELECT visit_start_date FROM visit_applications WHERE application_id = @app_id`)
+    
+    const validFrom = appResult.recordset[0]?.visit_start_date || new Date()
+    
     await dbPool.request()
       .input('application_id', sql.BigInt, applicationId)
       .input('pass_receipt', sql.NVarChar(50), pass_receipt)
       .input('token', sql.NVarChar(100), token)
+      .input('valid_from', sql.DateTime, validFrom)
       .query(`
-        INSERT INTO visit_passes (application_id, pass_receipt, token, status)
-        VALUES (@application_id, @pass_receipt, @token, 'active')
+        INSERT INTO visit_passes (application_id, pass_receipt, token, status, valid_from)
+        VALUES (@application_id, @pass_receipt, @token, 'active', @valid_from)
       `)
   }
 
