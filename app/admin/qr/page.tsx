@@ -4,8 +4,7 @@ import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Button } from "@/components/ui/button"
-import { useAdminAuth } from "@/hooks/use-admin-auth"
+import { RefreshCw } from "lucide-react"
 
 interface ScanRow {
   scan_id: string
@@ -222,9 +221,13 @@ export default function AdminQrScanPage() {
         <Button
           onClick={loadData}
           disabled={loading}
-          className="bg-amber-500 hover:bg-amber-600 text-black font-bold px-6 py-3 rounded-xl transition-all shadow-[0_0_20px_rgba(245,158,11,0.3)]"
+          className="bg-white/10 hover:bg-white/20 border border-white/20 text-white font-bold px-5 py-2 rounded-xl transition-all active:scale-95"
         >
-          {loading ? "새로고침 중..." : "🔄 새로고침"}
+          <RefreshCw
+            size={15}
+            className={`mr-2 ${loading ? "animate-spin" : ""}`}
+          />
+          {loading ? "새로고침 중..." : "새로고침"}
         </Button>
       </div>
 
