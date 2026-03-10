@@ -22,10 +22,7 @@ export function PublicHeader({ initialScrolled = false }: PublicHeaderProps) {
     return () => window.removeEventListener("scroll", handleScroll)
   }, [])
 
-  const navLinks = [
-    { label: lang === "ko" ? "공지사항" : "Notice", href: "#" },
-    { label: lang === "ko" ? "지원" : "Support", href: "#" },
-  ]
+  const navLinks: { label: string; href: string }[] = []
 
   return (
     <>

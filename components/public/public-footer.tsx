@@ -8,7 +8,6 @@ export function PublicFooter() {
       </div>
       <div className="flex gap-8 font-bold">
         <Link href="/privacy" className="hover:text-amber-500 transition-colors">Privacy Policy</Link>
-        <Link href="#" className="hover:text-amber-500 transition-colors">Terms of Use</Link>
         <Link href="/contact" className="hover:text-amber-500 transition-colors">Contact Us</Link>
       </div>
     </footer>

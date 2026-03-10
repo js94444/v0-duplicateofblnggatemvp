@@ -130,31 +130,42 @@ function AdminLayoutContent({ children }: { children: React.ReactNode }) {
       {/* Navigation */}
       <nav className="relative z-10 border-b border-white/5 bg-black/20 backdrop-blur-lg">
         <div className="container mx-auto px-6">
-          <div className="flex gap-2 py-3">
-            <Link href="/">
-              <Button
-                variant="ghost"
-                className="text-white/60 hover:text-white hover:bg-white/10 font-bold rounded-lg transition-all"
-              >
-                <Home size={16} className="mr-2" />
-                메인으로
-              </Button>
-            </Link>
-            {visiblePages.map(({ path, name, icon: Icon }) => (
-              <Link key={path} href={path}>
+          <div className="flex items-center justify-between py-3">
+            <div className="flex gap-2">
+              <Link href="/">
                 <Button
                   variant="ghost"
-                  className={`font-bold rounded-lg transition-all ${
-                    pathname === path || pathname.startsWith(path + "/")
-                      ? "bg-amber-500 text-black hover:bg-amber-600 hover:text-black"
-                      : "text-white/60 hover:text-white hover:bg-white/10"
-                  }`}
+                  className="text-white/60 hover:text-white hover:bg-white/10 font-bold rounded-lg transition-all"
                 >
-                  <Icon size={16} className="mr-2" />
-                  {name}
+                  <Home size={16} className="mr-2" />
+                  메인으로
                 </Button>
               </Link>
-            ))}
+              {visiblePages.map(({ path, name, icon: Icon }) => (
+                <Link key={path} href={path}>
+                  <Button
+                    variant="ghost"
+                    className={`font-bold rounded-lg transition-all ${
+                      pathname === path || pathname.startsWith(path + "/")
+                        ? "bg-amber-500 text-black hover:bg-amber-600 hover:text-black"
+                        : "text-white/60 hover:text-white hover:bg-white/10"
+                    }`}
+                  >
+                    <Icon size={16} className="mr-2" />
+                    {name}
+                  </Button>
+                </Link>
+              ))}
+            </div>
+            <Link href="/scanner">
+              <Button
+                variant="ghost"
+                className="text-white/60 hover:text-amber-500 hover:bg-white/10 font-bold rounded-lg transition-all border border-white/10"
+              >
+                <QrCode size={16} className="mr-2" />
+                QR 스캐너
+              </Button>
+            </Link>
           </div>
         </div>
       </nav>
