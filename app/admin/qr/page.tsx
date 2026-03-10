@@ -27,6 +27,7 @@ interface ScanRow {
   contact_mobile: string | null
   access_area: string | null
   vehicle_number: string | null
+  vehicle_model: string | null
   visitor_birth_date: string | null
   spark_arrestor: string | null
 }
@@ -141,6 +142,7 @@ export default function AdminQrScanPage() {
         contact_mobile: string | null
         access_area: string | null
         vehicle_number: string | null
+        vehicle_model: string | null
         visitor_birth_date: string | null
         spark_arrestor: string | null
         lastEntryAt: string | null
@@ -160,6 +162,7 @@ export default function AdminQrScanPage() {
           contact_mobile: row.contact_mobile,
           access_area: row.access_area,
           vehicle_number: row.vehicle_number,
+          vehicle_model: row.vehicle_model,
           visitor_birth_date: row.visitor_birth_date,
           spark_arrestor: row.spark_arrestor,
           lastEntryAt: null,
@@ -342,6 +345,7 @@ export default function AdminQrScanPage() {
                   <TableHead className="text-white/70 min-w-[140px]">입장 시각</TableHead>
                   <TableHead className="text-white/70 min-w-[140px]">퇴장 시각</TableHead>
                   <TableHead className="text-white/70 min-w-[100px]">차량 번호</TableHead>
+                  <TableHead className="text-white/70 min-w-[80px]">차량유종</TableHead>
                   <TableHead className="text-white/70 min-w-[70px]">불꽃방지망</TableHead>
                   <TableHead className="text-white/70 min-w-[80px]">상세</TableHead>
                 </TableRow>
@@ -384,6 +388,9 @@ export default function AdminQrScanPage() {
                       </TableCell>
                       <TableCell className="text-sm text-white/80">
                         {row.vehicle_number || "-"}
+                      </TableCell>
+                      <TableCell className="text-sm text-white/80">
+                        {row.vehicle_model || "-"}
                       </TableCell>
                       <TableCell className="text-sm text-center text-white/80">
                         {row.spark_arrestor || "-"}
@@ -460,6 +467,7 @@ export default function AdminQrScanPage() {
                   <TableHead className="text-white/70 min-w-[140px]">입장 시각</TableHead>
                   <TableHead className="text-white/70 min-w-[140px]">퇴장 시각</TableHead>
                   <TableHead className="text-white/70 min-w-[100px]">차량 번호</TableHead>
+                  <TableHead className="text-white/70 min-w-[80px]">차량유종</TableHead>
                   <TableHead className="text-white/70 min-w-[70px]">불꽃방지망</TableHead>
                   <TableHead className="text-white/70 min-w-[80px]">상세</TableHead>
                 </TableRow>
@@ -502,6 +510,9 @@ export default function AdminQrScanPage() {
                       </TableCell>
                       <TableCell className="text-sm text-white/80">
                         {row.vehicle_number || "-"}
+                      </TableCell>
+                      <TableCell className="text-sm text-white/80">
+                        {row.vehicle_model || "-"}
                       </TableCell>
                       <TableCell className="text-sm text-center text-white/80">
                         {row.spark_arrestor || "-"}

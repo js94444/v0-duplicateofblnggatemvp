@@ -349,7 +349,7 @@ export class AzureSqlDB {
     if (uploadedFiles && uploadedFiles.length > 0) {
       console.log('[v0] Processing', uploadedFiles.length, 'uploaded files')
       for (const file of uploadedFiles) {
-        // 파일명과 키가 유효한 경우에만 저장
+        // ��일명과 키가 유효한 경우에만 저장
         if (file && file.filename && file.fileKey && file.filename.trim() !== '' && file.fileKey.trim() !== '') {
           console.log('[v0] Saving file attachment:', { 
             filename: file.filename, 
@@ -1702,10 +1702,11 @@ export class AzureSqlDB {
           s.visitor_org,
           s.contact_name,
           s.access_area,
-          s.vehicle_number,
           s.application_id,
           a.contact_mobile,
           a.visitor_birth_date,
+          a.vehicle_number,
+          a.vehicle_model,
           a.spark_arrestor
         FROM visit_pass_scans s
         LEFT JOIN visit_applications a ON s.application_id = a.application_id

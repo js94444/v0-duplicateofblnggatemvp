@@ -20,7 +20,7 @@ const ALL_PAGES = [
   { path: "/admin/dashboard", name: "대시보드",    icon: LayoutDashboard },
   { path: "/admin/requests",  name: "신청 관리",   icon: FileText },
   { path: "/admin/calendar",  name: "방문 캘린더", icon: Calendar },
-  { path: "/admin/qr",        name: "QR 출입현황", icon: QrCode },
+  { path: "/admin/qr",        name: "출입현황", icon: QrCode },
   { path: "/admin/accounts",  name: "계정 관리",   icon: Users },
 ]
 
