@@ -218,6 +218,7 @@ export class AzureSqlDB {
       .input('access_area', sql.NVarChar(100), data.access_area || null)
       .input('vehicle_number', sql.NVarChar(50), data.vehicle_number || null)
       .input('vehicle_model', sql.NVarChar(100), data.vehicle_model || null)
+      .input('spark_arrestor', sql.NVarChar(1), data.spark_arrestor || null)
       .input('is_admin_submission', sql.Bit, data.is_admin_mode ? 1 : 0)
       .input('submission_ip', sql.NVarChar(50), data.submission_ip || null)
       .input('status', sql.NVarChar(20), 'pending')
@@ -227,7 +228,7 @@ export class AzureSqlDB {
           application_number, visitor_name, visitor_phone, visitor_birth_date,
           visitor_organization, visitor_position, visitor_address, visitor_email,
           contact_name, contact_mobile, visit_purpose, detailed_purpose, visit_start_date, visit_end_date,
-          access_area, vehicle_number, vehicle_model,
+          access_area, vehicle_number, vehicle_model, spark_arrestor,
           is_admin_submission, submission_ip, status, created_at, updated_at
         )
         OUTPUT INSERTED.application_id
@@ -235,7 +236,7 @@ export class AzureSqlDB {
           @application_number, @visitor_name, @visitor_phone, @visitor_birth_date,
           @visitor_organization, @visitor_position, @visitor_address, @visitor_email,
           @contact_name, @contact_mobile, @visit_purpose, @detailed_purpose, @visit_start_date, @visit_end_date,
-          @access_area, @vehicle_number, @vehicle_model,
+          @access_area, @vehicle_number, @vehicle_model, @spark_arrestor,
           @is_admin_submission, @submission_ip, @status, @created_at, @updated_at
         )
       `)
@@ -348,7 +349,7 @@ export class AzureSqlDB {
     if (uploadedFiles && uploadedFiles.length > 0) {
       console.log('[v0] Processing', uploadedFiles.length, 'uploaded files')
       for (const file of uploadedFiles) {
-        // 파일명과 키가 유효한 경우에만 저장
+        // �����일명과 키가 유효한 경우에만 저장
         if (file && file.filename && file.fileKey && file.filename.trim() !== '' && file.fileKey.trim() !== '') {
           console.log('[v0] Saving file attachment:', { 
             filename: file.filename, 
@@ -621,6 +622,7 @@ export class AzureSqlDB {
         access_area: row.access_area as AccessArea,
         vehicle_number: row.vehicle_number,
         vehicle_model: row.vehicle_model,
+        spark_arrestor: row.spark_arrestor,
         visit_start_time: "09:00",
         visit_end_time: "18:00",
         // Add date fields for all types
@@ -782,6 +784,7 @@ export class AzureSqlDB {
       access_area: row.access_area as AccessArea,
       vehicle_number: row.vehicle_number,
       vehicle_model: row.vehicle_model,
+      spark_arrestor: row.spark_arrestor,
       visit_start_time: "09:00",
       visit_end_time: "18:00",
       visit_start_date: new Date(row.visit_start_date),
@@ -871,6 +874,7 @@ export class AzureSqlDB {
         personnel,
         vehicle_number: row.vehicle_number,
         vehicle_model: row.vehicle_model,
+        spark_arrestor: row.spark_arrestor,
         visit_start_time: row.visit_start_time,
         visit_end_time: row.visit_end_time,
         created_at: new Date(row.created_at),
@@ -917,6 +921,7 @@ export class AzureSqlDB {
       access_area: row.access_area as AccessArea,
       vehicle_number: row.vehicle_number,
       vehicle_model: row.vehicle_model,
+      spark_arrestor: row.spark_arrestor,
       visit_start_time: "09:00",
       visit_end_time: "18:00",
       created_at: new Date(row.created_at),
@@ -932,7 +937,7 @@ export class AzureSqlDB {
   static async getAllApplications(): Promise<Application[]> {
     const dbPool = await getPool()
 
-    // 6개 쿼리 병렬 실행으로 N+1 문제 완전 해결
+    // 6�� 쿼리 병렬 실행으로 N+1 문제 완전 해결
     const [appResult, attachResult, companionResult, companionDeviceResult, deviceResult, companionAttachResult] = await Promise.all([
       dbPool.request().query(`
         SELECT application_id, application_number, status, visitor_name, visitor_phone,
@@ -1058,6 +1063,7 @@ export class AzureSqlDB {
         access_area: row.access_area as AccessArea,
         vehicle_number: row.vehicle_number,
         vehicle_model: row.vehicle_model,
+        spark_arrestor: row.spark_arrestor,
         visit_start_time: "09:00",
         visit_end_time: "18:00",
         created_at: new Date(row.created_at),
@@ -1696,10 +1702,12 @@ export class AzureSqlDB {
           s.visitor_org,
           s.contact_name,
           s.access_area,
-          s.vehicle_number,
           s.application_id,
           a.contact_mobile,
-          a.visitor_birth_date
+          a.visitor_birth_date,
+          a.vehicle_number,
+          a.vehicle_model,
+          a.spark_arrestor
         FROM visit_pass_scans s
         LEFT JOIN visit_applications a ON s.application_id = a.application_id
         ${isAll ? '' : 'WHERE s.scan_site = @scan_site'}
@@ -1788,6 +1796,30 @@ export class AzureSqlDB {
         INSERT INTO visit_passes (application_id, companion_id, pass_receipt, token, status, valid_from, valid_to)
         VALUES (@application_id, @companion_id, @pass_receipt, @token, 'active', @valid_from, @valid_to)
       `)
+  }
+
+  /** 여러 application_id에 대한 항만이수증 파일 조회 (신청자 + 동행인 모두) */
+  static async getPortCertFilesByApplicationIds(applicationIds: number[]): Promise<Array<{ application_id: number; file_url: string; file_name: string }>> {
+    if (applicationIds.length === 0) return []
+    const dbPool = await getPool()
+    
+    const placeholders = applicationIds.map((_, i) => `@id${i}`).join(',')
+    const request = dbPool.request()
+    applicationIds.forEach((id, i) => {
+      request.input(`id${i}`, sql.Int, id)
+    })
+    
+    // 신청자 본인 항만이수증 (visit_application_files) + 동행인 항만이수증 (visit_companion_attachments)
+    const result = await request.query(`
+      SELECT application_id, blob_url AS file_url, file_name
+      FROM visit_application_files
+      WHERE application_id IN (${placeholders}) AND attachment_type = 'PORT_CERT'
+      UNION ALL
+      SELECT application_id, blob_url AS file_url, file_name
+      FROM visit_companion_attachments
+      WHERE application_id IN (${placeholders}) AND attachment_type = 'PORT_CERT'
+    `)
+    return result.recordset
   }
 
   /** 보안담당자 지정/해제 및 전화번호 업데이트 */

@@ -49,6 +49,7 @@ interface FormData {
   access_area: string
   vehicle_number: string
   vehicle_model: string
+  spark_arrestor: string
   visit_purpose: string
   detailed_purpose: string
   has_no_vehicle: boolean
@@ -137,6 +138,7 @@ export default function VisitFormPage() {
     access_area: "",
     vehicle_number: "",
     vehicle_model: "",
+    spark_arrestor: "",
     visit_purpose: "",
     detailed_purpose: "",
     has_no_vehicle: false,
@@ -201,6 +203,7 @@ export default function VisitFormPage() {
               access_area: data.access_area || "",
               vehicle_number: data.vehicle_number || "",
               vehicle_model: data.vehicle_model || "",
+              spark_arrestor: data.spark_arrestor || "",
               visit_purpose: data.visit_purpose || "",
               has_no_vehicle: !data.vehicle_number,
             })
@@ -776,7 +779,7 @@ export default function VisitFormPage() {
                 </div>
 
                 {/* 차량 정보 */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
                   <FormInput
                     label={t("차량번호", "Vehicle Number")}
                     required={!formData.has_no_vehicle}
@@ -794,6 +797,18 @@ export default function VisitFormPage() {
                     error={errors.vehicle_model}
                     className={formData.has_no_vehicle ? "opacity-50 pointer-events-none h-14 w-full" : "h-14 w-full"}
                   />
+                  <FormSelect
+                    placeholder={t("불꽃방지망", "Spark Arrestor")}
+                    required={!formData.has_no_vehicle}
+                    options={[
+                      { value: "Y", label: t("Y", "Y") },
+                      { value: "N", label: t("N", "N") },
+                    ]}
+                    value={formData.spark_arrestor}
+                    onValueChange={(value) => updateField("spark_arrestor", value)}
+                    error={errors.spark_arrestor}
+                    className={formData.has_no_vehicle ? "opacity-50 pointer-events-none h-14 w-full" : "h-14 w-full"}
+                  />
                   <div className="flex items-center space-x-3 px-4 bg-black/40 rounded-xl border border-white/10 h-14 backdrop-blur-sm transition-all duration-300 hover:border-amber-500/30 hover:bg-black/50">
                     <Checkbox
                       id="has_no_vehicle"
@@ -804,12 +819,14 @@ export default function VisitFormPage() {
                           has_no_vehicle: checked as boolean,
                           vehicle_number: checked ? "" : prev.vehicle_number,
                           vehicle_model: checked ? "" : prev.vehicle_model,
+                          spark_arrestor: checked ? "" : prev.spark_arrestor,
                         }))
                         if (checked) {
                           setErrors((prev) => {
                             const newErrors = { ...prev }
                             delete newErrors.vehicle_number
                             delete newErrors.vehicle_model
+                            delete newErrors.spark_arrestor
                             return newErrors
                           })
                         }

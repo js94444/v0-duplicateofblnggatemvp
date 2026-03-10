@@ -283,7 +283,8 @@ export function ApplicationDetailModal({ application, open, loading = false, onC
                       <InfoField label="이메일" value={app.visitor_email || app.contact_email} />
                       <InfoField label="��사주소" value={app.visitor_address} />
                       <InfoField label="차량번호" value={app.vehicle_number} />
-                      <InfoField label="차종" value={app.vehicle_model} />
+                      <InfoField label="차량유종" value={app.vehicle_model} />
+                      <InfoField label="불꽃방지망" value={app.spark_arrestor || "-"} />
                     </div>
 
                     {/* 본인 전자기기 */}
