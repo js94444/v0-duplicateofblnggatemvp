@@ -1647,12 +1647,15 @@ export class AzureSqlDB {
   }
 
   /** QR 스캔 로그 조회 (출입현황) */
-  static async getQrScanLogs(scanSite: string): Promise<any[]> {
+  static async getQrScanLogs(scanSite: string, limit: number = 100): Promise<any[]> {
     const dbPool = await getPool()
+    const isAll = scanSite.toLowerCase() === 'all'
+    
     const result = await dbPool.request()
       .input('scan_site', sql.NVarChar(50), scanSite)
+      .input('limit', sql.Int, limit)
       .query(`
-        SELECT 
+        SELECT TOP (@limit)
           s.scan_id,
           s.pass_id,
           s.direction,
@@ -1667,10 +1670,9 @@ export class AzureSqlDB {
           s.contact_name,
           s.access_area,
           s.vehicle_number,
-          p.application_id
+          s.application_id
         FROM visit_pass_scans s
-        LEFT JOIN visit_passes p ON s.pass_id = p.pass_id
-        WHERE LOWER(s.scan_site) = LOWER(@scan_site) OR LOWER(@scan_site) = 'all'
+        ${isAll ? '' : 'WHERE s.scan_site = @scan_site'}
         ORDER BY s.scanned_at DESC
       `)
     return result.recordset
@@ -1679,6 +1681,8 @@ export class AzureSqlDB {
   /** QR 스캔 통계 조회 */
   static async getQrScanStats(scanSite: string): Promise<any> {
     const dbPool = await getPool()
+    const isAll = scanSite.toLowerCase() === 'all'
+    
     const result = await dbPool.request()
       .input('scan_site', sql.NVarChar(50), scanSite)
       .query(`
@@ -1689,7 +1693,7 @@ export class AzureSqlDB {
           SUM(CASE WHEN result = 'ALLOW' THEN 1 ELSE 0 END) as allowCount,
           SUM(CASE WHEN result = 'DENY' THEN 1 ELSE 0 END) as denyCount
         FROM visit_pass_scans
-        WHERE LOWER(scan_site) = LOWER(@scan_site) OR LOWER(@scan_site) = 'all'
+        ${isAll ? '' : 'WHERE scan_site = @scan_site'}
       `)
     return result.recordset[0] || { total: 0, entryCount: 0, exitCount: 0, allowCount: 0, denyCount: 0 }
   }
