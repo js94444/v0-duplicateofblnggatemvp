@@ -3,7 +3,7 @@ import { AzureSqlDB } from "@/lib/db/azure-sql"
 import { ApplicationStatus } from "@/lib/types"
 import { sendEmail } from "@/lib/email/sender"
 import { getApprovalEmailTemplate, getRejectionEmailTemplate } from "@/lib/email/templates"
-import { sendSMS } from "@/lib/services/solapi"
+import { sendSms } from "@/lib/services/solapi"
 import { getApprovalSMSMessage, getRejectionSMSMessage } from "@/lib/messages/sms-templates"
 
 export const runtime = 'nodejs'
@@ -94,13 +94,13 @@ export async function POST(request: NextRequest) {
         companionPhones.forEach((p) => approvalRecipients.add(p))
 
         await Promise.allSettled(
-          Array.from(approvalRecipients).map((phone) => sendSMS({ to: phone, message: approvalMsg }))
+          Array.from(approvalRecipients).map((phone) => sendSms(phone, approvalMsg))
         )
 
         // 승인 시: 담당자에게 승인 완료 알림
         if (contactPhone) {
           const contactMsg = `[B-Link] 방문 신청이 승인되었습니다.\n신청자: ${updatedApplication.visitor_name || ""}\n접수번호: ${updatedApplication.application_number || updatedApplication.receipt || ""}`
-          await sendSMS({ to: contactPhone, message: contactMsg }).catch(() => {})
+          await sendSms(contactPhone, contactMsg).catch(() => {})
         }
       } else {
         // 반려 시: 신청자 + 담당자에게 반려 문자
@@ -110,7 +110,7 @@ export async function POST(request: NextRequest) {
         if (contactPhone) rejectionRecipients.add(contactPhone)
 
         await Promise.allSettled(
-          Array.from(rejectionRecipients).map((phone) => sendSMS({ to: phone, message: rejectionMsg }))
+          Array.from(rejectionRecipients).map((phone) => sendSms(phone, rejectionMsg))
         )
       }
     } catch (smsError) {

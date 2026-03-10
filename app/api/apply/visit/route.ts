@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 import { AzureSqlDB } from "@/lib/db/azure-sql"
-import { sendSMS } from "@/lib/services/solapi"
+import { sendSms } from "@/lib/services/solapi"
 import { getSubmissionSmsText } from "@/lib/messages/sms-templates"
 
 export async function POST(request: Request) {
@@ -46,7 +46,7 @@ export async function POST(request: Request) {
 
       // 수신자 전체에게 발송
       const smsResults = await Promise.allSettled(
-        Array.from(recipients).map((phone) => sendSMS({ to: phone, message: smsMessage }))
+        Array.from(recipients).map((phone) => sendSms(phone, smsMessage))
       )
       console.log("[v0] SMS 발송 결과:", smsResults)
     } catch (smsError) {
