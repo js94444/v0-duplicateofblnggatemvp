@@ -1569,7 +1569,8 @@ export class AzureSqlDB {
     const appResult = await dbPool.request()
       .input('pass_receipt', sql.NVarChar(50), receipt)
       .query(`
-        SELECT a.application_id, a.visitor_name, a.visit_start_date, a.visit_end_date, a.status, p.pass_id
+        SELECT a.application_id, a.visitor_name, a.visitor_organization as visitor_org, 
+               a.contact_name, a.access_area, a.visit_start_date, a.visit_end_date, a.status, p.pass_id
         FROM visit_applications a
         INNER JOIN visit_passes p ON a.application_id = p.application_id
         WHERE p.pass_receipt = @pass_receipt
@@ -1597,22 +1598,36 @@ export class AzureSqlDB {
     // 스캔 기록 저장
     try {
       await dbPool.request()
-        .input('pass_id', sql.BigInt, app.pass_id)
+        .input('pass_id', sql.UniqueIdentifier, app.pass_id)
+        .input('application_id', sql.BigInt, app.application_id)
         .input('direction', sql.NVarChar(10), direction)
-        .input('device_id', sql.NVarChar(100), device_id)
+        .input('device_id', sql.NVarChar(100), device_id || 'WEB')
+        .input('result', sql.NVarChar(10), 'ALLOW')
         .input('scanned_ip', sql.NVarChar(50), scanned_ip)
         .input('user_agent', sql.NVarChar(500), user_agent)
+        .input('visitor_name', sql.NVarChar(100), app.visitor_name)
+        .input('visitor_org', sql.NVarChar(100), app.visitor_org)
+        .input('contact_name', sql.NVarChar(100), app.contact_name)
+        .input('access_area', sql.NVarChar(100), app.access_area)
         .input('scan_site', sql.NVarChar(50), scan_site)
         .input('scanned_at', sql.DateTime2, now)
         .query(`
-          INSERT INTO visit_pass_scans (pass_id, direction, device_id, scanned_ip, user_agent, scan_site, scanned_at)
-          VALUES (@pass_id, @direction, @device_id, @scanned_ip, @user_agent, @scan_site, @scanned_at)
+          INSERT INTO visit_pass_scans (pass_id, application_id, direction, device_id, result, scanned_ip, user_agent, visitor_name, visitor_org, contact_name, access_area, scan_site, scanned_at)
+          VALUES (@pass_id, @application_id, @direction, @device_id, @result, @scanned_ip, @user_agent, @visitor_name, @visitor_org, @contact_name, @access_area, @scan_site, @scanned_at)
         `)
     } catch (e) {
       console.error('[v0] Failed to record scan:', e)
     }
 
-    return { result: "ALLOW", message: `${direction === 'ENTRY' ? '입장' : '퇴장'} 처리되었습니다` }
+    return { 
+      result: "ALLOW", 
+      message: `${direction === 'ENTRY' ? '입장' : '퇴장'} 처리되었습니다`,
+      visitor_name: app.visitor_name,
+      visitor_org: app.visitor_org,
+      access_area: app.access_area,
+      visit_start_date: app.visit_start_date,
+      visit_end_date: app.visit_end_date,
+    }
   }
 
   /** 휴대폰 번호로 승인된 신청 조회 */
@@ -1632,12 +1647,15 @@ export class AzureSqlDB {
   }
 
   /** QR 스캔 로그 조회 (출입현황) */
-  static async getQrScanLogs(scanSite: string): Promise<any[]> {
+  static async getQrScanLogs(scanSite: string, limit: number = 100): Promise<any[]> {
     const dbPool = await getPool()
+    const isAll = scanSite.toLowerCase() === 'all'
+    
     const result = await dbPool.request()
       .input('scan_site', sql.NVarChar(50), scanSite)
+      .input('limit', sql.Int, limit)
       .query(`
-        SELECT 
+        SELECT TOP (@limit)
           s.scan_id,
           s.pass_id,
           s.direction,
@@ -1652,10 +1670,12 @@ export class AzureSqlDB {
           s.contact_name,
           s.access_area,
           s.vehicle_number,
-          p.application_id
+          s.application_id,
+          a.contact_mobile,
+          a.visitor_birth_date
         FROM visit_pass_scans s
-        LEFT JOIN visit_passes p ON s.pass_id = p.pass_id
-        WHERE LOWER(s.scan_site) = LOWER(@scan_site) OR LOWER(@scan_site) = 'all'
+        LEFT JOIN visit_applications a ON s.application_id = a.application_id
+        ${isAll ? '' : 'WHERE s.scan_site = @scan_site'}
         ORDER BY s.scanned_at DESC
       `)
     return result.recordset
@@ -1664,6 +1684,8 @@ export class AzureSqlDB {
   /** QR 스캔 통계 조회 */
   static async getQrScanStats(scanSite: string): Promise<any> {
     const dbPool = await getPool()
+    const isAll = scanSite.toLowerCase() === 'all'
+    
     const result = await dbPool.request()
       .input('scan_site', sql.NVarChar(50), scanSite)
       .query(`
@@ -1674,7 +1696,7 @@ export class AzureSqlDB {
           SUM(CASE WHEN result = 'ALLOW' THEN 1 ELSE 0 END) as allowCount,
           SUM(CASE WHEN result = 'DENY' THEN 1 ELSE 0 END) as denyCount
         FROM visit_pass_scans
-        WHERE LOWER(scan_site) = LOWER(@scan_site) OR LOWER(@scan_site) = 'all'
+        ${isAll ? '' : 'WHERE scan_site = @scan_site'}
       `)
     return result.recordset[0] || { total: 0, entryCount: 0, exitCount: 0, allowCount: 0, denyCount: 0 }
   }
