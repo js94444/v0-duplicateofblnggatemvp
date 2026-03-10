@@ -57,7 +57,7 @@ export default function AdminQrScanPage() {
   const [selectedApplicationId, setSelectedApplicationId] = useState<number | null>(null)
   const [selectedApplication, setSelectedApplication] = useState<Application | null>(null)
   const [modalLoading, setModalLoading] = useState(false)
-  const [portCertModal, setPortCertModal] = useState<{ open: boolean; files: Array<{ file_url: string; file_name: string }>; visitorName: string }>({ open: false, files: [], visitorName: "" })
+  const [portCertModal, setPortCertModal] = useState<{ open: boolean; files: Array<{ file_url: string; file_name: string }>; visitorName: string; birthDate: string }>({ open: false, files: [], visitorName: "", birthDate: "" })
 
   // 슈퍼어드민만 접근 가능
   useEffect(() => {
@@ -365,7 +365,8 @@ export default function AdminQrScanPage() {
                         className={`text-sm ${row.portCertFiles?.length ? 'text-blue-400 cursor-pointer hover:underline' : 'text-white/80'}`}
                         onClick={() => {
                           if (row.portCertFiles?.length) {
-                            setPortCertModal({ open: true, files: row.portCertFiles, visitorName: row.visitor_name || "" })
+                            const bd = row.visitor_birth_date ? new Date(row.visitor_birth_date).toLocaleDateString("ko-KR") : ""
+                            setPortCertModal({ open: true, files: row.portCertFiles, visitorName: row.visitor_name || "", birthDate: bd })
                           }
                         }}
                       >
@@ -492,7 +493,8 @@ export default function AdminQrScanPage() {
                             className={`text-sm ${row.portCertFiles?.length ? 'text-blue-400 cursor-pointer hover:underline' : 'text-white/80'}`}
                             onClick={() => {
                               if (row.portCertFiles?.length) {
-                                setPortCertModal({ open: true, files: row.portCertFiles, visitorName: row.visitor_name || "" })
+                                const bd = row.visitor_birth_date ? new Date(row.visitor_birth_date).toLocaleDateString("ko-KR") : ""
+                                setPortCertModal({ open: true, files: row.portCertFiles, visitorName: row.visitor_name || "", birthDate: bd })
                               }
                             }}
                           >
@@ -576,7 +578,9 @@ export default function AdminQrScanPage() {
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-bold text-white">{portCertModal.visitorName} - 항만이수증</h3>
+              <h3 className="text-lg font-bold text-white">
+                {portCertModal.visitorName}{portCertModal.birthDate ? ` - ${portCertModal.birthDate}` : ""} - 항만이수증
+              </h3>
               <button 
                 onClick={() => setPortCertModal({ open: false, files: [], visitorName: "" })}
                 className="text-white/60 hover:text-white text-2xl"
