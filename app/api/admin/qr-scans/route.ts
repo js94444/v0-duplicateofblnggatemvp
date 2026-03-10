@@ -19,12 +19,15 @@ export async function GET(request: NextRequest) {
 
     // 고유 application_id 목록 추출
     const applicationIds = [...new Set(data.map((d: any) => d.application_id).filter(Boolean))]
+    console.log("[v0] Extracted applicationIds:", applicationIds.length, applicationIds.slice(0, 5))
     
     // 각 application_id별 항만이수증 파일 조회
     const portCertMap = new Map<number, Array<{ file_url: string; file_name: string }>>()
     if (applicationIds.length > 0) {
       try {
         const portCertFiles = await AzureSqlDB.getPortCertFilesByApplicationIds(applicationIds as number[])
+        console.log("[v0] Retrieved portCertFiles:", portCertFiles.length, "records")
+        console.log("[v0] Sample portCertFiles:", portCertFiles.slice(0, 3))
         for (const file of portCertFiles) {
           const appId = file.application_id
           if (!portCertMap.has(appId)) {

@@ -95,6 +95,8 @@ export default function AdminQrScanPage() {
       }
       const json = await res.json()
       const next: ScanRow[] = json.data || []
+      console.log("[v0] QR scans loaded:", next.length, "records")
+      console.log("[v0] Sample record with portCertFiles:", next[0])
       setScans(next)
       setStats(json.stats || null)
     } catch (e) {
@@ -156,6 +158,7 @@ export default function AdminQrScanPage() {
     for (const row of scans) {
       const key = row.pass_id || row.scan_id || `scan-${Math.random()}`
       if (!byPass.has(key)) {
+        console.log("[v0] Creating byPass entry:", { visitor_name: row.visitor_name, portCertFiles: row.portCertFiles?.length || 0 })
         byPass.set(key, {
           pass_id: row.pass_id,
           application_id: row.application_id,
@@ -303,7 +306,7 @@ export default function AdminQrScanPage() {
           </Card>
           <Card className="bg-white/5 border-white/10 text-white">
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm text-white/60">전체 스캔</CardTitle>
+              <CardTitle className="text-sm text-white/60">��체 스캔</CardTitle>
             </CardHeader>
             <CardContent>
               <p className="text-3xl font-black">
