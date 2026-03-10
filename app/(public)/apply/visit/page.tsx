@@ -54,8 +54,7 @@ export default function VisitAgreementPage() {
         </h3>
       </div>
       <div className="p-8">
-        <div className="bg-black/40 rounded-2xl p-6 h-40 overflow-y-auto text-white/50 text-sm font-light leading-relaxed border border-white/5"
-             style={{ scrollbarWidth: 'thin', scrollbarColor: 'rgba(245,158,11,0.2) rgba(255,255,255,0.02)' }}>
+        <div className="bg-black/40 rounded-2xl p-6 text-white/50 text-sm font-light leading-relaxed border border-white/5">
           {content}
         </div>
         <label className="mt-6 flex items-center gap-3 cursor-pointer max-w-fit group/label">
