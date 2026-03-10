@@ -1598,17 +1598,23 @@ export class AzureSqlDB {
     // 스캔 기록 저장
     try {
       await dbPool.request()
-        .input('pass_id', sql.BigInt, app.pass_id)
+        .input('pass_id', sql.UniqueIdentifier, app.pass_id)
+        .input('application_id', sql.BigInt, app.application_id)
         .input('direction', sql.NVarChar(10), direction)
-        .input('device_id', sql.NVarChar(100), device_id)
+        .input('device_id', sql.NVarChar(100), device_id || 'WEB')
+        .input('result', sql.NVarChar(10), 'ALLOW')
         .input('scanned_ip', sql.NVarChar(50), scanned_ip)
         .input('user_agent', sql.NVarChar(500), user_agent)
+        .input('visitor_name', sql.NVarChar(100), app.visitor_name)
+        .input('visitor_org', sql.NVarChar(100), app.visitor_org)
+        .input('access_area', sql.NVarChar(100), app.access_area)
         .input('scan_site', sql.NVarChar(50), scan_site)
         .input('scanned_at', sql.DateTime2, now)
         .query(`
-          INSERT INTO visit_pass_scans (pass_id, direction, device_id, scanned_ip, user_agent, scan_site, scanned_at)
-          VALUES (@pass_id, @direction, @device_id, @scanned_ip, @user_agent, @scan_site, @scanned_at)
+          INSERT INTO visit_pass_scans (pass_id, application_id, direction, device_id, result, scanned_ip, user_agent, visitor_name, visitor_org, access_area, scan_site, scanned_at)
+          VALUES (@pass_id, @application_id, @direction, @device_id, @result, @scanned_ip, @user_agent, @visitor_name, @visitor_org, @access_area, @scan_site, @scanned_at)
         `)
+      console.log('[v0] Scan record saved successfully for application_id:', app.application_id)
     } catch (e) {
       console.error('[v0] Failed to record scan:', e)
     }
