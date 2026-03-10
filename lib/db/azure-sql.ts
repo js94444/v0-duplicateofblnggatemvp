@@ -349,7 +349,7 @@ export class AzureSqlDB {
     if (uploadedFiles && uploadedFiles.length > 0) {
       console.log('[v0] Processing', uploadedFiles.length, 'uploaded files')
       for (const file of uploadedFiles) {
-        // ����일명과 키가 유효한 경우에만 저장
+        // �����일명과 키가 유효한 경우에만 저장
         if (file && file.filename && file.fileKey && file.filename.trim() !== '' && file.fileKey.trim() !== '') {
           console.log('[v0] Saving file attachment:', { 
             filename: file.filename, 
@@ -1798,23 +1798,25 @@ export class AzureSqlDB {
       `)
   }
 
-  /** 여러 application_id에 대한 항만이수증 파일 조회 */
+  /** 여러 application_id에 대한 항만이수증 파일 조회 (신청자 + 동행인 모두) */
   static async getPortCertFilesByApplicationIds(applicationIds: number[]): Promise<Array<{ application_id: number; file_url: string; file_name: string }>> {
     if (applicationIds.length === 0) return []
     const dbPool = await getPool()
     
-    // 파라미터화된 쿼리로 변경 - IN 절 생성
     const placeholders = applicationIds.map((_, i) => `@id${i}`).join(',')
     const request = dbPool.request()
-    
-    // 각 ID를 파라미터로 추가
     applicationIds.forEach((id, i) => {
       request.input(`id${i}`, sql.Int, id)
     })
     
+    // 신청자 본인 항만이수증 (visit_application_files) + 동행인 항만이수증 (visit_companion_attachments)
     const result = await request.query(`
-      SELECT application_id, file_url, file_name
+      SELECT application_id, blob_url AS file_url, file_name
       FROM visit_application_files
+      WHERE application_id IN (${placeholders}) AND attachment_type = 'PORT_CERT'
+      UNION ALL
+      SELECT application_id, blob_url AS file_url, file_name
+      FROM visit_companion_attachments
       WHERE application_id IN (${placeholders}) AND attachment_type = 'PORT_CERT'
     `)
     return result.recordset
