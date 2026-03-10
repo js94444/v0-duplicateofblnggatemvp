@@ -23,13 +23,18 @@ export async function GET(request: NextRequest) {
     // 각 application_id별 항만이수증 파일 조회
     const portCertMap = new Map<number, Array<{ file_url: string; file_name: string }>>()
     if (applicationIds.length > 0) {
-      const portCertFiles = await AzureSqlDB.getPortCertFilesByApplicationIds(applicationIds as number[])
-      for (const file of portCertFiles) {
-        const appId = file.application_id
-        if (!portCertMap.has(appId)) {
-          portCertMap.set(appId, [])
+      try {
+        const portCertFiles = await AzureSqlDB.getPortCertFilesByApplicationIds(applicationIds as number[])
+        for (const file of portCertFiles) {
+          const appId = file.application_id
+          if (!portCertMap.has(appId)) {
+            portCertMap.set(appId, [])
+          }
+          portCertMap.get(appId)!.push({ file_url: file.file_url, file_name: file.file_name })
         }
-        portCertMap.get(appId)!.push({ file_url: file.file_url, file_name: file.file_name })
+      } catch (certError) {
+        console.error("[v0] Failed to get port certificates:", certError)
+        // 항만이수증 조회 실패해도 스캔 데이터는 반환하도록 계속 진행
       }
     }
 

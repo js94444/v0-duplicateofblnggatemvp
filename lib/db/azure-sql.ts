@@ -349,7 +349,7 @@ export class AzureSqlDB {
     if (uploadedFiles && uploadedFiles.length > 0) {
       console.log('[v0] Processing', uploadedFiles.length, 'uploaded files')
       for (const file of uploadedFiles) {
-        // ���일명과 키가 유효한 경우에만 저장
+        // ����일명과 키가 유효한 경우에만 저장
         if (file && file.filename && file.fileKey && file.filename.trim() !== '' && file.fileKey.trim() !== '') {
           console.log('[v0] Saving file attachment:', { 
             filename: file.filename, 
@@ -1802,14 +1802,21 @@ export class AzureSqlDB {
   static async getPortCertFilesByApplicationIds(applicationIds: number[]): Promise<Array<{ application_id: number; file_url: string; file_name: string }>> {
     if (applicationIds.length === 0) return []
     const dbPool = await getPool()
-    // IN 절에 사용할 ID 목록 생성
-    const idList = applicationIds.join(',')
-    const result = await dbPool.request()
-      .query(`
-        SELECT application_id, file_url, file_name
-        FROM visit_application_files
-        WHERE application_id IN (${idList}) AND attachment_type = 'PORT_CERT'
-      `)
+    
+    // 파라미터화된 쿼리로 변경 - IN 절 생성
+    const placeholders = applicationIds.map((_, i) => `@id${i}`).join(',')
+    const request = dbPool.request()
+    
+    // 각 ID를 파라미터로 추가
+    applicationIds.forEach((id, i) => {
+      request.input(`id${i}`, sql.Int, id)
+    })
+    
+    const result = await request.query(`
+      SELECT application_id, file_url, file_name
+      FROM visit_application_files
+      WHERE application_id IN (${placeholders}) AND attachment_type = 'PORT_CERT'
+    `)
     return result.recordset
   }
 
