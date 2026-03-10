@@ -233,22 +233,20 @@ export default function AdminQrScanPage() {
             <button
               type="button"
               onClick={() => setActiveTab("main")}
-              className={`px-4 py-2 rounded-lg font-bold text-sm transition-all ${
-                activeTab === "main"
+              className={`px-4 py-2 rounded-lg font-bold text-sm transition-all ${activeTab === "main"
                   ? "bg-amber-500 text-black"
                   : "text-white/60 hover:text-white hover:bg-white/10"
-              }`}
+                }`}
             >
               정문 출입현황
             </button>
             <button
               type="button"
               onClick={() => setActiveTab("pier")}
-              className={`px-4 py-2 rounded-lg font-bold text-sm transition-all ${
-                activeTab === "pier"
+              className={`px-4 py-2 rounded-lg font-bold text-sm transition-all ${activeTab === "pier"
                   ? "bg-amber-500 text-black"
                   : "text-white/60 hover:text-white hover:bg-white/10"
-              }`}
+                }`}
             >
               부두 출입현황
             </button>
@@ -272,282 +270,280 @@ export default function AdminQrScanPage() {
 
       {/* Summary cards: 정문 탭에서만 */}
       {activeTab === "main" && (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        <Card className="bg-white/5 border-white/10 text-white">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm text-white/60">방문 신청</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-3xl font-black">{currentStats.applicationCount.toLocaleString("ko-KR")}</p>
-          </CardContent>
-        </Card>
-        <Card className="bg-white/5 border-white/10 text-white">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm text-white/60">입장</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-3xl font-black text-emerald-400">
-              {entryCount.toLocaleString("ko-KR")}
-            </p>
-          </CardContent>
-        </Card>
-        <Card className="bg-white/5 border-white/10 text-white">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm text-white/60">퇴장</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-3xl font-black text-amber-400">
-              {exitCount.toLocaleString("ko-KR")}
-            </p>
-          </CardContent>
-        </Card>
-        <Card className="bg-white/5 border-white/10 text-white">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm text-white/60">전체 스캔</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-3xl font-black">
-              {currentStats.totalScans.toLocaleString("ko-KR")}
-            </p>
-          </CardContent>
-        </Card>
-      </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+          <Card className="bg-white/5 border-white/10 text-white">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm text-white/60">방문 신청</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-3xl font-black">{currentStats.applicationCount.toLocaleString("ko-KR")}</p>
+            </CardContent>
+          </Card>
+          <Card className="bg-white/5 border-white/10 text-white">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm text-white/60">입장</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-3xl font-black text-emerald-400">
+                {entryCount.toLocaleString("ko-KR")}
+              </p>
+            </CardContent>
+          </Card>
+          <Card className="bg-white/5 border-white/10 text-white">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm text-white/60">퇴장</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-3xl font-black text-amber-400">
+                {exitCount.toLocaleString("ko-KR")}
+              </p>
+            </CardContent>
+          </Card>
+          <Card className="bg-white/5 border-white/10 text-white">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm text-white/60">전체 스캔</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-3xl font-black">
+                {currentStats.totalScans.toLocaleString("ko-KR")}
+              </p>
+            </CardContent>
+          </Card>
+        </div>
       )}
 
       <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-[40px] p-8 shadow-2xl">
         {activeTab === "main" && (
           <>
-          <div className="mb-6">
-            <h2 className="text-2xl font-black text-white">정문 출입 이력 (인원별 {rowsByPerson.length}명)</h2>
-            <p className="text-sm text-white/40 mt-1">
-              신청자·동행인별로 한 행씩, 입장/퇴장 시각을 열로 표시합니다. 최근 10분 이내 행은 색으로 강조됩니다.
-            </p>
-          </div>
+            <div className="mb-6">
+              <h2 className="text-2xl font-black text-white">정문 출입 이력 (인원별 {rowsByPerson.length}명)</h2>
+              <p className="text-sm text-white/40 mt-1">
+                신청자·동행인별로 한 행씩, 입장/퇴장 시각을 열로 표시합니다.
+              </p>
+            </div>
 
-        {error && (
-          <div className="mb-4 px-4 py-3 rounded-xl bg-red-500/20 border border-red-500/40 text-red-200 text-sm">
-            {error}
-          </div>
-        )}
+            {error && (
+              <div className="mb-4 px-4 py-3 rounded-xl bg-red-500/20 border border-red-500/40 text-red-200 text-sm">
+                {error}
+              </div>
+            )}
 
-        {rowsByPerson.length === 0 && !loading ? (
-          <div className="text-center py-12 text-white/40">표시할 출입 이력이 없습니다.</div>
-        ) : (
-          <div className="overflow-x-auto rounded-2xl border border-white/10">
-            <Table>
-              <TableHeader className="bg-white/5">
-                <TableRow className="border-white/10 hover:bg-transparent">
-                  <TableHead className="text-white/70 min-w-[100px]">방문자</TableHead>
-                  <TableHead className="text-white/70 min-w-[100px]">생년월일</TableHead>
-                  <TableHead className="text-white/70 min-w-[140px]">소속</TableHead>
-                  <TableHead className="text-white/70 min-w-[140px]">담당자</TableHead>
-                  <TableHead className="text-white/70 min-w-[100px]">출입 구역</TableHead>
-                  <TableHead className="text-white/70 min-w-[140px]">입장 시각</TableHead>
-                  <TableHead className="text-white/70 min-w-[140px]">퇴장 시각</TableHead>
-                  <TableHead className="text-white/70 min-w-[100px]">차량 번호</TableHead>
-                  <TableHead className="text-white/70 min-w-[80px]">차량유종</TableHead>
-                  <TableHead className="text-white/70 min-w-[70px]">불꽃방지망</TableHead>
-                  <TableHead className="text-white/70 min-w-[80px]">상세</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {rowsByPerson.map((row) => {
-                  const recentClass = getRecentHighlight(row)
-                  return (
-                    <TableRow
-                      key={row.pass_id}
-                      className={`border-white/5 hover:bg-white/5 transition-colors ${recentClass}`}
-                    >
-                      <TableCell 
-                        className={`text-sm cursor-pointer ${row.portCertFiles?.length ? 'text-blue-400 hover:underline' : 'text-white/80'}`}
-                        onClick={() => {
-                          if (row.portCertFiles?.length) {
-                            setSelectedApplicationId(row.application_id)
-                          }
-                        }}
-                      >
-                        {row.visitor_name || "-"}
-                      </TableCell>
-                      <TableCell className="text-sm text-white/80">
-                        {row.visitor_birth_date ? new Date(row.visitor_birth_date).toLocaleDateString("ko-KR") : "-"}
-                      </TableCell>
-                      <TableCell className="text-sm text-white/60 max-w-[140px] truncate">
-                        {row.visitor_org || "-"}
-                      </TableCell>
-                      <TableCell className="max-w-[140px]">
-                        <div className="flex flex-col gap-0.5">
-                          <span className="text-sm truncate text-white/80">
-                            {row.contact_name || "-"}
-                          </span>
-                          <span className="text-xs text-white/40">
-                            {row.contact_mobile || "-"}
-                          </span>
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-sm text-white/80">
-                        {row.access_area || "-"}
-                      </TableCell>
-                      <TableCell className="text-sm text-white/80">
-                        {formatDateTime(row.lastEntryAt)}
-                      </TableCell>
-                      <TableCell className="text-sm text-white/80">
-                        {formatDateTime(row.lastExitAt)}
-                      </TableCell>
-                      <TableCell className="text-sm text-white/80">
-                        {row.vehicle_number || "-"}
-                      </TableCell>
-                      <TableCell className="text-sm text-white/80">
-                        {row.vehicle_model || "-"}
-                      </TableCell>
-                      <TableCell className="text-sm text-center text-white/80">
-                        {row.spark_arrestor || "-"}
-                      </TableCell>
-                      <TableCell>
-                        <Button
-                          size="sm"
-                          onClick={() => setSelectedApplicationId(row.application_id)}
-                          className="bg-white/10 hover:bg-white/20 border border-white/20 text-white rounded-lg text-xs px-2 py-1"
-                        >
-                          보기
-                        </Button>
-                      </TableCell>
+            {rowsByPerson.length === 0 && !loading ? (
+              <div className="text-center py-12 text-white/40">표시할 출입 이력이 없습니다.</div>
+            ) : (
+              <div className="overflow-x-auto rounded-2xl border border-white/10">
+                <Table>
+                  <TableHeader className="bg-white/5">
+                    <TableRow className="border-white/10 hover:bg-transparent">
+                      <TableHead className="text-white/70 min-w-[100px]">방문자</TableHead>
+                      <TableHead className="text-white/70 min-w-[100px]">생년월일</TableHead>
+                      <TableHead className="text-white/70 min-w-[140px]">소속</TableHead>
+                      <TableHead className="text-white/70 min-w-[140px]">담당자</TableHead>
+                      <TableHead className="text-white/70 min-w-[100px]">출입 구역</TableHead>
+                      <TableHead className="text-white/70 min-w-[140px]">입장 시각</TableHead>
+                      <TableHead className="text-white/70 min-w-[140px]">퇴장 시각</TableHead>
+                      <TableHead className="text-white/70 min-w-[100px]">차량 번호</TableHead>
+                      <TableHead className="text-white/70 min-w-[80px]">차량유종</TableHead>
+                      <TableHead className="text-white/70 min-w-[70px]">불꽃방지망</TableHead>
+                      <TableHead className="text-white/70 min-w-[80px]">상세</TableHead>
                     </TableRow>
-                  )
-                })}
-              </TableBody>
-            </Table>
-          </div>
-        )}
-        </>
+                  </TableHeader>
+                  <TableBody>
+                    {rowsByPerson.map((row) => {
+                      const recentClass = getRecentHighlight(row)
+                      return (
+                        <TableRow
+                          key={row.pass_id}
+                          className={`border-white/5 hover:bg-white/5 transition-colors ${recentClass}`}
+                        >
+                          <TableCell
+                            className={`text-sm cursor-pointer ${row.portCertFiles?.length ? 'text-blue-400 hover:underline' : 'text-white/80'}`}
+                            onClick={() => {
+                              if (row.portCertFiles?.length) {
+                                setSelectedApplicationId(row.application_id)
+                              }
+                            }}
+                          >
+                            {row.visitor_name || "-"}
+                          </TableCell>
+                          <TableCell className="text-sm text-white/80">
+                            {row.visitor_birth_date ? new Date(row.visitor_birth_date).toLocaleDateString("ko-KR") : "-"}
+                          </TableCell>
+                          <TableCell className="text-sm text-white/60 max-w-[140px] truncate">
+                            {row.visitor_org || "-"}
+                          </TableCell>
+                          <TableCell className="max-w-[140px]">
+                            <div className="flex flex-col gap-0.5">
+                              <span className="text-sm truncate text-white/80">
+                                {row.contact_name || "-"}
+                              </span>
+                              <span className="text-xs text-white/40">
+                                {row.contact_mobile || "-"}
+                              </span>
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-sm text-white/80">
+                            {row.access_area || "-"}
+                          </TableCell>
+                          <TableCell className="text-sm text-white/80">
+                            {formatDateTime(row.lastEntryAt)}
+                          </TableCell>
+                          <TableCell className="text-sm text-white/80">
+                            {formatDateTime(row.lastExitAt)}
+                          </TableCell>
+                          <TableCell className="text-sm text-white/80">
+                            {row.vehicle_number || "-"}
+                          </TableCell>
+                          <TableCell className="text-sm text-white/80">
+                            {row.vehicle_model || "-"}
+                          </TableCell>
+                          <TableCell className="text-sm text-center text-white/80">
+                            {row.spark_arrestor || "-"}
+                          </TableCell>
+                          <TableCell>
+                            <Button
+                              size="sm"
+                              onClick={() => setSelectedApplicationId(row.application_id)}
+                              className="bg-white/10 hover:bg-white/20 border border-white/20 text-white rounded-lg text-xs px-2 py-1"
+                            >
+                              보기
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      )
+                    })}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
+          </>
         )}
 
         {activeTab === "pier" && (
-        <>
-          <div className="mb-4 flex items-center gap-3 flex-wrap">
-            <span className="text-sm text-white/60">부두 선택</span>
-            <div className="flex rounded-lg border border-white/20 overflow-hidden">
-              <button
-                type="button"
-                onClick={() => setPierTab("1부두")}
-                className={`px-3 py-1.5 text-sm font-medium transition-all ${
-                  pierTab === "1부두" ? "bg-amber-500 text-black" : "bg-white/5 text-white/80 hover:bg-white/10"
-                }`}
-              >
-                1부두
-              </button>
-              <button
-                type="button"
-                onClick={() => setPierTab("2부두")}
-                className={`px-3 py-1.5 text-sm font-medium transition-all ${
-                  pierTab === "2부두" ? "bg-amber-500 text-black" : "bg-white/5 text-white/80 hover:bg-white/10"
-                }`}
-              >
-                2부두
-              </button>
+          <>
+            <div className="mb-4 flex items-center gap-3 flex-wrap">
+              <span className="text-sm text-white/60">부두 선택</span>
+              <div className="flex rounded-lg border border-white/20 overflow-hidden">
+                <button
+                  type="button"
+                  onClick={() => setPierTab("1부두")}
+                  className={`px-3 py-1.5 text-sm font-medium transition-all ${pierTab === "1부두" ? "bg-amber-500 text-black" : "bg-white/5 text-white/80 hover:bg-white/10"
+                    }`}
+                >
+                  1부두
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPierTab("2부두")}
+                  className={`px-3 py-1.5 text-sm font-medium transition-all ${pierTab === "2부두" ? "bg-amber-500 text-black" : "bg-white/5 text-white/80 hover:bg-white/10"
+                    }`}
+                >
+                  2부두
+                </button>
+              </div>
             </div>
-          </div>
-          <div className="mb-6">
-            <h2 className="text-2xl font-black text-white">{pierTab} 출입 이력 (인원별 {rowsByPerson.length}명)</h2>
-            <p className="text-sm text-white/40 mt-1">
-              부두에서 QR 스캔된 출입 이력을 인원별로 표시합니다. 최근 10분 이내 행은 색으로 강조됩니다.
-            </p>
-          </div>
-
-          {error && (
-            <div className="mb-4 px-4 py-3 rounded-xl bg-red-500/20 border border-red-500/40 text-red-200 text-sm">
-              {error}
+            <div className="mb-6">
+              <h2 className="text-2xl font-black text-white">{pierTab} 출입 이력 (인원별 {rowsByPerson.length}명)</h2>
+              <p className="text-sm text-white/40 mt-1">
+                부두에서 QR 스캔된 출입 이력을 인원별로 표시합니다. 최근 10분 이내 행은 색으로 강조됩니다.
+              </p>
             </div>
-          )}
 
-          {rowsByPerson.length === 0 && !loading ? (
-            <div className="text-center py-12 text-white/40">표시할 출입 이력이 없습니다.</div>
-          ) : (
-          <div className="overflow-x-auto rounded-2xl border border-white/10">
-            <Table>
-              <TableHeader className="bg-white/5">
-                <TableRow className="border-white/10 hover:bg-transparent">
-                  <TableHead className="text-white/70 min-w-[100px]">방문자</TableHead>
-                  <TableHead className="text-white/70 min-w-[100px]">생년월일</TableHead>
-                  <TableHead className="text-white/70 min-w-[140px]">소속</TableHead>
-                  <TableHead className="text-white/70 min-w-[140px]">담당자</TableHead>
-                  <TableHead className="text-white/70 min-w-[100px]">출입 구역</TableHead>
-                  <TableHead className="text-white/70 min-w-[140px]">입장 시각</TableHead>
-                  <TableHead className="text-white/70 min-w-[140px]">퇴장 시각</TableHead>
-                  <TableHead className="text-white/70 min-w-[100px]">차량 번호</TableHead>
-                  <TableHead className="text-white/70 min-w-[80px]">차량유종</TableHead>
-                  <TableHead className="text-white/70 min-w-[70px]">불꽃방지망</TableHead>
-                  <TableHead className="text-white/70 min-w-[80px]">상세</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {rowsByPerson.map((row) => {
-                  const recentClass = getRecentHighlight(row)
-                  return (
-                    <TableRow
-                      key={row.pass_id}
-                      className={`border-white/5 hover:bg-white/5 transition-colors ${recentClass}`}
-                    >
-                      <TableCell 
-                        className={`text-sm cursor-pointer ${row.portCertFiles?.length ? 'text-blue-400 hover:underline' : 'text-white/80'}`}
-                        onClick={() => {
-                          if (row.portCertFiles?.length) {
-                            setSelectedApplicationId(row.application_id)
-                          }
-                        }}
-                      >
-                        {row.visitor_name || "-"}
-                      </TableCell>
-                      <TableCell className="text-sm text-white/80">
-                        {row.visitor_birth_date ? new Date(row.visitor_birth_date).toLocaleDateString("ko-KR") : "-"}
-                      </TableCell>
-                      <TableCell className="text-sm text-white/60 max-w-[140px] truncate">
-                        {row.visitor_org || "-"}
-                      </TableCell>
-                      <TableCell className="max-w-[140px]">
-                        <div className="flex flex-col gap-0.5">
-                          <span className="text-sm truncate text-white/80">
-                            {row.contact_name || "-"}
-                          </span>
-                          <span className="text-xs text-white/40">
-                            {row.contact_mobile || "-"}
-                          </span>
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-sm text-white/80">
-                        {row.access_area || "-"}
-                      </TableCell>
-                      <TableCell className="text-sm text-white/80">
-                        {formatDateTime(row.lastEntryAt)}
-                      </TableCell>
-                      <TableCell className="text-sm text-white/80">
-                        {formatDateTime(row.lastExitAt)}
-                      </TableCell>
-                      <TableCell className="text-sm text-white/80">
-                        {row.vehicle_number || "-"}
-                      </TableCell>
-                      <TableCell className="text-sm text-white/80">
-                        {row.vehicle_model || "-"}
-                      </TableCell>
-                      <TableCell className="text-sm text-center text-white/80">
-                        {row.spark_arrestor || "-"}
-                      </TableCell>
-                      <TableCell>
-                        <Button
-                          size="sm"
-                          onClick={() => setSelectedApplicationId(row.application_id)}
-                          className="bg-white/10 hover:bg-white/20 border border-white/20 text-white rounded-lg text-xs px-2 py-1"
-                        >
-                          보기
-                        </Button>
-                      </TableCell>
+            {error && (
+              <div className="mb-4 px-4 py-3 rounded-xl bg-red-500/20 border border-red-500/40 text-red-200 text-sm">
+                {error}
+              </div>
+            )}
+
+            {rowsByPerson.length === 0 && !loading ? (
+              <div className="text-center py-12 text-white/40">표시할 출입 이력이 없습니다.</div>
+            ) : (
+              <div className="overflow-x-auto rounded-2xl border border-white/10">
+                <Table>
+                  <TableHeader className="bg-white/5">
+                    <TableRow className="border-white/10 hover:bg-transparent">
+                      <TableHead className="text-white/70 min-w-[100px]">방문자</TableHead>
+                      <TableHead className="text-white/70 min-w-[100px]">생년월일</TableHead>
+                      <TableHead className="text-white/70 min-w-[140px]">소속</TableHead>
+                      <TableHead className="text-white/70 min-w-[140px]">담당자</TableHead>
+                      <TableHead className="text-white/70 min-w-[100px]">출입 구역</TableHead>
+                      <TableHead className="text-white/70 min-w-[140px]">입장 시각</TableHead>
+                      <TableHead className="text-white/70 min-w-[140px]">퇴장 시각</TableHead>
+                      <TableHead className="text-white/70 min-w-[100px]">차량 번호</TableHead>
+                      <TableHead className="text-white/70 min-w-[80px]">차량유종</TableHead>
+                      <TableHead className="text-white/70 min-w-[70px]">불꽃방지망</TableHead>
+                      <TableHead className="text-white/70 min-w-[80px]">상세</TableHead>
                     </TableRow>
-                  )
-                })}
-              </TableBody>
-            </Table>
-          </div>
-          )}
-        </>
+                  </TableHeader>
+                  <TableBody>
+                    {rowsByPerson.map((row) => {
+                      const recentClass = getRecentHighlight(row)
+                      return (
+                        <TableRow
+                          key={row.pass_id}
+                          className={`border-white/5 hover:bg-white/5 transition-colors ${recentClass}`}
+                        >
+                          <TableCell
+                            className={`text-sm cursor-pointer ${row.portCertFiles?.length ? 'text-blue-400 hover:underline' : 'text-white/80'}`}
+                            onClick={() => {
+                              if (row.portCertFiles?.length) {
+                                setSelectedApplicationId(row.application_id)
+                              }
+                            }}
+                          >
+                            {row.visitor_name || "-"}
+                          </TableCell>
+                          <TableCell className="text-sm text-white/80">
+                            {row.visitor_birth_date ? new Date(row.visitor_birth_date).toLocaleDateString("ko-KR") : "-"}
+                          </TableCell>
+                          <TableCell className="text-sm text-white/60 max-w-[140px] truncate">
+                            {row.visitor_org || "-"}
+                          </TableCell>
+                          <TableCell className="max-w-[140px]">
+                            <div className="flex flex-col gap-0.5">
+                              <span className="text-sm truncate text-white/80">
+                                {row.contact_name || "-"}
+                              </span>
+                              <span className="text-xs text-white/40">
+                                {row.contact_mobile || "-"}
+                              </span>
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-sm text-white/80">
+                            {row.access_area || "-"}
+                          </TableCell>
+                          <TableCell className="text-sm text-white/80">
+                            {formatDateTime(row.lastEntryAt)}
+                          </TableCell>
+                          <TableCell className="text-sm text-white/80">
+                            {formatDateTime(row.lastExitAt)}
+                          </TableCell>
+                          <TableCell className="text-sm text-white/80">
+                            {row.vehicle_number || "-"}
+                          </TableCell>
+                          <TableCell className="text-sm text-white/80">
+                            {row.vehicle_model || "-"}
+                          </TableCell>
+                          <TableCell className="text-sm text-center text-white/80">
+                            {row.spark_arrestor || "-"}
+                          </TableCell>
+                          <TableCell>
+                            <Button
+                              size="sm"
+                              onClick={() => setSelectedApplicationId(row.application_id)}
+                              className="bg-white/10 hover:bg-white/20 border border-white/20 text-white rounded-lg text-xs px-2 py-1"
+                            >
+                              보기
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      )
+                    })}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
+          </>
         )}
       </div>
 
