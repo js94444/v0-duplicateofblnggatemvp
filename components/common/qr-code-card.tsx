@@ -4,16 +4,6 @@ import { useEffect, useState } from "react"
 import { QRCodeSVG } from "qrcode.react"
 import { CheckCircle2, Calendar, Clock, MapPin, User, Building2, Download, Share2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { ApplicationType } from "@/lib/types"
-
-/** QR 카드용 짧은 유형 라벨 (개인방문 / 단체방문 / 항만출입) */
-const QR_TYPE_LABELS: Record<ApplicationType, string> = {
-  [ApplicationType.VISIT_R3]: "개인방문",
-  [ApplicationType.GROUP_VISIT]: "단체방문",
-  [ApplicationType.PORT_ACCESS]: "항만출입",
-  [ApplicationType.GOODS_INOUT]: "물품반입반출",
-}
 
 interface QRData {
   receipt: string
@@ -22,7 +12,6 @@ interface QRData {
   visitDate: string
   visitTime: string
   accessArea: string
-  applicationType: ApplicationType
   approvedAt?: string
   validUntil?: string
 }
@@ -74,7 +63,6 @@ export function QRCodeCard({ receipt }: QRCodeCardProps) {
             visitDate: payload.visitDate,
             visitTime: payload.visitTime,
             accessArea: payload.accessArea,
-            applicationType: payload.applicationType,
             approvedAt: payload.approvedAt,
             validUntil: payload.validUntil,
           })
@@ -126,17 +114,9 @@ export function QRCodeCard({ receipt }: QRCodeCardProps) {
         <div className="h-1 w-full bg-gradient-to-r from-amber-600 via-amber-400 to-amber-600" />
 
         {/* Status badge area */}
-        <div className="px-6 pt-6 pb-4 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <CheckCircle2 size={18} className="text-amber-500" />
-            <span className="text-amber-500 text-xs font-black tracking-widest uppercase">Approved</span>
-          </div>
-          <Badge
-            variant="outline"
-            className="text-[10px] border-white/20 text-white/50 tracking-wider px-2"
-          >
-            {QR_TYPE_LABELS[data.applicationType] ?? data.applicationType}
-          </Badge>
+        <div className="px-6 pt-6 pb-4 flex items-center gap-2">
+          <CheckCircle2 size={18} className="text-amber-500" />
+          <span className="text-amber-500 text-xs font-black tracking-widest uppercase">Approved</span>
         </div>
 
         {/* Divider */}

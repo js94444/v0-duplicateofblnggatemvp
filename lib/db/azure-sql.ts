@@ -1638,20 +1638,39 @@ export class AzureSqlDB {
     }
   }
 
-  /** 휴대폰 번호로 승인된 신청 조회 */
+  /** 휴대폰 번호로 승인된 신청 조회 (신청자 + 동행인 포함) */
   static async getApprovedApplicationsByPhone(phone: string): Promise<any[]> {
     const dbPool = await getPool()
-    const result = await dbPool.request()
+
+    // 신청자 본인 번호로 조회 (companion_id 없는 pass)
+    const applicantResult = await dbPool.request()
       .input('phone', sql.NVarChar(20), phone)
       .query(`
         SELECT a.application_id, a.application_number, a.visitor_name, a.visit_start_date, 
-               a.visit_end_date, a.access_area, a.status, p.pass_receipt
+               a.visit_end_date, a.access_area, p.pass_receipt
         FROM visit_applications a
         INNER JOIN visit_passes p ON a.application_id = p.application_id
-        WHERE a.visitor_phone = @phone AND a.status = 'approved'
+        WHERE a.visitor_phone = @phone 
+          AND a.status = 'approved'
+          AND (p.companion_id IS NULL OR p.companion_id = 0)
         ORDER BY a.created_at DESC
       `)
-    return result.recordset
+
+    // 동행인 번호로 조회 (companion_id 있는 pass)
+    const companionResult = await dbPool.request()
+      .input('phone', sql.NVarChar(20), phone)
+      .query(`
+        SELECT a.application_id, a.application_number, c.name as visitor_name, a.visit_start_date, 
+               a.visit_end_date, a.access_area, p.pass_receipt
+        FROM visit_companions c
+        INNER JOIN visit_applications a ON c.application_id = a.application_id
+        INNER JOIN visit_passes p ON p.companion_id = c.companion_id
+        WHERE c.phone = @phone 
+          AND a.status = 'approved'
+        ORDER BY a.created_at DESC
+      `)
+
+    return [...applicantResult.recordset, ...companionResult.recordset]
   }
 
   /** QR 스캔 로그 조회 (출입현황) */

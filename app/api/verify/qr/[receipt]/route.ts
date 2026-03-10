@@ -18,9 +18,8 @@ export async function GET(
       )
     }
 
-    // visit_passes 테이블에서 pass_receipt로 조회
+    // visit_passes 테이블에서 pass_receipt로 조회 (동행인 여부 포함)
     const passData = await AzureSqlDB.getPassByReceipt(receipt)
-    console.log("[v0] Pass data found:", passData ? `ID: ${passData.application_id}` : "NOT FOUND")
 
     if (!passData) {
       return NextResponse.json(
@@ -31,13 +30,20 @@ export async function GET(
 
     // 연결된 visit_applications 정보 조회
     const application = await AzureSqlDB.getApplicationById(String(passData.application_id))
-    console.log("[v0] Application found:", application ? `Name: ${application.visitor_name}` : "NOT FOUND")
 
     if (!application) {
       return NextResponse.json(
         { result: "DENY", message: "신청 정보를 찾을 수 없습니다." },
         { status: 404 }
       )
+    }
+
+    // 동행인 pass인 경우 동행인 이름 조회
+    let displayName = application.visitor_name || ""
+    if (passData.companion_id) {
+      const companions = await AzureSqlDB.getCompanionsWithIdByApplicationId(String(passData.application_id))
+      const companion = companions.find((c) => c.companion_id === passData.companion_id)
+      if (companion?.name) displayName = companion.name
     }
 
     // 상태 확인
@@ -70,18 +76,17 @@ export async function GET(
       })
     }
 
-    // 성공 응답
+    // 성공 응답 - pass_receipt를 그대로 사용, 동행인이면 동행인 이름 표시
     return NextResponse.json({
       result: "ALLOW",
       message: "유효한 출입권입니다.",
       data: {
-        receipt: application.application_number || application.receipt || receipt,
-        applicantName: application.visitor_name || "",
+        receipt: receipt,
+        applicantName: displayName,
         organization: application.visitor_organization || "",
         visitDate: application.visit_start_date,
         visitTime: application.visit_start_time || "09:00",
         accessArea: application.access_area || "",
-        applicationType: application.application_type || "VISIT_R3",
         approvedAt: application.approved_at,
         validUntil: new Date(application.visit_end_date).toLocaleDateString("ko-KR"),
       },
