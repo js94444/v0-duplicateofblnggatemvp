@@ -585,28 +585,36 @@ export default function AdminQrScanPage() {
               </button>
             </div>
             <div className="grid grid-cols-1 gap-6">
-              {portCertModal.files.map((file, idx) => (
-                <div 
-                  key={idx} 
-                  className="border border-white/20 rounded-lg overflow-hidden bg-black/40 p-2"
-                  onLoad={() => console.log("[v0] Image loaded:", file.file_name)}
-                  onError={() => console.log("[v0] Image failed to load:", file.file_url)}
-                >
-                  <img 
-                    src={file.file_url} 
-                    alt={file.file_name} 
-                    className="w-full h-auto object-contain max-h-[600px] rounded"
-                    onError={(e) => {
-                      console.log("[v0] Image load error:", file.file_name, file.file_url)
-                      e.currentTarget.style.display = "none"
-                      e.currentTarget.parentElement!.innerHTML += `<div class="text-white/60 p-4 text-center">이미지를 불러올 수 없습니다.<br/><small>${file.file_name}</small></div>`
-                    }}
-                  />
-                  <div className="text-white/50 text-xs p-2 break-words">
-                    {file.file_name}
+              {portCertModal.files.map((file, idx) => {
+                // blob_url에서 파일명 추출하여 /api/files/ 경로로 변환
+                const blobName = file.file_url.includes("/attachments/") 
+                  ? file.file_url.split("/attachments/")[1]?.split("?")[0] 
+                  : file.file_name
+                const imageUrl = `/api/files/${encodeURIComponent(blobName || file.file_name)}`
+                
+                return (
+                  <div 
+                    key={idx} 
+                    className="border border-white/20 rounded-lg overflow-hidden bg-black/40 p-2"
+                  >
+                    <img 
+                      src={imageUrl} 
+                      alt={file.file_name} 
+                      className="w-full h-auto object-contain max-h-[600px] rounded"
+                      onError={(e) => {
+                        e.currentTarget.style.display = "none"
+                        const fallback = document.createElement("div")
+                        fallback.className = "text-white/60 p-4 text-center"
+                        fallback.innerHTML = `이미지를 불러올 수 없습니다.<br/><small>${file.file_name}</small>`
+                        e.currentTarget.parentElement?.appendChild(fallback)
+                      }}
+                    />
+                    <div className="text-white/50 text-xs p-2 break-words">
+                      {file.file_name}
+                    </div>
                   </div>
-                </div>
-              ))}
+                )
+              })}
             </div>
           </div>
         </div>
