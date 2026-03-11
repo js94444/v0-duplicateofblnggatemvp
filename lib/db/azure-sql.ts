@@ -349,7 +349,7 @@ export class AzureSqlDB {
     if (uploadedFiles && uploadedFiles.length > 0) {
       console.log('[v0] Processing', uploadedFiles.length, 'uploaded files')
       for (const file of uploadedFiles) {
-        // ��������������������������������일명과 키가 유효한 경우에만 저장
+        // ���������������������������������일명과 키가 유효한 경우에만 저장
         if (file && file.filename && file.fileKey && file.filename.trim() !== '' && file.fileKey.trim() !== '') {
           console.log('[v0] Saving file attachment:', { 
             filename: file.filename, 
@@ -1773,7 +1773,7 @@ export class AzureSqlDB {
             ) as rn
           FROM visit_pass_scans s
           LEFT JOIN visit_applications a ON s.application_id = a.application_id
-          WHERE s.scan_site = @scan_site AND s.direction = 'ENTRY'
+          WHERE s.scan_site = @scan_site AND s.direction = 'ENTRY' AND s.result = 'ALLOW'
         ),
         ExitScan AS (
           SELECT 
@@ -1790,7 +1790,7 @@ export class AzureSqlDB {
               ORDER BY s.scanned_at
             ) as rn
           FROM visit_pass_scans s
-          WHERE s.scan_site = @scan_site AND s.direction = 'EXIT'
+          WHERE s.scan_site = @scan_site AND s.direction = 'EXIT' AND s.result = 'ALLOW'
         )
         SELECT TOP (@limit)
           e.scan_id,
