@@ -349,7 +349,7 @@ export class AzureSqlDB {
     if (uploadedFiles && uploadedFiles.length > 0) {
       console.log('[v0] Processing', uploadedFiles.length, 'uploaded files')
       for (const file of uploadedFiles) {
-        // �����������������������일명과 키가 유효한 경우에만 저장
+        // ������������������������일명과 키가 유효한 경우에만 저장
         if (file && file.filename && file.fileKey && file.filename.trim() !== '' && file.fileKey.trim() !== '') {
           console.log('[v0] Saving file attachment:', { 
             filename: file.filename, 
@@ -1540,7 +1540,7 @@ export class AzureSqlDB {
   /** 신청 승인 시 pass_receipt 저장 */
   static async createPassForApplication(applicationId: string, pass_receipt: string): Promise<void> {
     const dbPool = await getPool()
-    // token 생��� (���� 토큰: UUID 대신 ���� ���������)
+    // token ������ (���� 토큰: UUID 대신 ���� ���������)
     const token = `TOKEN-${Date.now()}-${Math.random().toString(36).substring(2, 10).toUpperCase()}`
     
     // 신청 정보에서 방문 기간 가져오기
@@ -1664,8 +1664,11 @@ export class AzureSqlDB {
             AND scanned_at > DATEADD(SECOND, -3, GETDATE())
         `)
       
+      console.log("[v0] Duplicate check:", { pass_id: app.pass_id, direction, scan_site, recentCount: recentScanResult.recordset.length })
+      
       // 최근 3초 이내 동일 스캔이 없을 때만 INSERT
       if (recentScanResult.recordset.length === 0) {
+        console.log("[v0] Inserting scan record...")
         await dbPool.request()
           .input('pass_id', sql.UniqueIdentifier, app.pass_id)
           .input('application_id', sql.BigInt, app.application_id)
@@ -1684,6 +1687,9 @@ export class AzureSqlDB {
             INSERT INTO visit_pass_scans (pass_id, application_id, direction, device_id, result, scanned_ip, user_agent, visitor_name, visitor_org, contact_name, access_area, scan_site, scanned_at)
             VALUES (@pass_id, @application_id, @direction, @device_id, @result, @scanned_ip, @user_agent, @visitor_name, @visitor_org, @contact_name, @access_area, @scan_site, @scanned_at)
           `)
+        console.log("[v0] Scan record inserted successfully")
+      } else {
+        console.log("[v0] Scan record skipped - duplicate within 3 seconds")
       }
     } catch (e) {
       console.error('[v0] Failed to record scan:', e)
