@@ -349,7 +349,7 @@ export class AzureSqlDB {
     if (uploadedFiles && uploadedFiles.length > 0) {
       console.log('[v0] Processing', uploadedFiles.length, 'uploaded files')
       for (const file of uploadedFiles) {
-        // �������������������������일명과 키가 유효한 경우에만 저장
+        // ��������������������������일명과 키가 유효한 경우에만 저장
         if (file && file.filename && file.fileKey && file.filename.trim() !== '' && file.fileKey.trim() !== '') {
           console.log('[v0] Saving file attachment:', { 
             filename: file.filename, 
@@ -1629,13 +1629,14 @@ export class AzureSqlDB {
     }
 
     // 스캔 기록 저장
-    // 퇴장(EXIT) 시 입장 이력 확인 - 최근 스캔이 ENTRY인지 확인
+    // 퇴장(EXIT) 시 입장 이력 확인 - 같은 사이트에서의 최근 스캔이 ENTRY인지 확인
     if (direction === 'EXIT') {
       const lastScanResult = await dbPool.request()
         .input('pass_id', sql.UniqueIdentifier, app.pass_id)
+        .input('scan_site', sql.NVarChar(50), scan_site)
         .query(`
           SELECT TOP 1 direction FROM visit_pass_scans
-          WHERE pass_id = @pass_id
+          WHERE pass_id = @pass_id AND scan_site = @scan_site
           ORDER BY scanned_at DESC
         `)
       
