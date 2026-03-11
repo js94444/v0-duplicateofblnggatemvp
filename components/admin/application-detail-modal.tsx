@@ -168,7 +168,7 @@ function AttachmentSection({ title, files }: { title: string; files: any[] }) {
       {docFiles.length > 0 && (
         <div className="grid grid-cols-1 gap-2 mt-2">
           {docFiles.map((file, idx) => (
-            <FileThumbnail key={idx} file={file} onLightbox={() => {}} />
+            <FileThumbnail key={idx} file={file} onLightbox={() => { }} />
           ))}
         </div>
       )}
@@ -188,18 +188,18 @@ function AttachmentSection({ title, files }: { title: string; files: any[] }) {
 export function ApplicationDetailModal({ application, open, loading = false, onClose }: ApplicationDetailModalProps) {
   // application이 null일 때 로딩 상태로 처리
   const app = application as any
-  
+
   // 모달이 열리고 데이터 로딩 중이거나 application이 없으면 로딩 UI 표시
   const isLoading = loading || !application
 
   const getStatusColor = (status: string) => {
     const statusUpper = status?.toUpperCase() || ""
     switch (statusUpper) {
-      case "PENDING":       return "bg-amber-500/20 text-amber-300 border-amber-500/50"
-      case "APPROVED":      return "bg-green-500/20 text-green-300 border-green-500/50"
-      case "REJECTED":      return "bg-red-500/20 text-red-300 border-red-500/50"
-      case "CANCELLED":     return "bg-gray-500/20 text-gray-300 border-gray-500/50"
-      default:              return "bg-blue-500/20 text-blue-300 border-blue-500/50"
+      case "PENDING": return "bg-amber-500/20 text-amber-300 border-amber-500/50"
+      case "APPROVED": return "bg-green-500/20 text-green-300 border-green-500/50"
+      case "REJECTED": return "bg-red-500/20 text-red-300 border-red-500/50"
+      case "CANCELLED": return "bg-gray-500/20 text-gray-300 border-gray-500/50"
+      default: return "bg-blue-500/20 text-blue-300 border-blue-500/50"
     }
   }
 
@@ -253,9 +253,9 @@ export function ApplicationDetailModal({ application, open, loading = false, onC
           </div>
         </DialogHeader>
 
-{/* 본문 */}
-  <div className="flex-1 overflow-y-auto p-8 space-y-8 custom-scrollbar">
-{isLoading ? (
+        {/* 본문 */}
+        <div className="flex-1 overflow-y-auto p-8 space-y-8 custom-scrollbar">
+          {isLoading ? (
             <div className="space-y-6">
               <Skeleton className="h-48 w-full rounded-3xl bg-white/5" />
               <Skeleton className="h-48 w-full rounded-3xl bg-white/5" />
@@ -281,7 +281,7 @@ export function ApplicationDetailModal({ application, open, loading = false, onC
                       <InfoField label="소속" value={app.visitor_organization} />
                       <InfoField label="직책" value={app.visitor_position} />
                       <InfoField label="이메일" value={app.visitor_email || app.contact_email} />
-                      <InfoField label="��사주소" value={app.visitor_address} />
+                      <InfoField label="회사주소" value={app.visitor_address} />
                       <InfoField label="차량번호" value={app.vehicle_number} />
                       <InfoField label="차량유종" value={app.vehicle_model} />
                       <InfoField label="불꽃방지망" value={app.spark_arrestor || "-"} />

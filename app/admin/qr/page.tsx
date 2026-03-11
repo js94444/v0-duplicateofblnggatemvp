@@ -95,7 +95,7 @@ export default function AdminQrScanPage() {
       setStats(dataCache[scanSiteParam].stats)
       return
     }
-    
+
     try {
       setLoading(true)
       setError(null)
@@ -114,7 +114,7 @@ export default function AdminQrScanPage() {
       const json = await res.json()
       const next: ScanRow[] = json.data || []
       const nextStats = json.stats || null
-      
+
       // 캐시에 저장
       setDataCache(prev => ({
         ...prev,
@@ -157,7 +157,7 @@ export default function AdminQrScanPage() {
   // DB에서 이미 매칭된 입장/퇴장 쌍을 그대로 사용 (간소화)
   const rowsByPerson = useMemo(() => {
     if (scans.length === 0) return []
-    
+
     // DB에서 이미 entry_at/exit_at으로 매칭되어 있으므로 직접 변환만 수행
     return scans.map((row: ScanRow) => ({
       pass_id: row.pass_id,
@@ -226,8 +226,8 @@ export default function AdminQrScanPage() {
               type="button"
               onClick={() => setActiveTab("main")}
               className={`px-4 py-2 rounded-lg font-bold text-sm transition-all ${activeTab === "main"
-                  ? "bg-amber-500 text-black"
-                  : "text-white/60 hover:text-white hover:bg-white/10"
+                ? "bg-amber-500 text-black"
+                : "text-white/60 hover:text-white hover:bg-white/10"
                 }`}
             >
               정문 출입현황
@@ -236,8 +236,8 @@ export default function AdminQrScanPage() {
               type="button"
               onClick={() => setActiveTab("pier")}
               className={`px-4 py-2 rounded-lg font-bold text-sm transition-all ${activeTab === "pier"
-                  ? "bg-amber-500 text-black"
-                  : "text-white/60 hover:text-white hover:bg-white/10"
+                ? "bg-amber-500 text-black"
+                : "text-white/60 hover:text-white hover:bg-white/10"
                 }`}
             >
               부두 출입현황
@@ -293,7 +293,7 @@ export default function AdminQrScanPage() {
           </Card>
           <Card className="bg-white/5 border-white/10 text-white">
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm text-white/60">��체 스캔</CardTitle>
+              <CardTitle className="text-sm text-white/60">전체 스캔</CardTitle>
             </CardHeader>
             <CardContent>
               <p className="text-3xl font-black">
@@ -310,7 +310,7 @@ export default function AdminQrScanPage() {
             <div className="mb-6">
               <h2 className="text-2xl font-black text-white">정문 출입 이력 (인원별 {rowsByPerson.length}명)</h2>
               <p className="text-sm text-white/40 mt-1">
-                신��자·동행인별로 한 행씩, 입장/퇴장 시각을 열로 표시합니다.
+                신청자·동행인별로 한 행씩, 입장/퇴장 시각을 열로 표시합니다.
               </p>
             </div>
 
@@ -348,68 +348,68 @@ export default function AdminQrScanPage() {
                           key={row.pass_id}
                           className={`border-white/5 hover:bg-white/5 transition-colors ${recentClass}`}
                         >
-                      <TableCell 
-                        className={`text-sm ${row.portCertFiles?.length ? 'text-blue-400 cursor-pointer hover:underline' : 'text-white/80'}`}
-                        onClick={() => {
-                          if (row.portCertFiles?.length) {
-                            const bd = row.visitor_birth_date ? new Date(row.visitor_birth_date).toLocaleDateString("ko-KR") : ""
-                            setPortCertModal({ open: true, files: row.portCertFiles, visitorName: row.visitor_name || "", birthDate: bd })
-                          }
-                        }}
-                      >
-                        {row.visitor_name || "-"}
-                      </TableCell>
-                      <TableCell className="text-sm text-white/80">
-                        {row.visitor_birth_date ? new Date(row.visitor_birth_date).toLocaleDateString("ko-KR") : "-"}
-                      </TableCell>
-                      <TableCell className="text-sm text-white/60 max-w-[140px] truncate">
-                        {row.visitor_org || "-"}
-                      </TableCell>
-                      <TableCell className="max-w-[140px]">
-                        <div className="flex flex-col gap-0.5">
-                          <span className="text-sm truncate text-white/80">
-                            {row.contact_name || "-"}
-                          </span>
-                          <span className="text-xs text-white/40">
-                            {row.contact_mobile || "-"}
-                          </span>
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-sm text-white/80">
-                        {row.access_area || "-"}
-                      </TableCell>
-                      <TableCell className="text-sm text-white/80">
-                        {formatDateTime(row.lastEntryAt)}
-                      </TableCell>
-                      <TableCell className="text-sm text-white/80">
-                        {formatDateTime(row.lastExitAt)}
-                      </TableCell>
-                      <TableCell className="text-sm text-white/80">
-                        {row.vehicle_number || "-"}
-                      </TableCell>
-                      <TableCell className="text-sm text-white/80">
-                        {row.vehicle_model || "-"}
-                      </TableCell>
-                      <TableCell className="text-sm text-center text-white/80">
-                        {row.spark_arrestor || "-"}
-                      </TableCell>
-                      <TableCell>
-                        <Button
-                          size="sm"
-                          onClick={() => setSelectedApplicationId(row.application_id)}
-                          className="bg-white/10 hover:bg-white/20 border border-white/20 text-white rounded-lg text-xs px-2 py-1"
-                        >
-                          보기
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  )
-                })}
-              </TableBody>
-            </Table>
-          </div>
-        )}
-        </>
+                          <TableCell
+                            className={`text-sm ${row.portCertFiles?.length ? 'text-blue-400 cursor-pointer hover:underline' : 'text-white/80'}`}
+                            onClick={() => {
+                              if (row.portCertFiles?.length) {
+                                const bd = row.visitor_birth_date ? new Date(row.visitor_birth_date).toLocaleDateString("ko-KR") : ""
+                                setPortCertModal({ open: true, files: row.portCertFiles, visitorName: row.visitor_name || "", birthDate: bd })
+                              }
+                            }}
+                          >
+                            {row.visitor_name || "-"}
+                          </TableCell>
+                          <TableCell className="text-sm text-white/80">
+                            {row.visitor_birth_date ? new Date(row.visitor_birth_date).toLocaleDateString("ko-KR") : "-"}
+                          </TableCell>
+                          <TableCell className="text-sm text-white/60 max-w-[140px] truncate">
+                            {row.visitor_org || "-"}
+                          </TableCell>
+                          <TableCell className="max-w-[140px]">
+                            <div className="flex flex-col gap-0.5">
+                              <span className="text-sm truncate text-white/80">
+                                {row.contact_name || "-"}
+                              </span>
+                              <span className="text-xs text-white/40">
+                                {row.contact_mobile || "-"}
+                              </span>
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-sm text-white/80">
+                            {row.access_area || "-"}
+                          </TableCell>
+                          <TableCell className="text-sm text-white/80">
+                            {formatDateTime(row.lastEntryAt)}
+                          </TableCell>
+                          <TableCell className="text-sm text-white/80">
+                            {formatDateTime(row.lastExitAt)}
+                          </TableCell>
+                          <TableCell className="text-sm text-white/80">
+                            {row.vehicle_number || "-"}
+                          </TableCell>
+                          <TableCell className="text-sm text-white/80">
+                            {row.vehicle_model || "-"}
+                          </TableCell>
+                          <TableCell className="text-sm text-center text-white/80">
+                            {row.spark_arrestor || "-"}
+                          </TableCell>
+                          <TableCell>
+                            <Button
+                              size="sm"
+                              onClick={() => setSelectedApplicationId(row.application_id)}
+                              className="bg-white/10 hover:bg-white/20 border border-white/20 text-white rounded-lg text-xs px-2 py-1"
+                            >
+                              보기
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      )
+                    })}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
+          </>
         )}
 
         {activeTab === "pier" && (
@@ -556,11 +556,11 @@ export default function AdminQrScanPage() {
 
       {/* 항만이수증 모달 */}
       {portCertModal.open && (
-        <div 
+        <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm"
           onClick={() => setPortCertModal({ open: false, files: [], visitorName: "" })}
         >
-          <div 
+          <div
             className="bg-zinc-900 border border-white/10 rounded-2xl p-6 max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
@@ -568,7 +568,7 @@ export default function AdminQrScanPage() {
               <h3 className="text-lg font-bold text-white">
                 {portCertModal.visitorName}{portCertModal.birthDate ? ` - ${portCertModal.birthDate}` : ""} - 항만이수증
               </h3>
-              <button 
+              <button
                 onClick={() => setPortCertModal({ open: false, files: [], visitorName: "" })}
                 className="text-white/60 hover:text-white text-2xl"
               >
@@ -578,19 +578,19 @@ export default function AdminQrScanPage() {
             <div className="grid grid-cols-1 gap-6">
               {portCertModal.files.map((file, idx) => {
                 // blob_url에서 파일명 추출하여 /api/files/ 경로로 변환
-                const blobName = file.file_url.includes("/attachments/") 
-                  ? file.file_url.split("/attachments/")[1]?.split("?")[0] 
+                const blobName = file.file_url.includes("/attachments/")
+                  ? file.file_url.split("/attachments/")[1]?.split("?")[0]
                   : file.file_name
                 const imageUrl = `/api/files/${encodeURIComponent(blobName || file.file_name)}`
-                
+
                 return (
-                  <div 
-                    key={idx} 
+                  <div
+                    key={idx}
                     className="border border-white/20 rounded-lg overflow-hidden bg-black/40 p-2"
                   >
-                    <img 
-                      src={imageUrl} 
-                      alt={file.file_name} 
+                    <img
+                      src={imageUrl}
+                      alt={file.file_name}
                       className="w-full h-auto object-contain max-h-[600px] rounded"
                       onError={(e) => {
                         e.currentTarget.style.display = "none"
