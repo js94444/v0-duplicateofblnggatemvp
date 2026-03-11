@@ -38,9 +38,8 @@ export default function VerifyReceiptPage() {
     let isCancelled = false
     
     async function verifyAndRecord() {
-      // React StrictMode 중복 호출 방지 - 동기적으로 즉시 플래그 설정
+      // React StrictMode 중복 호출 방지
       if (isCalledRef.current || isCancelled) return
-      isCalledRef.current = true // 이 줄을 try 블록 진입 직전에 호출
       
       try {
         setLoading(true)
@@ -52,7 +51,14 @@ export default function VerifyReceiptPage() {
           headers: { "Cache-Control": "no-cache" },
         })
         
+        // StrictMode로 인해 컴포넌트가 언마운트된 상태면 결과 반영 안 함
+        if (isCancelled) return
+
         const json = await res.json()
+        
+        // API 호출이 성공적으로 완료되었을 때만 플래그 설정
+        // 이렇게 해야 StrictMode의 두 번째 실행이 정상적으로 API를 호출함
+        isCalledRef.current = true
         
         if (!res.ok) {
           setResult({
@@ -72,12 +78,14 @@ export default function VerifyReceiptPage() {
           })
         }
       } catch (e) {
-        setError("검증 중 오류가 발생했습니다.")
-        setResult({ result: "DENY", message: "검증 중 오류가 발생했습니다." })
-        // 에러 시 다시 시도 가능하도록 플래그 리셋
-        isCalledRef.current = false
+        if (!isCancelled) {
+          setError("검증 중 오류가 발생했습니다.")
+          setResult({ result: "DENY", message: "검증 중 오류가 발생했습니다." })
+        }
       } finally {
-        setLoading(false)
+        if (!isCancelled) {
+          setLoading(false)
+        }
       }
     }
 
