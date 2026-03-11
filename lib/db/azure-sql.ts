@@ -349,7 +349,7 @@ export class AzureSqlDB {
     if (uploadedFiles && uploadedFiles.length > 0) {
       console.log('[v0] Processing', uploadedFiles.length, 'uploaded files')
       for (const file of uploadedFiles) {
-        // ���������������������������일명과 키가 유효한 경우에만 저장
+        // ����������������������������일명과 키가 유효한 경우에만 저장
         if (file && file.filename && file.fileKey && file.filename.trim() !== '' && file.fileKey.trim() !== '') {
           console.log('[v0] Saving file attachment:', { 
             filename: file.filename, 
@@ -1667,11 +1667,8 @@ export class AzureSqlDB {
             AND device_id = @device_id AND scanned_at > @now_100ms_ago
         `)
       
-      console.log("[v0] Duplicate check (100ms):", { pass_id: app.pass_id, direction, scan_site, device_id, recentCount: recentScanResult.recordset.length })
-      
       // 100ms 이내 정확히 동일한 스캔이 없을 때만 INSERT
       if (recentScanResult.recordset.length === 0) {
-        console.log("[v0] Inserting scan record...")
         await dbPool.request()
           .input('pass_id', sql.UniqueIdentifier, app.pass_id)
           .input('application_id', sql.BigInt, app.application_id)
@@ -1690,9 +1687,6 @@ export class AzureSqlDB {
             INSERT INTO visit_pass_scans (pass_id, application_id, direction, device_id, result, scanned_ip, user_agent, visitor_name, visitor_org, contact_name, access_area, scan_site, scanned_at)
             VALUES (@pass_id, @application_id, @direction, @device_id, @result, @scanned_ip, @user_agent, @visitor_name, @visitor_org, @contact_name, @access_area, @scan_site, @scanned_at)
           `)
-        console.log("[v0] Scan record inserted successfully")
-      } else {
-        console.log("[v0] Scan record skipped - exact duplicate within 100ms")
       }
     } catch (e) {
       console.error('[v0] Failed to record scan:', e)
