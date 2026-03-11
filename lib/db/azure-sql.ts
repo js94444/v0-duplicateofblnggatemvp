@@ -349,7 +349,7 @@ export class AzureSqlDB {
     if (uploadedFiles && uploadedFiles.length > 0) {
       console.log('[v0] Processing', uploadedFiles.length, 'uploaded files')
       for (const file of uploadedFiles) {
-        // ���������일명과 키가 유효한 경우에만 저장
+        // ����������일명과 키가 유효한 경우에만 저장
         if (file && file.filename && file.fileKey && file.filename.trim() !== '' && file.fileKey.trim() !== '') {
           console.log('[v0] Saving file attachment:', { 
             filename: file.filename, 
@@ -1540,7 +1540,7 @@ export class AzureSqlDB {
   /** 신청 승인 시 pass_receipt 저장 */
   static async createPassForApplication(applicationId: string, pass_receipt: string): Promise<void> {
     const dbPool = await getPool()
-    // token 생성 (임시 토큰: UUID 대신 랜덤 스트링)
+    // token 생성 (임시 토큰: UUID 대신 랜덤 스트���)
     const token = `TOKEN-${Date.now()}-${Math.random().toString(36).substring(2, 10).toUpperCase()}`
     
     // 신청 정보에서 방문 기간 가져오기
@@ -1549,21 +1549,23 @@ export class AzureSqlDB {
       .query(`SELECT visit_start_date, visit_end_date FROM visit_applications WHERE application_id = @app_id`)
     
     const validFrom = appResult.recordset[0]?.visit_start_date || new Date()
-    const validTo = appResult.recordset[0]?.visit_end_date || new Date()
+    // visit_end_date는 DATE 타입이므로 23:59:59로 설정하여 종료일 끝까지 유효하게 함
+    const validToDate = new Date(appResult.recordset[0]?.visit_end_date || new Date())
+    validToDate.setHours(23, 59, 59, 999)
     
     await dbPool.request()
       .input('application_id', sql.BigInt, applicationId)
       .input('pass_receipt', sql.NVarChar(50), pass_receipt)
       .input('token', sql.NVarChar(100), token)
       .input('valid_from', sql.DateTime, validFrom)
-      .input('valid_to', sql.DateTime, validTo)
+      .input('valid_to', sql.DateTime, validToDate)
       .query(`
         INSERT INTO visit_passes (application_id, pass_receipt, token, status, valid_from, valid_to)
         VALUES (@application_id, @pass_receipt, @token, 'active', @valid_from, @valid_to)
       `)
   }
 
-  /** pass_receipt로 신청 조회 */
+  /** pass_receipt로 신청 ��회 */
   static async getApplicationByPassReceipt(pass_receipt: string): Promise<any> {
     const dbPool = await getPool()
     const result = await dbPool.request()
@@ -1797,7 +1799,9 @@ export class AzureSqlDB {
       .query(`SELECT visit_start_date, visit_end_date FROM visit_applications WHERE application_id = @app_id`)
     
     const validFrom = appResult.recordset[0]?.visit_start_date || new Date()
-    const validTo = appResult.recordset[0]?.visit_end_date || new Date()
+    // visit_end_date는 DATE 타입이므로 23:59:59로 설정하여 종료일 끝까지 유효하게 함
+    const validToDate = new Date(appResult.recordset[0]?.visit_end_date || new Date())
+    validToDate.setHours(23, 59, 59, 999)
     
     await dbPool.request()
       .input('application_id', sql.BigInt, applicationId)
@@ -1805,7 +1809,7 @@ export class AzureSqlDB {
       .input('pass_receipt', sql.NVarChar(50), pass_receipt)
       .input('token', sql.NVarChar(100), token)
       .input('valid_from', sql.DateTime, validFrom)
-      .input('valid_to', sql.DateTime, validTo)
+      .input('valid_to', sql.DateTime, validToDate)
       .query(`
         INSERT INTO visit_passes (application_id, companion_id, pass_receipt, token, status, valid_from, valid_to)
         VALUES (@application_id, @companion_id, @pass_receipt, @token, 'active', @valid_from, @valid_to)
