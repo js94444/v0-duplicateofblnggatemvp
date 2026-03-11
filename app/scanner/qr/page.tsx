@@ -54,7 +54,6 @@ export default function ScannerQrPage() {
       try {
         setError(null)
         const stream = await navigator.mediaDevices.getUserMedia({
-          // facingMode를 "user"로 변경하여 전면 카메라(셀카 모드) 사용
           video: { facingMode: "user", width: { ideal: 1280 }, height: { ideal: 720 } },
         })
         streamRef.current = stream
@@ -91,10 +90,6 @@ export default function ScannerQrPage() {
       canvas.width = video.videoWidth
       canvas.height = video.videoHeight
 
-      // 좌우 반전 처리가 필요한 경우 아래 주석을 해제하세요 (셀카 모드 느낌)
-      // ctx.translate(canvas.width, 0);
-      // ctx.scale(-1, 1);
-
       ctx.drawImage(video, 0, 0)
       const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height)
       const code = jsQR(imageData.data, imageData.width, imageData.height)
@@ -123,39 +118,48 @@ export default function ScannerQrPage() {
 
   return (
     <div className="min-h-screen bg-neutral-950 text-white flex flex-col">
-      <header className="px-6 py-5 border-b border-white/10 flex items-center justify-between">
-        <Link
-          href="/scanner"
-          className="flex items-center gap-2 text-white/70 hover:text-white transition-colors"
-        >
-          <ArrowLeft size={20} />
-          <span className="text-base font-semibold">출입 인증</span>
-        </Link>
-        <span className="text-base font-extrabold text-amber-400 tracking-wide">
-          {direction === "ENTRY" ? "입장" : "퇴장"} · QR 스캔
-        </span>
+      {/* 헤더 수정: grid를 사용하여 중앙 정렬 구현 및 글자 크기 업그레이드 */}
+      <header className="px-6 py-6 border-b border-white/10 grid grid-cols-3 items-center">
+        <div className="flex justify-start">
+          <Link
+            href="/scanner"
+            className="flex items-center gap-2 text-white/70 hover:text-white transition-colors"
+          >
+            <ArrowLeft size={24} />
+            <span className="text-lg font-semibold">출입 인증</span>
+          </Link>
+        </div>
+
+        <div className="flex justify-center whitespace-nowrap">
+          <span className="text-xl font-black text-amber-400 tracking-tight">
+            {direction === "ENTRY" ? "입장" : "퇴장"} · QR 스캔
+          </span>
+        </div>
+
+        {/* 우측 밸런스를 위한 빈 공간 */}
+        <div className="flex justify-end" />
       </header>
 
       <main className="flex-1 flex flex-col items-center justify-center p-6">
         {error && (
-          <div className="mb-4 px-4 py-3 rounded-xl bg-red-500/20 border border-red-500/40 text-red-300 text-sm text-center">
+          <div className="mb-4 px-4 py-3 rounded-xl bg-red-500/20 border border-red-500/40 text-red-300 text-base text-center">
             {error}
           </div>
         )}
 
         {state === "idle" && !error && (
-          <div className="flex flex-col items-center gap-5 text-white/50">
-            <div className="w-14 h-14 rounded-full border-2 border-amber-500/30 border-t-amber-500 animate-spin" />
-            <p className="text-lg font-semibold tracking-widest uppercase">카메라 준비 중...</p>
+          <div className="flex flex-col items-center gap-6 text-white/50">
+            <div className="w-16 h-16 rounded-full border-2 border-amber-500/30 border-t-amber-500 animate-spin" />
+            <p className="text-xl font-bold tracking-widest uppercase">카메라 준비 중...</p>
           </div>
         )}
 
         {(state === "scanning" || state === "processing") && (
           <>
-            <p className="text-2xl font-extrabold text-white mb-2 tracking-tight">
+            <p className="text-3xl font-black text-white mb-3 tracking-tight">
               {state === "scanning" ? "QR 코드를 비춰주세요" : "검증 중..."}
             </p>
-            <p className="text-base text-white/50 text-center">
+            <p className="text-lg text-white/50 text-center mb-4">
               {direction === "ENTRY" ? "입장" : "퇴장"} 처리할 QR 코드를 카메라에 비춰주세요
             </p>
           </>
@@ -165,12 +169,11 @@ export default function ScannerQrPage() {
           className={
             state === "idle"
               ? "absolute left-0 top-0 w-px h-px overflow-hidden opacity-0 pointer-events-none"
-              : "relative w-full max-w-lg aspect-square rounded-2xl overflow-hidden border-2 border-amber-500/40 bg-black mt-4"
+              : "relative w-full max-w-lg aspect-square rounded-3xl overflow-hidden border-[3px] border-amber-500/50 bg-black mt-4 shadow-2xl shadow-amber-500/10"
           }
         >
           <video
             ref={videoRef}
-            // 전면 카메라 사용 시 화면 좌우 반전을 위해 scale-x-[-1] 추가
             className="absolute inset-0 w-full h-full object-cover scale-x-[-1]"
             playsInline
             muted
@@ -178,7 +181,7 @@ export default function ScannerQrPage() {
           <canvas ref={canvasRef} className="hidden" aria-hidden />
           {state !== "idle" && (
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-              <div className="w-64 h-64 border-2 border-dashed border-amber-400/60 rounded-xl" />
+              <div className="w-72 h-72 border-2 border-dashed border-amber-400/60 rounded-2xl animate-pulse" />
             </div>
           )}
         </div>
