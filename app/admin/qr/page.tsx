@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useMemo, useCallback } from "react"
 import { useRouter } from "next/navigation"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
@@ -14,23 +14,32 @@ interface ScanRow {
   scan_id: string
   pass_id: string
   application_id: number
-  scanned_at: string
-  device_id: string | null
-  result: "ALLOW" | "DENY"
-  direction?: string | null
-  deny_reason: string | null
-  scanned_ip: string | null
-  user_agent: string | null
+  entry_direction: string
+  entry_at: string
+  entry_device_id: string | null
+  entry_scanned_ip: string | null
+  scan_site: string
+  entry_result: "ALLOW" | "DENY"
+  entry_deny_reason: string | null
   visitor_name: string | null
   visitor_org: string | null
   contact_name: string | null
-  contact_mobile: string | null
   access_area: string | null
+  contact_mobile: string | null
+  visitor_birth_date: string | null
   vehicle_number: string | null
   vehicle_model: string | null
-  visitor_birth_date: string | null
   spark_arrestor: string | null
   portCertFiles: Array<{ file_url: string; file_name: string }>
+  // 퇴장 데이터 (있으면)
+  exit_scan_id?: string | null
+  exit_direction?: string | null
+  exit_at?: string | null
+  exit_device_id?: string | null
+  exit_scanned_ip?: string | null
+  exit_result?: string | null
+  exit_deny_reason?: string | null
+  last_event_at: string
 }
 
 interface ScanStats {
@@ -51,6 +60,8 @@ export default function AdminQrScanPage() {
   const [activeTab, setActiveTab] = useState<TabKind>("main")
   const [pierTab, setPierTab] = useState<PierKind>("1부두")
   const [loading, setLoading] = useState(true)
+  // 각 사이트별 데이터 캐싱
+  const [dataCache, setDataCache] = useState<Record<string, { scans: ScanRow[]; stats: ScanStats | null }>>({})
   const [scans, setScans] = useState<ScanRow[]>([])
   const [stats, setStats] = useState<ScanStats | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -77,7 +88,14 @@ export default function AdminQrScanPage() {
   const scanSiteParam =
     activeTab === "main" ? "main" : pierTab === "1부두" ? "pier_1" : "pier_2"
 
-  const loadData = async () => {
+  const loadData = useCallback(async (forceRefresh = false) => {
+    // 캐시된 데이터가 있고 강제 새로고침이 아니면 캐시 사용
+    if (!forceRefresh && dataCache[scanSiteParam]) {
+      setScans(dataCache[scanSiteParam].scans)
+      setStats(dataCache[scanSiteParam].stats)
+      return
+    }
+    
     try {
       setLoading(true)
       setError(null)
@@ -95,19 +113,26 @@ export default function AdminQrScanPage() {
       }
       const json = await res.json()
       const next: ScanRow[] = json.data || []
+      const nextStats = json.stats || null
+      
+      // 캐시에 저장
+      setDataCache(prev => ({
+        ...prev,
+        [scanSiteParam]: { scans: next, stats: nextStats }
+      }))
       setScans(next)
-      setStats(json.stats || null)
+      setStats(nextStats)
     } catch (e) {
       console.error("[v0] Failed to load qr-scans:", e)
       setError(e instanceof Error ? e.message : "데이터 로드 중 오류가 발생했습니다.")
     } finally {
       setLoading(false)
     }
-  }
+  }, [scanSiteParam, dataCache])
 
   useEffect(() => {
-    loadData()
-  }, [activeTab, pierTab])
+    loadData(false)
+  }, [scanSiteParam])
 
   // 상세보기 모달용 application 조회
   useEffect(() => {
@@ -129,137 +154,32 @@ export default function AdminQrScanPage() {
     fetchApplication()
   }, [selectedApplicationId])
 
+  // DB에서 이미 매칭된 입장/퇴장 쌍을 그대로 사용 (간소화)
+  const rowsByPerson = useMemo(() => {
+    if (scans.length === 0) return []
+    
+    // DB에서 이미 entry_at/exit_at으로 매칭되어 있으므로 직접 변환만 수행
+    return scans.map((row: ScanRow) => ({
+      pass_id: row.pass_id,
+      application_id: row.application_id,
+      visitor_name: row.visitor_name,
+      visitor_org: row.visitor_org,
+      contact_name: row.contact_name,
+      access_area: row.access_area,
+      vehicle_number: row.vehicle_number,
+      vehicle_model: row.vehicle_model,
+      visitor_birth_date: row.visitor_birth_date,
+      spark_arrestor: row.spark_arrestor,
+      contact_mobile: row.contact_mobile,
+      portCertFiles: row.portCertFiles || [],
+      lastEntryAt: row.entry_at,
+      lastExitAt: row.exit_at,
+      lastEventAt: new Date(row.last_event_at).getTime(),
+    }))
+  }, [scans])
+
+  // 최근 10분 이내 스캔 여부
   const TEN_MINUTES_MS = 10 * 60 * 1000
-
-  // pass_id별 입장/퇴장 이력을 쌍으로 매칭 (입장 건별 관리)
-  const rowsByPerson = (() => {
-    const byPass = new Map<
-      string,
-      Array<{
-        entryAt: string
-        exitAt: string | null
-        lastEventAt: number
-      }>
-    >()
-    const personInfo = new Map<
-      string,
-      {
-        pass_id: string
-        application_id: number
-        visitor_name: string | null
-        visitor_org: string | null
-        contact_name: string | null
-        contact_mobile: string | null
-        access_area: string | null
-        vehicle_number: string | null
-        vehicle_model: string | null
-        visitor_birth_date: string | null
-        spark_arrestor: string | null
-        portCertFiles: Array<{ file_url: string; file_name: string }>
-      }
-    >()
-
-    // 먼저 ENTRY와 EXIT를 분리해서 수집
-    const entries: Map<string, typeof scans> = new Map()
-    const exits: Map<string, typeof scans> = new Map()
-
-    for (const row of scans) {
-      const key = row.pass_id || row.scan_id || `scan-${Math.random()}`
-      
-      // 방문자 정보 저장 (최초 1회)
-      if (!personInfo.has(key)) {
-        personInfo.set(key, {
-          pass_id: row.pass_id,
-          application_id: row.application_id,
-          visitor_name: row.visitor_name,
-          visitor_org: row.visitor_org,
-          contact_name: row.contact_name,
-          contact_mobile: row.contact_mobile,
-          access_area: row.access_area,
-          vehicle_number: row.vehicle_number,
-          vehicle_model: row.vehicle_model,
-          visitor_birth_date: row.visitor_birth_date,
-          spark_arrestor: row.spark_arrestor,
-          portCertFiles: row.portCertFiles || [],
-        })
-      }
-
-      // ENTRY/EXIT 분리
-      if (row.result === "ALLOW" && row.direction === "ENTRY" && row.scanned_at) {
-        if (!entries.has(key)) entries.set(key, [])
-        entries.get(key)!.push(row)
-      } else if (row.result === "ALLOW" && row.direction === "EXIT" && row.scanned_at) {
-        if (!exits.has(key)) exits.set(key, [])
-        exits.get(key)!.push(row)
-      }
-    }
-
-    // 입장/퇴장 쌍으로 매칭
-    for (const [key, entryRecords] of entries) {
-      const exitRecords = exits.get(key) || []
-      const pairs: Array<{ entryAt: string; exitAt: string | null; lastEventAt: number }> = []
-
-      // 시간순 정렬
-      entryRecords.sort((a, b) => new Date(a.scanned_at!).getTime() - new Date(b.scanned_at!).getTime())
-      exitRecords.sort((a, b) => new Date(a.scanned_at!).getTime() - new Date(b.scanned_at!).getTime())
-
-      // 입장과 퇴장을 순서대로 매칭
-      let exitIndex = 0
-      for (const entry of entryRecords) {
-        const entryTime = new Date(entry.scanned_at!).getTime()
-        let matchedExit: string | null = null
-
-        // 이 입장 이후의 첫 번째 퇴장 찾기
-        while (exitIndex < exitRecords.length) {
-          const exitTime = new Date(exitRecords[exitIndex].scanned_at!).getTime()
-          if (exitTime > entryTime) {
-            matchedExit = exitRecords[exitIndex].scanned_at!
-            exitIndex++
-            break
-          }
-          exitIndex++
-        }
-
-        pairs.push({
-          entryAt: entry.scanned_at!,
-          exitAt: matchedExit,
-          lastEventAt: matchedExit ? new Date(matchedExit).getTime() : entryTime,
-        })
-      }
-
-      byPass.set(key, pairs)
-    }
-
-    // 최종 결과: 방문자 정보와 입장/퇴장 쌍을 합쳐서 반환
-    const result = []
-    for (const [key, pairs] of byPass) {
-      const info = personInfo.get(key)
-      if (!info) continue
-      for (const pair of pairs) {
-        result.push({
-          pass_id: info.pass_id,
-          application_id: info.application_id,
-          visitor_name: info.visitor_name,
-          visitor_org: info.visitor_org,
-          contact_name: info.contact_name,
-          contact_mobile: info.contact_mobile,
-          access_area: info.access_area,
-          vehicle_number: info.vehicle_number,
-          vehicle_model: info.vehicle_model,
-          visitor_birth_date: info.visitor_birth_date,
-          spark_arrestor: info.spark_arrestor,
-          portCertFiles: info.portCertFiles,
-          lastEntryAt: pair.entryAt,
-          lastExitAt: pair.exitAt,
-          lastEventAt: pair.lastEventAt,
-        })
-      }
-    }
-
-    return result.sort((a, b) => b.lastEventAt - a.lastEventAt)
-  })()
-
-  // 최근 10분 이내 스캔 여부 (입장/퇴장 중 하나라도 10분 이내면 하이라이트)
   const getRecentHighlight = (row: (typeof rowsByPerson)[0]) => {
     const entryMs = row.lastEntryAt ? Date.now() - new Date(row.lastEntryAt).getTime() : Infinity
     const exitMs = row.lastExitAt ? Date.now() - new Date(row.lastExitAt).getTime() : Infinity
@@ -328,7 +248,7 @@ export default function AdminQrScanPage() {
           </p>
         </div>
         <Button
-          onClick={loadData}
+          onClick={() => loadData(true)}
           disabled={loading}
           className="bg-white/10 hover:bg-white/20 border border-white/20 text-white font-bold px-5 py-2 rounded-xl transition-all active:scale-95"
         >
@@ -390,7 +310,7 @@ export default function AdminQrScanPage() {
             <div className="mb-6">
               <h2 className="text-2xl font-black text-white">정문 출입 이력 (인원별 {rowsByPerson.length}명)</h2>
               <p className="text-sm text-white/40 mt-1">
-                신청자·동행인별로 한 행씩, 입장/퇴장 시각을 열로 표시합니다.
+                신��자·동행인별로 한 행씩, 입장/퇴장 시각을 열로 표시합니다.
               </p>
             </div>
 

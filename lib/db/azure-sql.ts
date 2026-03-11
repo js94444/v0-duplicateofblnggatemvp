@@ -349,7 +349,7 @@ export class AzureSqlDB {
     if (uploadedFiles && uploadedFiles.length > 0) {
       console.log('[v0] Processing', uploadedFiles.length, 'uploaded files')
       for (const file of uploadedFiles) {
-        // �����������������������������일명과 키가 유효한 경우에만 저장
+        // ������������������������������일명과 키가 유효한 경우에만 저장
         if (file && file.filename && file.fileKey && file.filename.trim() !== '' && file.fileKey.trim() !== '') {
           console.log('[v0] Saving file attachment:', { 
             filename: file.filename, 
@@ -1530,7 +1530,7 @@ export class AzureSqlDB {
 
   /** �����유����� pass_receipt (QR 코드) 생성 */
   static generatePassReceipt(): string {
-    // 형식: QR-YYYYMMDD-XXXXXX (6����� 랜덤)
+    // 형식: QR-YYYYMMDD-XXXXXX (6������ 랜덤)
     const date = new Date()
     const dateStr = date.toISOString().split('T')[0].replace(/-/g, '')
     const random = Math.random().toString(36).substring(2, 8).toUpperCase()
@@ -1747,30 +1747,58 @@ export class AzureSqlDB {
       .input('scan_site', sql.NVarChar(50), scanSite)
       .input('limit', sql.Int, limit)
       .query(`
+        ;WITH RankedScans AS (
+          SELECT 
+            s.*,
+            a.contact_mobile,
+            a.visitor_birth_date,
+            a.vehicle_number,
+            a.vehicle_model,
+            a.spark_arrestor,
+            ROW_NUMBER() OVER (
+              PARTITION BY s.pass_id, s.scan_site 
+              ORDER BY s.scanned_at
+            ) as entry_rn
+          FROM visit_pass_scans s
+          LEFT JOIN visit_applications a ON s.application_id = a.application_id
+          WHERE s.scan_site = @scan_site
+        )
         SELECT TOP (@limit)
-          s.scan_id,
-          s.pass_id,
-          s.direction,
-          s.scanned_at,
-          s.device_id,
-          s.scanned_ip,
-          s.scan_site,
-          s.result,
-          s.deny_reason,
-          s.visitor_name,
-          s.visitor_org,
-          s.contact_name,
-          s.access_area,
-          s.application_id,
-          a.contact_mobile,
-          a.visitor_birth_date,
-          a.vehicle_number,
-          a.vehicle_model,
-          a.spark_arrestor
-        FROM visit_pass_scans s
-        LEFT JOIN visit_applications a ON s.application_id = a.application_id
-        WHERE s.scan_site = @scan_site
-        ORDER BY s.scanned_at DESC
+          e.scan_id,
+          e.pass_id,
+          e.direction as entry_direction,
+          e.scanned_at as entry_at,
+          e.device_id as entry_device_id,
+          e.scanned_ip as entry_scanned_ip,
+          e.scan_site,
+          e.result as entry_result,
+          e.deny_reason as entry_deny_reason,
+          e.visitor_name,
+          e.visitor_org,
+          e.contact_name,
+          e.access_area,
+          e.application_id,
+          e.contact_mobile,
+          e.visitor_birth_date,
+          e.vehicle_number,
+          e.vehicle_model,
+          e.spark_arrestor,
+          x.scan_id as exit_scan_id,
+          x.direction as exit_direction,
+          x.scanned_at as exit_at,
+          x.device_id as exit_device_id,
+          x.scanned_ip as exit_scanned_ip,
+          x.result as exit_result,
+          x.deny_reason as exit_deny_reason,
+          COALESCE(x.scanned_at, e.scanned_at) as last_event_at
+        FROM RankedScans e
+        LEFT JOIN RankedScans x 
+          ON e.pass_id = x.pass_id 
+          AND e.scan_site = x.scan_site 
+          AND e.entry_rn = x.entry_rn 
+          AND x.direction = 'EXIT'
+        WHERE e.direction = 'ENTRY'
+        ORDER BY last_event_at DESC
       `)
     return result.recordset
   }
