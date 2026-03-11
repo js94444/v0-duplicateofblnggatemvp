@@ -29,6 +29,13 @@ export async function GET(
     // 연결된 visit_applications 정보 조회
     const application = await AzureSqlDB.getApplicationById(String(passData.application_id))
 
+    console.log("[v0] Application fetched:", {
+      id: passData.application_id,
+      visit_start_date: application?.visit_start_date,
+      visit_end_date: application?.visit_end_date,
+      status: application?.status
+    })
+
     if (!application) {
       return NextResponse.json(
         { result: "DENY", message: "신청 정보를 찾을 수 없습니다." },
@@ -59,6 +66,18 @@ export async function GET(
     
     const visitEnd = new Date(application.visit_end_date)
     visitEnd.setHours(23, 59, 59, 999) // 종료일 끝까지 유효
+
+    console.log("[v0] Visit period debug:", {
+      now: now.toISOString(),
+      visit_start_date: application.visit_start_date,
+      visit_end_date: application.visit_end_date,
+      visitStart: visitStart.toISOString(),
+      visitEnd: visitEnd.toISOString(),
+      comparison: {
+        nowBeforeStart: now < visitStart,
+        nowAfterEnd: now > visitEnd
+      }
+    })
 
     if (now < visitStart) {
       return NextResponse.json({
