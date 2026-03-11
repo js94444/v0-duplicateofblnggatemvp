@@ -61,7 +61,7 @@ export default function ScannerPhonePage() {
 
         <div className="flex justify-center whitespace-nowrap">
           <span className="text-xl font-black text-amber-400 tracking-tight">
-            {direction === "ENTRY" ? "입장" : "퇴장"} · 번호 조회
+            {direction === "ENTRY" ? "입장" : "퇴장"} · 휴대전화 번호 조회
           </span>
         </div>
 
