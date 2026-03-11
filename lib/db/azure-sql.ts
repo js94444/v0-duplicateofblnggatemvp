@@ -349,7 +349,7 @@ export class AzureSqlDB {
     if (uploadedFiles && uploadedFiles.length > 0) {
       console.log('[v0] Processing', uploadedFiles.length, 'uploaded files')
       for (const file of uploadedFiles) {
-        // ��������������������������일명과 키가 유효한 경우에만 저장
+        // ���������������������������일명과 키가 유효한 경우에만 저장
         if (file && file.filename && file.fileKey && file.filename.trim() !== '' && file.fileKey.trim() !== '') {
           console.log('[v0] Saving file attachment:', { 
             filename: file.filename, 
@@ -1292,7 +1292,7 @@ export class AzureSqlDB {
       .query(`UPDATE admin_accounts SET last_login_at = @last_login_at WHERE account_id = @account_id`)
   }
 
-  // ─── 신청서 확인 체크 ───────────────���─────���──────────────
+  // ─── 신청서 확인 체크 ─────────────���─���─────���──────────────
 
   /** 확인 체크 조회 */
   static async getApplicationCheck(applicationId: number, accountId: number): Promise<{ checked: boolean; checked_at: Date | null; note: string | null } | null> {
@@ -1530,7 +1530,7 @@ export class AzureSqlDB {
 
   /** �����유����� pass_receipt (QR 코드) 생성 */
   static generatePassReceipt(): string {
-    // 형식: QR-YYYYMMDD-XXXXXX (6글자 랜덤)
+    // 형식: QR-YYYYMMDD-XXXXXX (6글�� 랜덤)
     const date = new Date()
     const dateStr = date.toISOString().split('T')[0].replace(/-/g, '')
     const random = Math.random().toString(36).substring(2, 8).toUpperCase()
@@ -1660,16 +1660,16 @@ export class AzureSqlDB {
         .input('direction', sql.NVarChar(10), direction)
         .input('scan_site', sql.NVarChar(50), scan_site)
         .input('device_id', sql.NVarChar(100), device_id || null)
-        .input('now_seconds_ago', sql.DateTime2, new Date(now.getTime() - 1000)) // 1초 이내
+        .input('now_100ms_ago', sql.DateTime2, new Date(now.getTime() - 100)) // 100ms 이내만 중복
         .query(`
           SELECT TOP 1 scan_id FROM visit_pass_scans
           WHERE pass_id = @pass_id AND direction = @direction AND scan_site = @scan_site
-            AND device_id = @device_id AND scanned_at > @now_seconds_ago
+            AND device_id = @device_id AND scanned_at > @now_100ms_ago
         `)
       
-      console.log("[v0] Duplicate check (1sec):", { pass_id: app.pass_id, direction, scan_site, device_id, recentCount: recentScanResult.recordset.length })
+      console.log("[v0] Duplicate check (100ms):", { pass_id: app.pass_id, direction, scan_site, device_id, recentCount: recentScanResult.recordset.length })
       
-      // 1초 이내 정확히 동일한 스캔이 없을 때만 INSERT
+      // 100ms 이내 정확히 동일한 스캔이 없을 때만 INSERT
       if (recentScanResult.recordset.length === 0) {
         console.log("[v0] Inserting scan record...")
         await dbPool.request()
@@ -1692,7 +1692,7 @@ export class AzureSqlDB {
           `)
         console.log("[v0] Scan record inserted successfully")
       } else {
-        console.log("[v0] Scan record skipped - exact duplicate within 1 second")
+        console.log("[v0] Scan record skipped - exact duplicate within 100ms")
       }
     } catch (e) {
       console.error('[v0] Failed to record scan:', e)
