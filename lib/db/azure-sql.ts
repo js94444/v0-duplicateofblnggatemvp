@@ -349,7 +349,7 @@ export class AzureSqlDB {
     if (uploadedFiles && uploadedFiles.length > 0) {
       console.log('[v0] Processing', uploadedFiles.length, 'uploaded files')
       for (const file of uploadedFiles) {
-        // �����������������������일명과 키가 유효한 경우에만 저장
+        // ���������������������������일명과 키가 유효한 경우에만 저장
         if (file && file.filename && file.fileKey && file.filename.trim() !== '' && file.fileKey.trim() !== '') {
           console.log('[v0] Saving file attachment:', { 
             filename: file.filename, 
@@ -1292,7 +1292,7 @@ export class AzureSqlDB {
       .query(`UPDATE admin_accounts SET last_login_at = @last_login_at WHERE account_id = @account_id`)
   }
 
-  // ─── 신청서 확인 체크 ─────────────────────���──────────────
+  // ─── 신청서 확인 체크 ─────────────���─���─────���──────────────
 
   /** 확인 체크 조회 */
   static async getApplicationCheck(applicationId: number, accountId: number): Promise<{ checked: boolean; checked_at: Date | null; note: string | null } | null> {
@@ -1530,7 +1530,7 @@ export class AzureSqlDB {
 
   /** �����유����� pass_receipt (QR 코드) 생성 */
   static generatePassReceipt(): string {
-    // 형식: QR-YYYYMMDD-XXXXXX (6글자 랜덤)
+    // 형식: QR-YYYYMMDD-XXXXXX (6글�� 랜덤)
     const date = new Date()
     const dateStr = date.toISOString().split('T')[0].replace(/-/g, '')
     const random = Math.random().toString(36).substring(2, 8).toUpperCase()
@@ -1540,7 +1540,7 @@ export class AzureSqlDB {
   /** 신청 승인 시 pass_receipt 저장 */
   static async createPassForApplication(applicationId: string, pass_receipt: string): Promise<void> {
     const dbPool = await getPool()
-    // token 생��� (���� 토큰: UUID 대신 ���� ���������)
+    // token ������ (���� 토큰: UUID 대신 ���� ���������)
     const token = `TOKEN-${Date.now()}-${Math.random().toString(36).substring(2, 10).toUpperCase()}`
     
     // 신청 정보에서 방문 기간 가져오기
@@ -1629,13 +1629,14 @@ export class AzureSqlDB {
     }
 
     // 스캔 기록 저장
-    // 퇴장(EXIT) 시 입장 이력 확인 - 최근 스캔이 ENTRY인지 확인
+    // 퇴장(EXIT) 시 입장 이력 확인 - 같은 사이트에서의 최근 스캔이 ENTRY인지 확인
     if (direction === 'EXIT') {
       const lastScanResult = await dbPool.request()
         .input('pass_id', sql.UniqueIdentifier, app.pass_id)
+        .input('scan_site', sql.NVarChar(50), scan_site)
         .query(`
           SELECT TOP 1 direction FROM visit_pass_scans
-          WHERE pass_id = @pass_id
+          WHERE pass_id = @pass_id AND scan_site = @scan_site
           ORDER BY scanned_at DESC
         `)
       
@@ -1653,19 +1654,24 @@ export class AzureSqlDB {
     try {
       const now = getKoreaTime()
       
-      // 백엔드 중복 방지 - 최근 3초 이내 동일 pass_id, direction, scan_site 스캔 확인
+      // 백엔드 중복 방지 - 정확히 같은 시각(1초 내) 동일 pass_id, direction, scan_site, device_id 스캔만 중복 처리
       const recentScanResult = await dbPool.request()
         .input('pass_id', sql.UniqueIdentifier, app.pass_id)
         .input('direction', sql.NVarChar(10), direction)
         .input('scan_site', sql.NVarChar(50), scan_site)
+        .input('device_id', sql.NVarChar(100), device_id || null)
+        .input('now_100ms_ago', sql.DateTime2, new Date(now.getTime() - 100)) // 100ms 이내만 중복
         .query(`
           SELECT TOP 1 scan_id FROM visit_pass_scans
           WHERE pass_id = @pass_id AND direction = @direction AND scan_site = @scan_site
-            AND scanned_at > DATEADD(SECOND, -3, GETDATE())
+            AND device_id = @device_id AND scanned_at > @now_100ms_ago
         `)
       
-      // 최근 3초 이내 동일 스캔이 없을 때만 INSERT
+      console.log("[v0] Duplicate check (100ms):", { pass_id: app.pass_id, direction, scan_site, device_id, recentCount: recentScanResult.recordset.length })
+      
+      // 100ms 이내 정확히 동일한 스캔이 없을 때만 INSERT
       if (recentScanResult.recordset.length === 0) {
+        console.log("[v0] Inserting scan record...")
         await dbPool.request()
           .input('pass_id', sql.UniqueIdentifier, app.pass_id)
           .input('application_id', sql.BigInt, app.application_id)
@@ -1684,6 +1690,9 @@ export class AzureSqlDB {
             INSERT INTO visit_pass_scans (pass_id, application_id, direction, device_id, result, scanned_ip, user_agent, visitor_name, visitor_org, contact_name, access_area, scan_site, scanned_at)
             VALUES (@pass_id, @application_id, @direction, @device_id, @result, @scanned_ip, @user_agent, @visitor_name, @visitor_org, @contact_name, @access_area, @scan_site, @scanned_at)
           `)
+        console.log("[v0] Scan record inserted successfully")
+      } else {
+        console.log("[v0] Scan record skipped - exact duplicate within 100ms")
       }
     } catch (e) {
       console.error('[v0] Failed to record scan:', e)

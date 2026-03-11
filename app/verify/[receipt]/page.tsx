@@ -37,10 +37,11 @@ export default function VerifyReceiptPage() {
   useEffect(() => {
     let isCancelled = false
     
+    // React StrictMode 중복 호출 방지 - 즉시 플래그 설정
+    if (isCalledRef.current) return
+    isCalledRef.current = true
+    
     async function verifyAndRecord() {
-      // React StrictMode 중복 호출 방지
-      if (isCalledRef.current || isCancelled) return
-      
       try {
         setLoading(true)
         setError(null)
@@ -55,10 +56,6 @@ export default function VerifyReceiptPage() {
         if (isCancelled) return
 
         const json = await res.json()
-        
-        // API 호출이 성공적으로 완료되었을 때만 플래그 설정
-        // 이렇게 해야 StrictMode의 두 번째 실행이 정상적으로 API를 호출함
-        isCalledRef.current = true
         
         if (!res.ok) {
           setResult({
