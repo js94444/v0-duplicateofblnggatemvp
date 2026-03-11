@@ -9,8 +9,6 @@ export async function GET(
 ) {
   try {
     const { receipt } = await params
-    console.log("[v0] QR Verify API called with receipt:", receipt)
-
     if (!receipt || receipt.trim() === "") {
       return NextResponse.json(
         { result: "DENY", message: "접수번호가 필요합니다." },
@@ -61,14 +59,6 @@ export async function GET(
     
     const visitEnd = new Date(application.visit_end_date)
     visitEnd.setHours(23, 59, 59, 999) // 종료일 끝까지 유효
-
-    console.log("[v0] Visit period check:", {
-      now: now.toISOString(),
-      visitStart: visitStart.toISOString(),
-      visitEnd: visitEnd.toISOString(),
-      nowBeforeStart: now < visitStart,
-      nowAfterEnd: now > visitEnd,
-    })
 
     if (now < visitStart) {
       return NextResponse.json({
