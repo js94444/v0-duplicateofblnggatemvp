@@ -21,7 +21,6 @@ import {
 } from "lucide-react"
 import { PublicHeader } from "@/components/public/public-header"
 import { StatusTimeline } from "@/components/common/status-timeline"
-import { QRCodeCard } from "@/components/common/qr-code-card"
 import { useLang } from "@/lib/language-context"
 import {
   type Application,
@@ -356,7 +355,18 @@ export default function StatusDetailPage() {
                   {/* 신청인 QR 코드 */}
                   <div className="flex flex-col items-center bg-black/30 rounded-3xl p-8 border border-emerald-500/20">
                     <p className="text-sm font-bold text-emerald-500 mb-6 uppercase tracking-widest">신청인 (Applicant)</p>
-                    <QRCodeCard receipt={application.receipt} />
+                    <div className="text-center space-y-4">
+                      <p className="text-xs text-white/60">신청 번호</p>
+                      <a 
+                        href={`/verify/${application.receipt}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-block text-base font-bold text-amber-400 hover:text-amber-300 underline break-all"
+                      >
+                        {application.receipt}
+                      </a>
+                      <p className="text-xs text-white/40">클릭하여 QR 코드 확인</p>
+                    </div>
                   </div>
 
                   {/* 동행인 QR 코드 */}
@@ -369,19 +379,22 @@ export default function StatusDetailPage() {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                           {companions.map((companion: any, idx: number) => (
                             <div key={idx} className="flex flex-col items-center bg-black/30 rounded-3xl p-8 border border-amber-500/20">
-                              <p className="text-xs font-bold text-amber-500 mb-4">{companion.name}</p>
-                              <div className="w-full flex justify-center">
-                                <div className="text-white/40 text-sm">
-                                  {companion.qr_code ? (
-                                    <div className="p-4 bg-white rounded-2xl">
-                                      <img src={companion.qr_code} alt={companion.name} className="w-full h-auto" />
-                                    </div>
-                                  ) : (
-                                    <div className="p-8 border border-dashed border-white/20 rounded-xl text-center">
-                                      <p className="text-xs">QR 코드 준비 중...</p>
-                                    </div>
-                                  )}
-                                </div>
+                              <p className="text-sm font-bold text-amber-500 mb-6">{companion.name}</p>
+                              <div className="text-center space-y-4 w-full">
+                                <p className="text-xs text-white/60">신청 번호</p>
+                                {companion.receipt ? (
+                                  <a 
+                                    href={`/verify/${companion.receipt}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="inline-block text-base font-bold text-amber-400 hover:text-amber-300 underline break-all w-full"
+                                  >
+                                    {companion.receipt}
+                                  </a>
+                                ) : (
+                                  <p className="text-xs text-white/40">QR 코드 준비 중...</p>
+                                )}
+                                <p className="text-xs text-white/40">클릭하여 QR 코드 확인</p>
                               </div>
                             </div>
                           ))}
