@@ -56,14 +56,14 @@ export async function POST(request: NextRequest) {
     // 승인 시 QR pass_receipt 생성 (신청자 + 동행인 각각)
     let pass_receipt: string | null = null
     let companionPasses: { companion_id: number; name: string; phone: string; pass_receipt: string }[] = []
-    
+
     if (action === "approve") {
       // 신청자 QR 생성 - application_number 사용
       const applicationNumber = updatedApplication.application_number || updatedApplication.receipt || AzureSqlDB.generatePassReceipt()
       pass_receipt = applicationNumber
       await AzureSqlDB.createPassForApplication(id, pass_receipt)
       console.log("[v0] Created applicant pass_receipt:", pass_receipt)
-      
+
       // 동행인 QR 생성 - application_number-1, -2 형식
       const companions = await AzureSqlDB.getCompanionsWithIdByApplicationId(id)
       for (let i = 0; i < companions.length; i++) {
@@ -125,8 +125,8 @@ export async function POST(request: NextRequest) {
 
         // 승인 시: 담당자에게 승인 완료 알림
         if (contactPhone) {
-          const contactMsg = `[담당자용] [B-Link] 방문 신청이 승인되었습니다.\n신청자: ${updatedApplication.visitor_name || ""}\n접수번호: ${updatedApplication.application_number || updatedApplication.receipt || ""}\n동행인: ${companionPasses.length}명`
-          await sendSms(contactPhone, contactMsg).catch(() => {})
+          const contactMsg = `[담당자용] 보령LNG터미널 방문 신청이 승인되었습니다.\n신청자: ${updatedApplication.visitor_name || ""}\n접수번호: ${updatedApplication.application_number || updatedApplication.receipt || ""}\n동행인: ${companionPasses.length}명`
+          await sendSms(contactPhone, contactMsg).catch(() => { })
         }
       } else {
         // 반려 시: 신청자 + 담당자에게 반려 문자

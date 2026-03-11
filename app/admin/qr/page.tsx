@@ -1,7 +1,8 @@
 "use client"
 
-import { useEffect, useState, useMemo, useCallback } from "react"
+import { useEffect, useState, useMemo } from "react"
 import { useRouter } from "next/navigation"
+import useSWR from "swr"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
@@ -59,16 +60,16 @@ export default function AdminQrScanPage() {
   const { user, loading: authLoading } = useAdminAuth()
   const [activeTab, setActiveTab] = useState<TabKind>("main")
   const [pierTab, setPierTab] = useState<PierKind>("1부두")
-  const [loading, setLoading] = useState(true)
-  // 각 사이트별 데이터 캐싱
-  const [dataCache, setDataCache] = useState<Record<string, { scans: ScanRow[]; stats: ScanStats | null }>>({})
-  const [scans, setScans] = useState<ScanRow[]>([])
-  const [stats, setStats] = useState<ScanStats | null>(null)
-  const [error, setError] = useState<string | null>(null)
   const [selectedApplicationId, setSelectedApplicationId] = useState<number | null>(null)
   const [selectedApplication, setSelectedApplication] = useState<Application | null>(null)
   const [modalLoading, setModalLoading] = useState(false)
   const [portCertModal, setPortCertModal] = useState<{ open: boolean; files: Array<{ file_url: string; file_name: string }>; visitorName: string; birthDate: string }>({ open: false, files: [], visitorName: "", birthDate: "" })
+
+  // SWR fetcher
+  const fetcher = (url: string) => fetch(url, { cache: "no-store" }).then(res => {
+    if (!res.ok) throw new Error("데이터를 불러오는데 실패했습니다.")
+    return res.json()
+  })
 
   // 슈퍼어드민만 접근 가능
   useEffect(() => {
@@ -88,51 +89,25 @@ export default function AdminQrScanPage() {
   const scanSiteParam =
     activeTab === "main" ? "main" : pierTab === "1부두" ? "pier_1" : "pier_2"
 
-  const loadData = useCallback(async (forceRefresh = false) => {
-    // 캐시된 데이터가 있고 강제 새로고침이 아니면 캐시 사용
-    if (!forceRefresh && dataCache[scanSiteParam]) {
-      setScans(dataCache[scanSiteParam].scans)
-      setStats(dataCache[scanSiteParam].stats)
-      return
+  // SWR로 데이터 fetching - 캐시가 자동으로 유지됨
+  const { data: swrData, error, isLoading: loading, mutate } = useSWR(
+    `/api/admin/qr-scans?scan_site=${scanSiteParam}`,
+    fetcher,
+    {
+      revalidateOnFocus: false, // 포커스 시 재요청 방지
+      dedupingInterval: 30000,  // 30초 내 중복 요청 방지
     }
+  )
 
-    try {
-      setLoading(true)
-      setError(null)
-      const t = Date.now()
-      const res = await fetch(`/api/admin/qr-scans?t=${t}&scan_site=${scanSiteParam}`, {
-        cache: "no-store",
-        headers: {
-          "Cache-Control": "no-cache",
-          Pragma: "no-cache",
-        },
-      })
-      if (!res.ok) {
-        const json = await res.json().catch(() => ({}))
-        throw new Error(json.message || "QR 스캔 이력을 불러오지 못했습니다.")
-      }
-      const json = await res.json()
-      const next: ScanRow[] = json.data || []
-      const nextStats = json.stats || null
+  const scans: ScanRow[] = swrData?.data || []
+  const stats: ScanStats | null = swrData?.stats || null
 
-      // 캐시에 저장
-      setDataCache(prev => ({
-        ...prev,
-        [scanSiteParam]: { scans: next, stats: nextStats }
-      }))
-      setScans(next)
-      setStats(nextStats)
-    } catch (e) {
-      console.error("[v0] Failed to load qr-scans:", e)
-      setError(e instanceof Error ? e.message : "데이터 로드 중 오류가 발생했습니다.")
-    } finally {
-      setLoading(false)
+  // 새로고침 함수
+  const loadData = (forceRefresh = false) => {
+    if (forceRefresh) {
+      mutate()
     }
-  }, [scanSiteParam, dataCache])
-
-  useEffect(() => {
-    loadData(false)
-  }, [scanSiteParam])
+  }
 
   // 상세보기 모달용 application 조회
   useEffect(() => {
@@ -316,7 +291,7 @@ export default function AdminQrScanPage() {
 
             {error && (
               <div className="mb-4 px-4 py-3 rounded-xl bg-red-500/20 border border-red-500/40 text-red-200 text-sm">
-                {error}
+                {error instanceof Error ? error.message : "데이터 로드 중 오류가 발생했습니다."}
               </div>
             )}
 
@@ -426,37 +401,16 @@ export default function AdminQrScanPage() {
 
         {activeTab === "pier" && (
           <>
-            <div className="mb-4 flex items-center gap-3 flex-wrap">
-              <span className="text-sm text-white/60">부두 선택</span>
-              <div className="flex rounded-lg border border-white/20 overflow-hidden">
-                <button
-                  type="button"
-                  onClick={() => setPierTab("1부두")}
-                  className={`px-3 py-1.5 text-sm font-medium transition-all ${pierTab === "1부두" ? "bg-amber-500 text-black" : "bg-white/5 text-white/80 hover:bg-white/10"
-                    }`}
-                >
-                  1부두
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setPierTab("2부두")}
-                  className={`px-3 py-1.5 text-sm font-medium transition-all ${pierTab === "2부두" ? "bg-amber-500 text-black" : "bg-white/5 text-white/80 hover:bg-white/10"
-                    }`}
-                >
-                  2부두
-                </button>
-              </div>
-            </div>
             <div className="mb-6">
-              <h2 className="text-2xl font-black text-white">{pierTab} 출입 이력 (인원별 {rowsByPerson.length}명)</h2>
+              <h2 className="text-2xl font-black text-white">부두 출입 이력 (인원별 {rowsByPerson.length}명)</h2>
               <p className="text-sm text-white/40 mt-1">
-                부두에서 QR 스캔된 출입 이력을 인원별로 표시합니다. 최근 10분 이내 행은 색으로 강조됩니다.
+                부두 구역별로 방문자 출입 이력을 확인합니다.
               </p>
             </div>
 
             {error && (
               <div className="mb-4 px-4 py-3 rounded-xl bg-red-500/20 border border-red-500/40 text-red-200 text-sm">
-                {error}
+                {error instanceof Error ? error.message : "데이터 로드 중 오류가 발생했습니다."}
               </div>
             )}
 
