@@ -349,7 +349,7 @@ export class AzureSqlDB {
     if (uploadedFiles && uploadedFiles.length > 0) {
       console.log('[v0] Processing', uploadedFiles.length, 'uploaded files')
       for (const file of uploadedFiles) {
-        // ����������������������일명과 키가 유효한 경우에만 저장
+        // �����������������������일명과 키가 유효한 경우에만 저장
         if (file && file.filename && file.fileKey && file.filename.trim() !== '' && file.fileKey.trim() !== '') {
           console.log('[v0] Saving file attachment:', { 
             filename: file.filename, 
@@ -1540,7 +1540,7 @@ export class AzureSqlDB {
   /** 신청 승인 시 pass_receipt 저장 */
   static async createPassForApplication(applicationId: string, pass_receipt: string): Promise<void> {
     const dbPool = await getPool()
-    // token 생성 (���� 토큰: UUID 대신 ���� ���������)
+    // token 생��� (���� 토큰: UUID 대신 ���� ���������)
     const token = `TOKEN-${Date.now()}-${Math.random().toString(36).substring(2, 10).toUpperCase()}`
     
     // 신청 정보에서 방문 기간 가져오기
@@ -1639,15 +1639,8 @@ export class AzureSqlDB {
           ORDER BY scanned_at DESC
         `)
       
-      console.log("[v0] EXIT scan - lastScanResult:", {
-        pass_id: app.pass_id,
-        recordCount: lastScanResult.recordset.length,
-        lastDirection: lastScanResult.recordset[0]?.direction
-      })
-      
       // 최근 스캔이 없거나 EXIT면 입장 기록이 없는 것
       if (lastScanResult.recordset.length === 0 || lastScanResult.recordset[0].direction === 'EXIT') {
-        console.log("[v0] EXIT scan DENIED - no entry record")
         return { 
           result: "DENY", 
           message: "입장 기록이 없습니다", 
@@ -1657,8 +1650,6 @@ export class AzureSqlDB {
       }
     }
     
-    console.log("[v0] Scan will be recorded:", { direction, scan_site, pass_id: app.pass_id })
-
     try {
       const now = getKoreaTime()
       
@@ -1673,14 +1664,8 @@ export class AzureSqlDB {
             AND scanned_at > DATEADD(SECOND, -3, GETDATE())
         `)
       
-      console.log("[v0] Duplicate check result:", {
-        recentScanCount: recentScanResult.recordset.length,
-        willInsert: recentScanResult.recordset.length === 0
-      })
-      
       // 최근 3초 이내 동일 스캔이 없을 때만 INSERT
       if (recentScanResult.recordset.length === 0) {
-        console.log("[v0] Inserting scan record...")
         await dbPool.request()
           .input('pass_id', sql.UniqueIdentifier, app.pass_id)
           .input('application_id', sql.BigInt, app.application_id)
