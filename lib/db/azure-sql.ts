@@ -349,7 +349,7 @@ export class AzureSqlDB {
     if (uploadedFiles && uploadedFiles.length > 0) {
       console.log('[v0] Processing', uploadedFiles.length, 'uploaded files')
       for (const file of uploadedFiles) {
-        // ������������������������������일명과 키가 유효한 경우에만 저장
+        // �������������������������������일명과 키가 유효한 경우에만 저장
         if (file && file.filename && file.fileKey && file.filename.trim() !== '' && file.fileKey.trim() !== '') {
           console.log('[v0] Saving file attachment:', { 
             filename: file.filename, 
@@ -1749,7 +1749,20 @@ export class AzureSqlDB {
       .query(`
         ;WITH RankedScans AS (
           SELECT 
-            s.*,
+            s.scan_id,
+            s.pass_id,
+            s.application_id,
+            s.scanned_at,
+            s.device_id,
+            s.result,
+            s.deny_reason,
+            s.scanned_ip,
+            s.visitor_name,
+            s.visitor_org,
+            s.contact_name,
+            s.access_area,
+            s.direction,
+            s.scan_site,
             a.contact_mobile,
             a.visitor_birth_date,
             a.vehicle_number,
