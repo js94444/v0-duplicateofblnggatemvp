@@ -349,7 +349,7 @@ export class AzureSqlDB {
     if (uploadedFiles && uploadedFiles.length > 0) {
       console.log('[v0] Processing', uploadedFiles.length, 'uploaded files')
       for (const file of uploadedFiles) {
-        // ���������������일명과 키가 유효한 경우에만 저장
+        // ����������������일명과 키가 유효한 경우에만 저장
         if (file && file.filename && file.fileKey && file.filename.trim() !== '' && file.fileKey.trim() !== '') {
           console.log('[v0] Saving file attachment:', { 
             filename: file.filename, 
@@ -1640,7 +1640,7 @@ export class AzureSqlDB {
     // 퇴장(EXIT) 시 입장 이력 확인 - 최근 스캔이 ENTRY인지 확인
     if (direction === 'EXIT') {
       const lastScanResult = await dbPool.request()
-        .input('pass_id', sql.BigInt, passData.pass_id)
+        .input('pass_id', sql.BigInt, app.pass_id)
         .query(`
           SELECT TOP 1 direction FROM visit_pass_scans
           WHERE pass_id = @pass_id
@@ -1663,8 +1663,8 @@ export class AzureSqlDB {
       
       // 입장/퇴장 모두 새 행으로 INSERT
       await dbPool.request()
-        .input('pass_id', sql.BigInt, passData.pass_id)
-        .input('application_id', sql.BigInt, passData.application_id)
+        .input('pass_id', sql.BigInt, app.pass_id)
+        .input('application_id', sql.BigInt, app.application_id)
         .input('direction', sql.NVarChar(10), direction)
         .input('device_id', sql.NVarChar(100), deviceId || null)
         .input('result', sql.NVarChar(20), 'ALLOW')
