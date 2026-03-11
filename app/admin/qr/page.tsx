@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useMemo, useCallback } from "react"
 import { useRouter } from "next/navigation"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
@@ -51,6 +51,8 @@ export default function AdminQrScanPage() {
   const [activeTab, setActiveTab] = useState<TabKind>("main")
   const [pierTab, setPierTab] = useState<PierKind>("1부두")
   const [loading, setLoading] = useState(true)
+  // 각 사이트별 데이터 캐싱
+  const [dataCache, setDataCache] = useState<Record<string, { scans: ScanRow[]; stats: ScanStats | null }>>({})
   const [scans, setScans] = useState<ScanRow[]>([])
   const [stats, setStats] = useState<ScanStats | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -77,7 +79,14 @@ export default function AdminQrScanPage() {
   const scanSiteParam =
     activeTab === "main" ? "main" : pierTab === "1부두" ? "pier_1" : "pier_2"
 
-  const loadData = async () => {
+  const loadData = useCallback(async (forceRefresh = false) => {
+    // 캐시된 데이터가 있고 강제 새로고침이 아니면 캐시 사용
+    if (!forceRefresh && dataCache[scanSiteParam]) {
+      setScans(dataCache[scanSiteParam].scans)
+      setStats(dataCache[scanSiteParam].stats)
+      return
+    }
+    
     try {
       setLoading(true)
       setError(null)
@@ -95,19 +104,26 @@ export default function AdminQrScanPage() {
       }
       const json = await res.json()
       const next: ScanRow[] = json.data || []
+      const nextStats = json.stats || null
+      
+      // 캐시에 저장
+      setDataCache(prev => ({
+        ...prev,
+        [scanSiteParam]: { scans: next, stats: nextStats }
+      }))
       setScans(next)
-      setStats(json.stats || null)
+      setStats(nextStats)
     } catch (e) {
       console.error("[v0] Failed to load qr-scans:", e)
       setError(e instanceof Error ? e.message : "데이터 로드 중 오류가 발생했습니다.")
     } finally {
       setLoading(false)
     }
-  }
+  }, [scanSiteParam, dataCache])
 
   useEffect(() => {
-    loadData()
-  }, [activeTab, pierTab])
+    loadData(false)
+  }, [scanSiteParam])
 
   // 상세보기 모달용 application 조회
   useEffect(() => {
@@ -131,8 +147,9 @@ export default function AdminQrScanPage() {
 
   const TEN_MINUTES_MS = 10 * 60 * 1000
 
-  // pass_id별 입장/퇴장 이력을 쌍으로 매칭 (입장 건별 관리)
-  const rowsByPerson = (() => {
+  // pass_id별 입장/퇴장 이력을 쌍으로 매칭 (입장 건별 관리) - useMemo로 캐싱
+  const rowsByPerson = useMemo(() => {
+    if (scans.length === 0) return []
     const byPass = new Map<
       string,
       Array<{
@@ -257,7 +274,7 @@ export default function AdminQrScanPage() {
     }
 
     return result.sort((a, b) => b.lastEventAt - a.lastEventAt)
-  })()
+  }, [scans])
 
   // 최근 10분 이내 스캔 여부 (입장/퇴장 중 하나라도 10분 이내면 하이라이트)
   const getRecentHighlight = (row: (typeof rowsByPerson)[0]) => {
@@ -328,7 +345,7 @@ export default function AdminQrScanPage() {
           </p>
         </div>
         <Button
-          onClick={loadData}
+          onClick={() => loadData(true)}
           disabled={loading}
           className="bg-white/10 hover:bg-white/20 border border-white/20 text-white font-bold px-5 py-2 rounded-xl transition-all active:scale-95"
         >
