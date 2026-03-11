@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useRef } from "react"
 import { useSearchParams, useParams } from "next/navigation"
 import Link from "next/link"
 import { CheckCircle, XCircle, ArrowLeft, QrCode, Loader2 } from "lucide-react"
@@ -32,9 +32,13 @@ export default function VerifyReceiptPage() {
   const [loading, setLoading] = useState(true)
   const [result, setResult] = useState<VerifyResult | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const isCalledRef = useRef(false)
 
   useEffect(() => {
     async function verifyAndRecord() {
+      // React StrictMode 중복 호출 방지
+      if (isCalledRef.current) return
+      isCalledRef.current = true
       try {
         setLoading(true)
         setError(null)
@@ -46,7 +50,6 @@ export default function VerifyReceiptPage() {
         })
         
         const json = await res.json()
-        console.log("[v0] Verify API response:", json)
         
         if (!res.ok) {
           setResult({
@@ -66,7 +69,6 @@ export default function VerifyReceiptPage() {
           })
         }
       } catch (e) {
-        console.error("[v0] Verify error:", e)
         setError("검증 중 오류가 발생했습니다.")
         setResult({ result: "DENY", message: "검증 중 오류가 발생했습니다." })
       } finally {
