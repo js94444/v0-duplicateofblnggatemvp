@@ -4,7 +4,8 @@ import { useEffect, useRef, useState } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import Link from "next/link"
 import jsQR from "jsqr"
-import { Home, ArrowLeft } from "lucide-react"
+import { ArrowLeft } from "lucide-react"
+import { PublicFooter } from "@/components/public/public-footer"
 
 type ScannerState = "idle" | "scanning" | "processing"
 
@@ -122,24 +123,17 @@ export default function ScannerQrPage() {
 
   return (
     <div className="min-h-screen bg-neutral-950 text-white flex flex-col">
-      <header className="px-6 py-4 border-b border-white/10 flex items-center justify-between">
+      <header className="px-6 py-5 border-b border-white/10 flex items-center justify-between">
         <Link
           href="/scanner"
-          className="flex items-center gap-2 text-white/60 hover:text-white"
+          className="flex items-center gap-2 text-white/70 hover:text-white transition-colors"
         >
-          <ArrowLeft size={18} />
-          <span className="text-sm font-medium">출입 인증</span>
+          <ArrowLeft size={20} />
+          <span className="text-base font-semibold">출입 인증</span>
         </Link>
-        <span className="text-xs text-amber-400 font-bold">
-          {direction === "ENTRY" ? "입장" : "퇴장"} · QR
+        <span className="text-base font-extrabold text-amber-400 tracking-wide">
+          {direction === "ENTRY" ? "입장" : "퇴장"} · QR 스캔
         </span>
-        <Link
-          href="/"
-          className="flex items-center gap-2 px-3 py-2 rounded-xl border border-white/20 text-white/70 text-sm font-medium hover:bg-white/10"
-        >
-          <Home size={18} />
-          메인
-        </Link>
       </header>
 
       <main className="flex-1 flex flex-col items-center justify-center p-6">
@@ -150,19 +144,19 @@ export default function ScannerQrPage() {
         )}
 
         {state === "idle" && !error && (
-          <div className="flex flex-col items-center gap-4 text-white/50">
-            <div className="w-12 h-12 rounded-full border-2 border-amber-500/30 border-t-amber-500 animate-spin" />
-            <p className="text-sm tracking-widest uppercase">카메라 준비 중...</p>
+          <div className="flex flex-col items-center gap-5 text-white/50">
+            <div className="w-14 h-14 rounded-full border-2 border-amber-500/30 border-t-amber-500 animate-spin" />
+            <p className="text-lg font-semibold tracking-widest uppercase">카메라 준비 중...</p>
           </div>
         )}
 
         {(state === "scanning" || state === "processing") && (
           <>
-            <p className="text-lg font-bold text-white/90 mb-4 tracking-tight">
+            <p className="text-2xl font-extrabold text-white mb-2 tracking-tight">
               {state === "scanning" ? "QR 코드를 비춰주세요" : "검증 중..."}
             </p>
-            <p className="mt-4 text-xs text-white/40 text-center">
-              {direction === "ENTRY" ? "입장" : "퇴장"} 처리할 QR을 비춰주세요
+            <p className="text-base text-white/50 text-center">
+              {direction === "ENTRY" ? "입장" : "퇴장"} 처리할 QR 코드를 카메라에 비춰주세요
             </p>
           </>
         )}
@@ -190,9 +184,7 @@ export default function ScannerQrPage() {
         </div>
       </main>
 
-      <footer className="px-6 py-4 text-center text-[10px] text-white/20 tracking-widest uppercase border-t border-white/5">
-        © BORYEONG LNG Terminal Management System
-      </footer>
+      <PublicFooter />
     </div>
   )
 }
