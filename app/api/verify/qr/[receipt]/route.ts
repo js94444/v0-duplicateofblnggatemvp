@@ -57,8 +57,18 @@ export async function GET(
     // 방문 기간 확인
     const now = new Date()
     const visitStart = new Date(application.visit_start_date)
+    visitStart.setHours(0, 0, 0, 0) // 시작일 자정
+    
     const visitEnd = new Date(application.visit_end_date)
     visitEnd.setHours(23, 59, 59, 999) // 종료일 끝까지 유효
+
+    console.log("[v0] Visit period check:", {
+      now: now.toISOString(),
+      visitStart: visitStart.toISOString(),
+      visitEnd: visitEnd.toISOString(),
+      nowBeforeStart: now < visitStart,
+      nowAfterEnd: now > visitEnd,
+    })
 
     if (now < visitStart) {
       return NextResponse.json({
