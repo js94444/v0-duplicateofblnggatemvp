@@ -349,7 +349,7 @@ export class AzureSqlDB {
     if (uploadedFiles && uploadedFiles.length > 0) {
       console.log('[v0] Processing', uploadedFiles.length, 'uploaded files')
       for (const file of uploadedFiles) {
-        // ��������������������일명과 키가 유효한 경우에만 저장
+        // ���������������������일명과 키가 유효한 경우에만 저장
         if (file && file.filename && file.fileKey && file.filename.trim() !== '' && file.fileKey.trim() !== '') {
           console.log('[v0] Saving file attachment:', { 
             filename: file.filename, 
@@ -1540,7 +1540,7 @@ export class AzureSqlDB {
   /** 신청 승인 시 pass_receipt 저장 */
   static async createPassForApplication(applicationId: string, pass_receipt: string): Promise<void> {
     const dbPool = await getPool()
-    // token 생성 (임�� 토큰: UUID 대신 ���� ���������)
+    // token 생성 (���� 토큰: UUID 대신 ���� ���������)
     const token = `TOKEN-${Date.now()}-${Math.random().toString(36).substring(2, 10).toUpperCase()}`
     
     // 신청 정보에서 방문 기간 가져오기
@@ -1653,25 +1653,38 @@ export class AzureSqlDB {
     try {
       const now = getKoreaTime()
       
-      // 입장/퇴장 모두 새 행으로 INSERT
-      await dbPool.request()
+      // 백엔드 중복 방지 - 최근 3초 이내 동일 pass_id, direction, scan_site 스캔 확인
+      const recentScanResult = await dbPool.request()
         .input('pass_id', sql.UniqueIdentifier, app.pass_id)
-        .input('application_id', sql.BigInt, app.application_id)
         .input('direction', sql.NVarChar(10), direction)
-        .input('device_id', sql.NVarChar(100), device_id || null)
-        .input('result', sql.NVarChar(20), 'ALLOW')
-        .input('scanned_ip', sql.NVarChar(50), scanned_ip || null)
-        .input('user_agent', sql.NVarChar(500), user_agent || null)
-        .input('visitor_name', sql.NVarChar(100), displayName)
-        .input('visitor_org', sql.NVarChar(200), app.visitor_org || null)
-        .input('contact_name', sql.NVarChar(100), app.contact_name || null)
-        .input('access_area', sql.NVarChar(100), app.access_area || null)
         .input('scan_site', sql.NVarChar(50), scan_site)
-        .input('scanned_at', sql.DateTime2, now)
         .query(`
-          INSERT INTO visit_pass_scans (pass_id, application_id, direction, device_id, result, scanned_ip, user_agent, visitor_name, visitor_org, contact_name, access_area, scan_site, scanned_at)
-          VALUES (@pass_id, @application_id, @direction, @device_id, @result, @scanned_ip, @user_agent, @visitor_name, @visitor_org, @contact_name, @access_area, @scan_site, @scanned_at)
+          SELECT TOP 1 scan_id FROM visit_pass_scans
+          WHERE pass_id = @pass_id AND direction = @direction AND scan_site = @scan_site
+            AND scanned_at > DATEADD(SECOND, -3, GETDATE())
         `)
+      
+      // 최근 3초 이내 동일 스캔이 없을 때만 INSERT
+      if (recentScanResult.recordset.length === 0) {
+        await dbPool.request()
+          .input('pass_id', sql.UniqueIdentifier, app.pass_id)
+          .input('application_id', sql.BigInt, app.application_id)
+          .input('direction', sql.NVarChar(10), direction)
+          .input('device_id', sql.NVarChar(100), device_id || null)
+          .input('result', sql.NVarChar(20), 'ALLOW')
+          .input('scanned_ip', sql.NVarChar(50), scanned_ip || null)
+          .input('user_agent', sql.NVarChar(500), user_agent || null)
+          .input('visitor_name', sql.NVarChar(100), displayName)
+          .input('visitor_org', sql.NVarChar(200), app.visitor_org || null)
+          .input('contact_name', sql.NVarChar(100), app.contact_name || null)
+          .input('access_area', sql.NVarChar(100), app.access_area || null)
+          .input('scan_site', sql.NVarChar(50), scan_site)
+          .input('scanned_at', sql.DateTime2, now)
+          .query(`
+            INSERT INTO visit_pass_scans (pass_id, application_id, direction, device_id, result, scanned_ip, user_agent, visitor_name, visitor_org, contact_name, access_area, scan_site, scanned_at)
+            VALUES (@pass_id, @application_id, @direction, @device_id, @result, @scanned_ip, @user_agent, @visitor_name, @visitor_org, @contact_name, @access_area, @scan_site, @scanned_at)
+          `)
+      }
     } catch (e) {
       console.error('[v0] Failed to record scan:', e)
     }
