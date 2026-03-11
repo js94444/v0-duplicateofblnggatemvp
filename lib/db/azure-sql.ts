@@ -349,7 +349,7 @@ export class AzureSqlDB {
     if (uploadedFiles && uploadedFiles.length > 0) {
       console.log('[v0] Processing', uploadedFiles.length, 'uploaded files')
       for (const file of uploadedFiles) {
-        // ����������������������������일명과 키가 유효한 경우에만 저장
+        // �����������������������������일명과 키가 유효한 경우에만 저장
         if (file && file.filename && file.fileKey && file.filename.trim() !== '' && file.fileKey.trim() !== '') {
           console.log('[v0] Saving file attachment:', { 
             filename: file.filename, 
@@ -1530,7 +1530,7 @@ export class AzureSqlDB {
 
   /** �����유����� pass_receipt (QR 코드) 생성 */
   static generatePassReceipt(): string {
-    // 형식: QR-YYYYMMDD-XXXXXX (6글�� 랜덤)
+    // 형식: QR-YYYYMMDD-XXXXXX (6����� 랜덤)
     const date = new Date()
     const dateStr = date.toISOString().split('T')[0].replace(/-/g, '')
     const random = Math.random().toString(36).substring(2, 8).toUpperCase()
@@ -1742,7 +1742,6 @@ export class AzureSqlDB {
   /** QR 스캔 로그 조회 (출입현황) */
   static async getQrScanLogs(scanSite: string, limit: number = 100): Promise<any[]> {
     const dbPool = await getPool()
-    const isAll = scanSite.toLowerCase() === 'all'
     
     const result = await dbPool.request()
       .input('scan_site', sql.NVarChar(50), scanSite)
@@ -1770,7 +1769,7 @@ export class AzureSqlDB {
           a.spark_arrestor
         FROM visit_pass_scans s
         LEFT JOIN visit_applications a ON s.application_id = a.application_id
-        ${isAll ? '' : 'WHERE s.scan_site = @scan_site'}
+        WHERE s.scan_site = @scan_site
         ORDER BY s.scanned_at DESC
       `)
     return result.recordset
@@ -1779,7 +1778,6 @@ export class AzureSqlDB {
   /** QR 스캔 통계 조회 */
   static async getQrScanStats(scanSite: string): Promise<any> {
     const dbPool = await getPool()
-    const isAll = scanSite.toLowerCase() === 'all'
     
     const result = await dbPool.request()
       .input('scan_site', sql.NVarChar(50), scanSite)
@@ -1791,7 +1789,7 @@ export class AzureSqlDB {
           SUM(CASE WHEN result = 'ALLOW' THEN 1 ELSE 0 END) as allowCount,
           SUM(CASE WHEN result = 'DENY' THEN 1 ELSE 0 END) as denyCount
         FROM visit_pass_scans
-        ${isAll ? '' : 'WHERE scan_site = @scan_site'}
+        WHERE scan_site = @scan_site
       `)
     return result.recordset[0] || { total: 0, entryCount: 0, exitCount: 0, allowCount: 0, denyCount: 0 }
   }

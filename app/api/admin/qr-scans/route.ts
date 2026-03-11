@@ -10,14 +10,9 @@ export async function GET(request: NextRequest) {
     const url = new URL(request.url)
     const scanSite = url.searchParams.get("scan_site") || "main"
     
-    // 정문(main)은 모든 scan_site 필터링 없이 전체 데이터 반환
-    // 부두는 pier_1 또는 pier_2로 필터링
-    const scanSiteFilter = scanSite === "main" ? "ALL" 
-                          : scanSite === "pier_1" ? "PIER_1" 
-                          : "PIER_2"
-
-    const data = await AzureSqlDB.getQrScanLogs(scanSiteFilter)
-    const stats = await AzureSqlDB.getQrScanStats(scanSiteFilter)
+    // 정문(main), 1부두(pier_1), 2부두(pier_2) 각각 해당 scan_site로 필터링
+    const data = await AzureSqlDB.getQrScanLogs(scanSite)
+    const stats = await AzureSqlDB.getQrScanStats(scanSite)
 
     // 고유 application_id 목록 추출
     const applicationIds = [...new Set(data.map((d: any) => d.application_id).filter(Boolean))]
