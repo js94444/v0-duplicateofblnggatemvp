@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect, useRef } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import Link from "next/link"
 import { ArrowLeft, User } from "lucide-react"
@@ -22,6 +22,16 @@ export default function ScannerPhonePage() {
   const [list, setList] = useState<ApprovedItem[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  // 입력을 위해 input 엘리먼트에 직접 접근하기 위한 ref
+  const inputRef = useRef<HTMLInputElement>(null)
+
+  // 페이지 진입 시 자동으로 입력창에 포커스를 줘서 키패드를 유도함
+  useEffect(() => {
+    if (inputRef.current) {
+      inputRef.current.focus()
+    }
+  }, [])
 
   const search = async () => {
     if (!phone.trim()) return
@@ -45,9 +55,15 @@ export default function ScannerPhonePage() {
     router.push(`/verify/${receipt}?t=${Date.now()}&direction=${direction}&gate=${gate}`)
   }
 
+  // 엔터 키 대응 (숫자 패드의 '완료' 또는 '이동' 버튼 클릭 시 바로 조회)
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter") {
+      search()
+    }
+  }
+
   return (
     <div className="min-h-screen bg-neutral-950 text-white flex flex-col">
-      {/* 헤더: 좌측 '출입 인증' 버튼에 라운드 및 배경 처리 적용 */}
       <header className="px-6 py-6 border-b border-white/10 grid grid-cols-3 items-center">
         <div className="flex justify-start">
           <Link
@@ -72,11 +88,14 @@ export default function ScannerPhonePage() {
         <label className="block text-base font-bold text-white/70 mb-3">휴대폰 번호</label>
         <div className="flex gap-3 mb-6">
           <input
-            type="tel"
-            inputMode="numeric" // 모바일에서 숫자 패드를 강제로 띄움
-            pattern="[0-9]*"    // iOS 등 일부 브라우저 호환성 강화
+            ref={inputRef}
+            type="text"         // tel보다 text + inputMode 조합이 더 확실하게 숫자패드를 띄웁니다
+            inputMode="numeric" // 모바일 숫자 키패드 강제
+            pattern="[0-9]*"    // iOS 키패드 호환성
+            autoFocus           // 페이지 로드 시 자동 포커스
             value={phone}
-            onChange={(e) => setPhone(e.target.value.replace(/[^0-9]/g, ""))} // 숫자만 입력되도록 강제
+            onKeyDown={handleKeyDown}
+            onChange={(e) => setPhone(e.target.value.replace(/[^0-9]/g, ""))}
             placeholder="01012345678"
             className="flex-1 px-4 py-4 rounded-xl bg-white/5 border border-white/20 text-lg text-white placeholder:text-white/30 focus:outline-none focus:border-amber-500/50"
           />
@@ -86,7 +105,7 @@ export default function ScannerPhonePage() {
             disabled={loading}
             className="px-6 py-4 rounded-xl bg-amber-500 text-black text-lg font-black hover:bg-amber-600 disabled:opacity-50 transition-colors"
           >
-            {loading ? "조회 중" : "조회"}
+            {loading ? "..." : "조회"}
           </button>
         </div>
 
