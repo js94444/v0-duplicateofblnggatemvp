@@ -349,7 +349,7 @@ export class AzureSqlDB {
     if (uploadedFiles && uploadedFiles.length > 0) {
       console.log('[v0] Processing', uploadedFiles.length, 'uploaded files')
       for (const file of uploadedFiles) {
-        // ����������������일명과 키가 유효한 경우에만 저장
+        // �����������������일명과 키가 유효한 경우에만 저장
         if (file && file.filename && file.fileKey && file.filename.trim() !== '' && file.fileKey.trim() !== '') {
           console.log('[v0] Saving file attachment:', { 
             filename: file.filename, 
@@ -1666,15 +1666,15 @@ export class AzureSqlDB {
         .input('pass_id', sql.BigInt, app.pass_id)
         .input('application_id', sql.BigInt, app.application_id)
         .input('direction', sql.NVarChar(10), direction)
-        .input('device_id', sql.NVarChar(100), deviceId || null)
+        .input('device_id', sql.NVarChar(100), device_id || null)
         .input('result', sql.NVarChar(20), 'ALLOW')
-        .input('scanned_ip', sql.NVarChar(50), scannedIp || null)
-        .input('user_agent', sql.NVarChar(500), userAgent || null)
+        .input('scanned_ip', sql.NVarChar(50), scanned_ip || null)
+        .input('user_agent', sql.NVarChar(500), user_agent || null)
         .input('visitor_name', sql.NVarChar(100), displayName)
         .input('visitor_org', sql.NVarChar(200), app.visitor_org || null)
         .input('contact_name', sql.NVarChar(100), app.contact_name || null)
         .input('access_area', sql.NVarChar(100), app.access_area || null)
-        .input('scan_site', sql.NVarChar(50), scanSite)
+        .input('scan_site', sql.NVarChar(50), scan_site)
         .input('scanned_at', sql.DateTime2, now)
         .query(`
           INSERT INTO visit_pass_scans (pass_id, application_id, direction, device_id, result, scanned_ip, user_agent, visitor_name, visitor_org, contact_name, access_area, scan_site, scanned_at)
