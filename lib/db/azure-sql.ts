@@ -349,7 +349,7 @@ export class AzureSqlDB {
     if (uploadedFiles && uploadedFiles.length > 0) {
       console.log('[v0] Processing', uploadedFiles.length, 'uploaded files')
       for (const file of uploadedFiles) {
-        // ������������일명과 키가 유효한 경우에만 저장
+        // �������������일명과 키가 유효한 경우에만 저장
         if (file && file.filename && file.fileKey && file.filename.trim() !== '' && file.fileKey.trim() !== '') {
           console.log('[v0] Saving file attachment:', { 
             filename: file.filename, 
@@ -1540,7 +1540,7 @@ export class AzureSqlDB {
   /** 신청 승인 시 pass_receipt 저장 */
   static async createPassForApplication(applicationId: string, pass_receipt: string): Promise<void> {
     const dbPool = await getPool()
-    // token 생성 (임시 토큰: UUID 대신 랜덤 ���������)
+    // token 생성 (임시 토큰: UUID 대신 랜�� ���������)
     const token = `TOKEN-${Date.now()}-${Math.random().toString(36).substring(2, 10).toUpperCase()}`
     
     // 신청 정보에서 방문 기간 가져오기
@@ -1629,17 +1629,18 @@ export class AzureSqlDB {
     }
 
     // 스캔 기록 저장
-    // 퇴장(EXIT) 시 입장 이력 확인
+    // 퇴장(EXIT) 시 입장 이력 확인 - 최근 스캔이 ENTRY인지 확인
     if (direction === 'EXIT') {
-      const entryCheckResult = await dbPool.request()
+      const lastScanResult = await dbPool.request()
         .input('pass_id', sql.BigInt, passData.pass_id)
         .query(`
-          SELECT TOP 1 scan_id FROM visit_pass_scans
-          WHERE pass_id = @pass_id AND direction = 'ENTRY' AND exit_at IS NULL
+          SELECT TOP 1 direction FROM visit_pass_scans
+          WHERE pass_id = @pass_id
           ORDER BY scanned_at DESC
         `)
       
-      if (entryCheckResult.recordset.length === 0) {
+      // 최근 스캔이 없거나 EXIT면 입장 기록이 없는 것
+      if (lastScanResult.recordset.length === 0 || lastScanResult.recordset[0].direction === 'EXIT') {
         return { 
           result: "DENY", 
           message: "입장 기록이 없습니다", 
@@ -1652,42 +1653,25 @@ export class AzureSqlDB {
     try {
       const now = getKoreaTime()
       
-      if (direction === 'ENTRY') {
-        // 입장: 새 행 INSERT
-        await dbPool.request()
-          .input('pass_id', sql.BigInt, passData.pass_id)
-          .input('application_id', sql.BigInt, passData.application_id)
-          .input('direction', sql.NVarChar(10), direction)
-          .input('device_id', sql.NVarChar(100), deviceId || null)
-          .input('result', sql.NVarChar(20), 'ALLOW')
-          .input('scanned_ip', sql.NVarChar(50), scannedIp || null)
-          .input('user_agent', sql.NVarChar(500), userAgent || null)
-          .input('visitor_name', sql.NVarChar(100), displayName)
-          .input('visitor_org', sql.NVarChar(200), app.visitor_org || null)
-          .input('contact_name', sql.NVarChar(100), app.contact_name || null)
-          .input('access_area', sql.NVarChar(100), app.access_area || null)
-          .input('scan_site', sql.NVarChar(50), scanSite)
-          .input('entry_at', sql.DateTime2, now)
-          .query(`
-            INSERT INTO visit_pass_scans (pass_id, application_id, direction, device_id, result, scanned_ip, user_agent, visitor_name, visitor_org, contact_name, access_area, scan_site, entry_at)
-            VALUES (@pass_id, @application_id, @direction, @device_id, @result, @scanned_ip, @user_agent, @visitor_name, @visitor_org, @contact_name, @access_area, @scan_site, @entry_at)
-          `)
-      } else if (direction === 'EXIT') {
-        // 퇴장: exit_at이 NULL인 최근 ENTRY 행 UPDATE
-        await dbPool.request()
-          .input('pass_id', sql.BigInt, passData.pass_id)
-          .input('exit_at', sql.DateTime2, now)
-          .query(`
-            UPDATE visit_pass_scans
-            SET exit_at = @exit_at
-            WHERE pass_id = @pass_id AND direction = 'ENTRY' AND exit_at IS NULL
-            AND scan_id = (
-              SELECT TOP 1 scan_id FROM visit_pass_scans
-              WHERE pass_id = @pass_id AND direction = 'ENTRY' AND exit_at IS NULL
-              ORDER BY entry_at DESC
-            )
-          `)
-      }
+      // 입장/퇴장 모두 새 행으로 INSERT
+      await dbPool.request()
+        .input('pass_id', sql.BigInt, passData.pass_id)
+        .input('application_id', sql.BigInt, passData.application_id)
+        .input('direction', sql.NVarChar(10), direction)
+        .input('device_id', sql.NVarChar(100), deviceId || null)
+        .input('result', sql.NVarChar(20), 'ALLOW')
+        .input('scanned_ip', sql.NVarChar(50), scannedIp || null)
+        .input('user_agent', sql.NVarChar(500), userAgent || null)
+        .input('visitor_name', sql.NVarChar(100), displayName)
+        .input('visitor_org', sql.NVarChar(200), app.visitor_org || null)
+        .input('contact_name', sql.NVarChar(100), app.contact_name || null)
+        .input('access_area', sql.NVarChar(100), app.access_area || null)
+        .input('scan_site', sql.NVarChar(50), scanSite)
+        .input('scanned_at', sql.DateTime2, now)
+        .query(`
+          INSERT INTO visit_pass_scans (pass_id, application_id, direction, device_id, result, scanned_ip, user_agent, visitor_name, visitor_org, contact_name, access_area, scan_site, scanned_at)
+          VALUES (@pass_id, @application_id, @direction, @device_id, @result, @scanned_ip, @user_agent, @visitor_name, @visitor_org, @contact_name, @access_area, @scan_site, @scanned_at)
+        `)
     } catch (e) {
       console.error('[v0] Failed to record scan:', e)
     }
