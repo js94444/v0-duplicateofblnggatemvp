@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import Link from "next/link"
-import { ArrowLeft, User } from "lucide-react"
+import { ArrowLeft, User, Delete } from "lucide-react"
 import { PublicFooter } from "@/components/public/public-footer"
 
 interface ApprovedItem {
@@ -106,6 +106,41 @@ export default function ScannerPhonePage() {
             className="px-6 py-4 rounded-xl bg-amber-500 text-black text-lg font-black hover:bg-amber-600 disabled:opacity-50 transition-colors"
           >
             {loading ? "..." : "조회"}
+          </button>
+        </div>
+
+        {/* 커스텀 숫자 키패드 */}
+        <div className="grid grid-cols-3 gap-3 mb-6">
+          {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((num) => (
+            <button
+              key={num}
+              type="button"
+              onClick={() => setPhone((prev) => prev + num)}
+              className="py-5 rounded-xl bg-white/10 text-2xl font-bold text-white hover:bg-white/20 active:bg-amber-500/30 transition-colors"
+            >
+              {num}
+            </button>
+          ))}
+          <button
+            type="button"
+            onClick={() => setPhone("")}
+            className="py-5 rounded-xl bg-red-500/20 text-base font-bold text-red-400 hover:bg-red-500/30 active:bg-red-500/40 transition-colors"
+          >
+            전체삭제
+          </button>
+          <button
+            type="button"
+            onClick={() => setPhone((prev) => prev + "0")}
+            className="py-5 rounded-xl bg-white/10 text-2xl font-bold text-white hover:bg-white/20 active:bg-amber-500/30 transition-colors"
+          >
+            0
+          </button>
+          <button
+            type="button"
+            onClick={() => setPhone((prev) => prev.slice(0, -1))}
+            className="py-5 rounded-xl bg-white/10 text-white hover:bg-white/20 active:bg-amber-500/30 transition-colors flex items-center justify-center"
+          >
+            <Delete size={28} />
           </button>
         </div>
 
