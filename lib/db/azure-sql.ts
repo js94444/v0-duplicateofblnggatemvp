@@ -349,7 +349,7 @@ export class AzureSqlDB {
     if (uploadedFiles && uploadedFiles.length > 0) {
       console.log('[v0] Processing', uploadedFiles.length, 'uploaded files')
       for (const file of uploadedFiles) {
-        // �����������������일명과 키가 유효한 경우에만 저장
+        // ������������������일명과 키가 유효한 경우에만 저장
         if (file && file.filename && file.fileKey && file.filename.trim() !== '' && file.fileKey.trim() !== '') {
           console.log('[v0] Saving file attachment:', { 
             filename: file.filename, 
@@ -1624,14 +1624,6 @@ export class AzureSqlDB {
     // visit_end_date는 DATE 타입이므로 23:59:59까지 유효
     const visitEnd = new Date(app.visit_end_date)
     visitEnd.setHours(23, 59, 59, 999)
-    console.log("[v0] Visit period check:", {
-      receipt,
-      direction,
-      now: now.toISOString(),
-      visit_end_date: app.visit_end_date,
-      visitEnd: visitEnd.toISOString(),
-      isExpired: now > visitEnd
-    })
     if (app.visit_end_date && now > visitEnd) {
       return { result: "DENY", message: "방문 기간이 만료되었습니다", denyReason: "EXPIRED" }
     }
@@ -1640,7 +1632,7 @@ export class AzureSqlDB {
     // 퇴장(EXIT) 시 입장 이력 확인 - 최근 스캔이 ENTRY인지 확인
     if (direction === 'EXIT') {
       const lastScanResult = await dbPool.request()
-        .input('pass_id', sql.BigInt, app.pass_id)
+        .input('pass_id', sql.UniqueIdentifier, app.pass_id)
         .query(`
           SELECT TOP 1 direction FROM visit_pass_scans
           WHERE pass_id = @pass_id
@@ -1663,7 +1655,7 @@ export class AzureSqlDB {
       
       // 입장/퇴장 모두 새 행으로 INSERT
       await dbPool.request()
-        .input('pass_id', sql.BigInt, app.pass_id)
+        .input('pass_id', sql.UniqueIdentifier, app.pass_id)
         .input('application_id', sql.BigInt, app.application_id)
         .input('direction', sql.NVarChar(10), direction)
         .input('device_id', sql.NVarChar(100), device_id || null)
