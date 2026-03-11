@@ -349,7 +349,7 @@ export class AzureSqlDB {
     if (uploadedFiles && uploadedFiles.length > 0) {
       console.log('[v0] Processing', uploadedFiles.length, 'uploaded files')
       for (const file of uploadedFiles) {
-        // �������������������일명과 키가 유효한 경우에만 저장
+        // ��������������������일명과 키가 유효한 경우에만 저장
         if (file && file.filename && file.fileKey && file.filename.trim() !== '' && file.fileKey.trim() !== '') {
           console.log('[v0] Saving file attachment:', { 
             filename: file.filename, 
@@ -1540,7 +1540,7 @@ export class AzureSqlDB {
   /** 신청 승인 시 pass_receipt 저장 */
   static async createPassForApplication(applicationId: string, pass_receipt: string): Promise<void> {
     const dbPool = await getPool()
-    // token 생성 (임시 토큰: UUID 대신 ���� ���������)
+    // token 생성 (임�� 토큰: UUID 대신 ���� ���������)
     const token = `TOKEN-${Date.now()}-${Math.random().toString(36).substring(2, 10).toUpperCase()}`
     
     // 신청 정보에서 방문 기간 가져오기
@@ -1652,31 +1652,6 @@ export class AzureSqlDB {
 
     try {
       const now = getKoreaTime()
-      
-      // 중복 스캔 방지 - 같은 pass_id, direction, scan_site로 5초 이내 스캔 시 INSERT 생략
-      const recentScanCheck = await dbPool.request()
-        .input('pass_id', sql.UniqueIdentifier, app.pass_id)
-        .input('direction', sql.NVarChar(10), direction)
-        .input('scan_site', sql.NVarChar(50), scan_site)
-        .query(`
-          SELECT TOP 1 scan_id FROM visit_pass_scans
-          WHERE pass_id = @pass_id AND direction = @direction AND scan_site = @scan_site
-            AND scanned_at > DATEADD(SECOND, -5, GETDATE())
-        `)
-      
-      if (recentScanCheck.recordset.length > 0) {
-        // 최근 5초 이내 동일 스캔이 있으면 INSERT 생략
-        return { 
-          result: "ALLOW", 
-          message: `${direction === 'ENTRY' ? '입장' : '퇴장'} 처리되었습니다`,
-          visitor_name: displayName,
-          visitor_org: app.visitor_org,
-          access_area: app.access_area,
-          visit_start_date: app.visit_start_date,
-          visit_end_date: app.visit_end_date,
-          is_companion: !!app.companion_id,
-        }
-      }
       
       // 입장/퇴장 모두 새 행으로 INSERT
       await dbPool.request()

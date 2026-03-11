@@ -35,9 +35,11 @@ export default function VerifyReceiptPage() {
   const isCalledRef = useRef(false)
 
   useEffect(() => {
+    let isCancelled = false
+    
     async function verifyAndRecord() {
       // React StrictMode 중복 호출 방지
-      if (isCalledRef.current) return
+      if (isCalledRef.current || isCancelled) return
       isCalledRef.current = true
       try {
         setLoading(true)
@@ -78,6 +80,10 @@ export default function VerifyReceiptPage() {
 
     if (receipt) {
       verifyAndRecord()
+    }
+    
+    return () => {
+      isCancelled = true
     }
   }, [receipt, direction, gate])
 
