@@ -322,6 +322,18 @@ export default function AdminQrScanPage() {
 
             {rowsByPerson.length === 0 && !loading ? (
               <div className="text-center py-12 text-white/40">표시할 출입 이력이 없습니다.</div>
+            ) : loading ? (
+              <div className="space-y-3">
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <div key={i} className="flex gap-3 border border-white/5 rounded-lg p-3 bg-white/2">
+                    <div className="w-24 h-8 bg-white/10 rounded animate-pulse" />
+                    <div className="w-32 h-8 bg-white/10 rounded animate-pulse" />
+                    <div className="flex-1 h-8 bg-white/10 rounded animate-pulse" />
+                    <div className="w-24 h-8 bg-white/10 rounded animate-pulse" />
+                    <div className="w-20 h-8 bg-white/10 rounded animate-pulse" />
+                  </div>
+                ))}
+              </div>
             ) : (
               <div className="overflow-x-auto rounded-2xl border border-white/10">
                 <Table>
@@ -450,6 +462,18 @@ export default function AdminQrScanPage() {
 
             {rowsByPerson.length === 0 && !loading ? (
               <div className="text-center py-12 text-white/40">표시할 출입 이력이 없습니다.</div>
+            ) : loading ? (
+              <div className="space-y-3">
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <div key={i} className="flex gap-3 border border-white/5 rounded-lg p-3 bg-white/2">
+                    <div className="w-24 h-8 bg-white/10 rounded animate-pulse" />
+                    <div className="w-32 h-8 bg-white/10 rounded animate-pulse" />
+                    <div className="flex-1 h-8 bg-white/10 rounded animate-pulse" />
+                    <div className="w-24 h-8 bg-white/10 rounded animate-pulse" />
+                    <div className="w-20 h-8 bg-white/10 rounded animate-pulse" />
+                  </div>
+                ))}
+              </div>
             ) : (
               <div className="overflow-x-auto rounded-2xl border border-white/10">
                 <Table>
