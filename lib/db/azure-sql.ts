@@ -349,7 +349,7 @@ export class AzureSqlDB {
     if (uploadedFiles && uploadedFiles.length > 0) {
       console.log('[v0] Processing', uploadedFiles.length, 'uploaded files')
       for (const file of uploadedFiles) {
-        // �����일명과 키가 유효한 경우에만 저장
+        // ���������일명과 키가 유효한 경우에만 저장
         if (file && file.filename && file.fileKey && file.filename.trim() !== '' && file.fileKey.trim() !== '') {
           console.log('[v0] Saving file attachment:', { 
             filename: file.filename, 
@@ -658,7 +658,7 @@ export class AzureSqlDB {
     const row = result.recordset[0]
     
     // Fetch all related data in parallel
-    const [companionsResult, devicesResult, companionDevicesResult, filesResult, companionAttachmentsResult] = await Promise.all([
+    const [companionsResult, devicesResult, companionDevicesResult, filesResult, companionAttachmentsResult, companionPassesResult] = await Promise.all([
       dbPool.request()
         .input('application_id', sql.BigInt, row.application_id)
         .query('SELECT * FROM visit_companions WHERE application_id = @application_id'),
@@ -683,6 +683,14 @@ export class AzureSqlDB {
           FROM visit_companion_attachments vca
           JOIN visit_companions vc ON vca.companion_id = vc.companion_id
           WHERE vc.application_id = @application_id
+        `).catch(() => ({ recordset: [] })),
+      // Fetch companion passes (pass_receipt) from visit_passes
+      dbPool.request()
+        .input('application_id', sql.BigInt, row.application_id)
+        .query(`
+          SELECT companion_id, pass_receipt
+          FROM visit_passes
+          WHERE application_id = @application_id AND companion_id IS NOT NULL AND status = 'ACTIVE'
         `).catch(() => ({ recordset: [] })),
     ])
 
@@ -727,7 +735,13 @@ export class AzureSqlDB {
           size: a.file_size ? Number(a.file_size) : 0,
           attachment_type: a.attachment_type,
         }))
-      return { ...c, electronicDevices: devices, portCertFiles: companionPortCerts }
+      // Get companion's pass_receipt from visit_passes
+      const companionPass = (companionPassesResult.recordset || []).find((p: any) => {
+        const actualId = Array.isArray(p.companion_id) ? p.companion_id[0] : p.companion_id
+        return String(actualId) === String(c.companion_id)
+      })
+      const receipt = companionPass?.pass_receipt || null
+      return { ...c, electronicDevices: devices, portCertFiles: companionPortCerts, receipt }
     })
     
     const allFiles = filesResult.recordset.map((f: any) => ({
@@ -1376,7 +1390,7 @@ export class AzureSqlDB {
       `)
   }
 
-  /** 특정 역할이 특정 페이지에 접근 가���한지 확인 */
+  /** 특정 역할이 특정 페이지에 접근 가���한��� 확인 */
   static async canRoleAccessPage(role: string, pagePath: string): Promise<boolean> {
     if (role === 'super_admin') return true
     const dbPool = await getPool()
@@ -1798,7 +1812,7 @@ export class AzureSqlDB {
       `)
   }
 
-  /** 여러 application_id에 대한 항만이수증 파일 조회 (신청자 + 동행인 모두) */
+  /** 여러 application_id에 대한 항만이수증 파일 조회 (신청자 본인 항만이수증만) */
   static async getPortCertFilesByApplicationIds(applicationIds: number[]): Promise<Array<{ application_id: number; file_url: string; file_name: string }>> {
     if (applicationIds.length === 0) return []
     const dbPool = await getPool()
@@ -1809,14 +1823,10 @@ export class AzureSqlDB {
       request.input(`id${i}`, sql.Int, id)
     })
     
-    // 신청자 본인 항만이수증 (visit_application_files) + 동행인 항만이수증 (visit_companion_attachments)
+    // 신청자 본인의 항만이수증만 조회 (동행인 제외)
     const result = await request.query(`
       SELECT application_id, blob_url AS file_url, file_name
-      FROM visit_application_files
-      WHERE application_id IN (${placeholders}) AND attachment_type = 'PORT_CERT'
-      UNION ALL
-      SELECT application_id, blob_url AS file_url, file_name
-      FROM visit_companion_attachments
+      FROM visit_attachments
       WHERE application_id IN (${placeholders}) AND attachment_type = 'PORT_CERT'
     `)
     return result.recordset

@@ -57,7 +57,7 @@ export default function AdminQrScanPage() {
   const [selectedApplicationId, setSelectedApplicationId] = useState<number | null>(null)
   const [selectedApplication, setSelectedApplication] = useState<Application | null>(null)
   const [modalLoading, setModalLoading] = useState(false)
-  const [portCertModal, setPortCertModal] = useState<{ open: boolean; files: Array<{ file_url: string; file_name: string }>; visitorName: string }>({ open: false, files: [], visitorName: "" })
+  const [portCertModal, setPortCertModal] = useState<{ open: boolean; files: Array<{ file_url: string; file_name: string }>; visitorName: string; birthDate: string }>({ open: false, files: [], visitorName: "", birthDate: "" })
 
   // 슈퍼어드민만 접근 가능
   useEffect(() => {
@@ -95,6 +95,8 @@ export default function AdminQrScanPage() {
       }
       const json = await res.json()
       const next: ScanRow[] = json.data || []
+      console.log("[v0] QR scans loaded:", next.length, "records")
+      console.log("[v0] Sample record with portCertFiles:", next[0])
       setScans(next)
       setStats(json.stats || null)
     } catch (e) {
@@ -156,6 +158,7 @@ export default function AdminQrScanPage() {
     for (const row of scans) {
       const key = row.pass_id || row.scan_id || `scan-${Math.random()}`
       if (!byPass.has(key)) {
+        console.log("[v0] Creating byPass entry:", { visitor_name: row.visitor_name, portCertFiles: row.portCertFiles?.length || 0 })
         byPass.set(key, {
           pass_id: row.pass_id,
           application_id: row.application_id,
@@ -303,7 +306,7 @@ export default function AdminQrScanPage() {
           </Card>
           <Card className="bg-white/5 border-white/10 text-white">
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm text-white/60">전체 스캔</CardTitle>
+              <CardTitle className="text-sm text-white/60">��체 스캔</CardTitle>
             </CardHeader>
             <CardContent>
               <p className="text-3xl font-black">
@@ -362,7 +365,8 @@ export default function AdminQrScanPage() {
                         className={`text-sm ${row.portCertFiles?.length ? 'text-blue-400 cursor-pointer hover:underline' : 'text-white/80'}`}
                         onClick={() => {
                           if (row.portCertFiles?.length) {
-                            setPortCertModal({ open: true, files: row.portCertFiles, visitorName: row.visitor_name || "" })
+                            const bd = row.visitor_birth_date ? new Date(row.visitor_birth_date).toLocaleDateString("ko-KR") : ""
+                            setPortCertModal({ open: true, files: row.portCertFiles, visitorName: row.visitor_name || "", birthDate: bd })
                           }
                         }}
                       >
@@ -489,7 +493,8 @@ export default function AdminQrScanPage() {
                             className={`text-sm ${row.portCertFiles?.length ? 'text-blue-400 cursor-pointer hover:underline' : 'text-white/80'}`}
                             onClick={() => {
                               if (row.portCertFiles?.length) {
-                                setPortCertModal({ open: true, files: row.portCertFiles, visitorName: row.visitor_name || "" })
+                                const bd = row.visitor_birth_date ? new Date(row.visitor_birth_date).toLocaleDateString("ko-KR") : ""
+                                setPortCertModal({ open: true, files: row.portCertFiles, visitorName: row.visitor_name || "", birthDate: bd })
                               }
                             }}
                           >
@@ -569,11 +574,13 @@ export default function AdminQrScanPage() {
           onClick={() => setPortCertModal({ open: false, files: [], visitorName: "" })}
         >
           <div 
-            className="bg-zinc-900 border border-white/10 rounded-2xl p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto"
+            className="bg-zinc-900 border border-white/10 rounded-2xl p-6 max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-bold text-white">{portCertModal.visitorName} - 항만이수증</h3>
+              <h3 className="text-lg font-bold text-white">
+                {portCertModal.visitorName}{portCertModal.birthDate ? ` - ${portCertModal.birthDate}` : ""} - 항만이수증
+              </h3>
               <button 
                 onClick={() => setPortCertModal({ open: false, files: [], visitorName: "" })}
                 className="text-white/60 hover:text-white text-2xl"
@@ -581,16 +588,37 @@ export default function AdminQrScanPage() {
                 &times;
               </button>
             </div>
-            <div className="grid grid-cols-1 gap-4">
-              {portCertModal.files.map((file, idx) => (
-                <div key={idx} className="border border-white/10 rounded-lg overflow-hidden">
-                  <img 
-                    src={file.file_url} 
-                    alt={file.file_name} 
-                    className="w-full h-auto object-contain"
-                  />
-                </div>
-              ))}
+            <div className="grid grid-cols-1 gap-6">
+              {portCertModal.files.map((file, idx) => {
+                // blob_url에서 파일명 추출하여 /api/files/ 경로로 변환
+                const blobName = file.file_url.includes("/attachments/") 
+                  ? file.file_url.split("/attachments/")[1]?.split("?")[0] 
+                  : file.file_name
+                const imageUrl = `/api/files/${encodeURIComponent(blobName || file.file_name)}`
+                
+                return (
+                  <div 
+                    key={idx} 
+                    className="border border-white/20 rounded-lg overflow-hidden bg-black/40 p-2"
+                  >
+                    <img 
+                      src={imageUrl} 
+                      alt={file.file_name} 
+                      className="w-full h-auto object-contain max-h-[600px] rounded"
+                      onError={(e) => {
+                        e.currentTarget.style.display = "none"
+                        const fallback = document.createElement("div")
+                        fallback.className = "text-white/60 p-4 text-center"
+                        fallback.innerHTML = `이미지를 불러올 수 없습니다.<br/><small>${file.file_name}</small>`
+                        e.currentTarget.parentElement?.appendChild(fallback)
+                      }}
+                    />
+                    <div className="text-white/50 text-xs p-2 break-words">
+                      {file.file_name}
+                    </div>
+                  </div>
+                )
+              })}
             </div>
           </div>
         </div>

@@ -340,7 +340,73 @@ export default function StatusDetailPage() {
               </div>
             </section>
 
-            {application.status === "REJECTED" && application.rejection_reason && (
+            {/* QR Code Section - Show if Approved */}
+            {application.status?.toUpperCase() === "APPROVED" && (
+              <section className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-[40px] p-10 shadow-2xl">
+                <div className="flex items-center gap-3 mb-8">
+                  <div className="w-1.5 h-8 bg-emerald-500 rounded-full shadow-[0_0_10px_rgba(16,185,129,0.5)]" />
+                  <div>
+                    <h3 className="text-2xl font-black text-white">출입 QR 코드</h3>
+                    <p className="text-[10px] font-bold tracking-[0.2em] uppercase text-white/30">Access QR Codes</p>
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-1 gap-8">
+                  {/* 신청인 QR 코드 */}
+                  <div className="flex flex-col items-center bg-black/30 rounded-3xl p-8 border border-emerald-500/20">
+                    <p className="text-sm font-bold text-emerald-500 mb-6 uppercase tracking-widest">신청인 (Applicant)</p>
+                    <div className="text-center space-y-4">
+                      <p className="text-xs text-white/60">신청 번호</p>
+                      <a 
+                        href={`/verify/${application.receipt}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-block text-base font-bold text-amber-400 hover:text-amber-300 underline break-all"
+                      >
+                        {application.receipt}
+                      </a>
+                      <p className="text-xs text-white/40">클릭하여 QR 코드 확인</p>
+                    </div>
+                  </div>
+
+                  {/* 동행인 QR 코드 */}
+                  {(() => {
+                    const app = application as any
+                    const companions = app.companions || []
+                    return companions.length > 0 ? (
+                      <div className="space-y-6">
+                        <p className="text-sm font-bold text-amber-500 uppercase tracking-widest">동행인 ({companions.length}명)</p>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          {companions.map((companion: any, idx: number) => (
+                            <div key={idx} className="flex flex-col items-center bg-black/30 rounded-3xl p-8 border border-amber-500/20">
+                              <p className="text-sm font-bold text-amber-500 mb-6">{companion.name}</p>
+                              <div className="text-center space-y-4 w-full">
+                                <p className="text-xs text-white/60">신청 번호</p>
+                                {companion.receipt ? (
+                                  <a 
+                                    href={`/verify/${companion.receipt}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="inline-block text-base font-bold text-amber-400 hover:text-amber-300 underline break-all w-full"
+                                  >
+                                    {companion.receipt}
+                                  </a>
+                                ) : (
+                                  <p className="text-xs text-white/40">QR 코드 준비 중...</p>
+                                )}
+                                <p className="text-xs text-white/40">클릭하여 QR 코드 확인</p>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ) : null
+                  })()}
+                </div>
+              </section>
+            )}
+
+            {application.status?.toUpperCase() === "REJECTED" && application.rejection_reason && (
               <section className="bg-red-500/5 backdrop-blur-xl border border-red-500/20 rounded-[40px] p-10 shadow-2xl">
                 <div className="flex items-center gap-3 mb-6">
                   <div className="w-10 h-10 rounded-xl bg-red-500/10 flex items-center justify-center text-red-500">
