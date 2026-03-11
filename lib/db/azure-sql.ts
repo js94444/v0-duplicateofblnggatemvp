@@ -349,7 +349,7 @@ export class AzureSqlDB {
     if (uploadedFiles && uploadedFiles.length > 0) {
       console.log('[v0] Processing', uploadedFiles.length, 'uploaded files')
       for (const file of uploadedFiles) {
-        // ��������������일명과 키가 유효한 경우에만 저장
+        // ���������������일명과 키가 유효한 경우에만 저장
         if (file && file.filename && file.fileKey && file.filename.trim() !== '' && file.fileKey.trim() !== '') {
           console.log('[v0] Saving file attachment:', { 
             filename: file.filename, 
@@ -1625,7 +1625,7 @@ export class AzureSqlDB {
     const visitEnd = new Date(app.visit_end_date)
     visitEnd.setHours(23, 59, 59, 999)
     console.log("[v0] Visit period check:", {
-      pass_receipt,
+      receipt,
       direction,
       now: now.toISOString(),
       visit_end_date: app.visit_end_date,
