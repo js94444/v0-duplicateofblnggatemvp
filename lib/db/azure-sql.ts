@@ -349,7 +349,7 @@ export class AzureSqlDB {
     if (uploadedFiles && uploadedFiles.length > 0) {
       console.log('[v0] Processing', uploadedFiles.length, 'uploaded files')
       for (const file of uploadedFiles) {
-        // �������������������������������일명과 키가 유효한 경우에만 저장
+        // ��������������������������������일명과 키가 유효한 경우에만 저장
         if (file && file.filename && file.fileKey && file.filename.trim() !== '' && file.fileKey.trim() !== '') {
           console.log('[v0] Saving file attachment:', { 
             filename: file.filename, 
@@ -1292,7 +1292,7 @@ export class AzureSqlDB {
       .query(`UPDATE admin_accounts SET last_login_at = @last_login_at WHERE account_id = @account_id`)
   }
 
-  // ─── 신청서 확인 체크 ─────────────���─���─────���──────────────
+  // ─── 신청서 확인 체크 ────────���────���─���─────���──────────────
 
   /** 확인 체크 조회 */
   static async getApplicationCheck(applicationId: number, accountId: number): Promise<{ checked: boolean; checked_at: Date | null; note: string | null } | null> {
@@ -1747,7 +1747,7 @@ export class AzureSqlDB {
       .input('scan_site', sql.NVarChar(50), scanSite)
       .input('limit', sql.Int, limit)
       .query(`
-        ;WITH RankedScans AS (
+        ;WITH EntryScan AS (
           SELECT 
             s.scan_id,
             s.pass_id,
@@ -1761,7 +1761,6 @@ export class AzureSqlDB {
             s.visitor_org,
             s.contact_name,
             s.access_area,
-            s.direction,
             s.scan_site,
             a.contact_mobile,
             a.visitor_birth_date,
@@ -1771,15 +1770,31 @@ export class AzureSqlDB {
             ROW_NUMBER() OVER (
               PARTITION BY s.pass_id, s.scan_site 
               ORDER BY s.scanned_at
-            ) as entry_rn
+            ) as rn
           FROM visit_pass_scans s
           LEFT JOIN visit_applications a ON s.application_id = a.application_id
-          WHERE s.scan_site = @scan_site
+          WHERE s.scan_site = @scan_site AND s.direction = 'ENTRY'
+        ),
+        ExitScan AS (
+          SELECT 
+            s.scan_id,
+            s.pass_id,
+            s.scanned_at,
+            s.device_id,
+            s.result,
+            s.deny_reason,
+            s.scanned_ip,
+            s.scan_site,
+            ROW_NUMBER() OVER (
+              PARTITION BY s.pass_id, s.scan_site 
+              ORDER BY s.scanned_at
+            ) as rn
+          FROM visit_pass_scans s
+          WHERE s.scan_site = @scan_site AND s.direction = 'EXIT'
         )
         SELECT TOP (@limit)
           e.scan_id,
           e.pass_id,
-          e.direction as entry_direction,
           e.scanned_at as entry_at,
           e.device_id as entry_device_id,
           e.scanned_ip as entry_scanned_ip,
@@ -1797,20 +1812,17 @@ export class AzureSqlDB {
           e.vehicle_model,
           e.spark_arrestor,
           x.scan_id as exit_scan_id,
-          x.direction as exit_direction,
           x.scanned_at as exit_at,
           x.device_id as exit_device_id,
           x.scanned_ip as exit_scanned_ip,
           x.result as exit_result,
           x.deny_reason as exit_deny_reason,
           COALESCE(x.scanned_at, e.scanned_at) as last_event_at
-        FROM RankedScans e
-        LEFT JOIN RankedScans x 
+        FROM EntryScan e
+        LEFT JOIN ExitScan x 
           ON e.pass_id = x.pass_id 
           AND e.scan_site = x.scan_site 
-          AND e.entry_rn = x.entry_rn 
-          AND x.direction = 'EXIT'
-        WHERE e.direction = 'ENTRY'
+          AND e.rn = x.rn
         ORDER BY last_event_at DESC
       `)
     return result.recordset
