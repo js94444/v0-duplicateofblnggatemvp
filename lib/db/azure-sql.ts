@@ -349,7 +349,7 @@ export class AzureSqlDB {
     if (uploadedFiles && uploadedFiles.length > 0) {
       console.log('[v0] Processing', uploadedFiles.length, 'uploaded files')
       for (const file of uploadedFiles) {
-        // ����������������������������������일명과 키가 유효한 경우에만 저장
+        // �����������������������������������일명과 키가 유효한 경우에만 저장
         if (file && file.filename && file.fileKey && file.filename.trim() !== '' && file.fileKey.trim() !== '') {
           console.log('[v0] Saving file attachment:', { 
             filename: file.filename, 
@@ -1775,7 +1775,7 @@ export class AzureSqlDB {
         EntryScanRanked AS (
           SELECT *,
             ROW_NUMBER() OVER (
-              PARTITION BY pass_id, scan_site 
+              PARTITION BY pass_id, scan_site, CAST(scanned_at AS DATE)
               ORDER BY scanned_at
             ) as entry_rn
           FROM AllowedScans
@@ -1784,7 +1784,7 @@ export class AzureSqlDB {
         ExitScanRanked AS (
           SELECT *,
             ROW_NUMBER() OVER (
-              PARTITION BY pass_id, scan_site 
+              PARTITION BY pass_id, scan_site, CAST(scanned_at AS DATE)
               ORDER BY scanned_at
             ) as exit_rn
           FROM AllowedScans
