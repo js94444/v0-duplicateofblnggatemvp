@@ -349,7 +349,7 @@ export class AzureSqlDB {
     if (uploadedFiles && uploadedFiles.length > 0) {
       console.log('[v0] Processing', uploadedFiles.length, 'uploaded files')
       for (const file of uploadedFiles) {
-        // ���������������������������������일명과 키가 유효한 경우에만 저장
+        // �����������������������������������일명과 키가 유효한 경우에만 저장
         if (file && file.filename && file.fileKey && file.filename.trim() !== '' && file.fileKey.trim() !== '') {
           console.log('[v0] Saving file attachment:', { 
             filename: file.filename, 
@@ -1344,7 +1344,7 @@ export class AzureSqlDB {
       `)
   }
 
-  // ─── 역할별 페이지 권한 ────────────────────────────────────
+  // ─── 역할별 페이�� 권한 ────────────────────────────────────
 
   /** 특정 역할의 권한 목록 조회 */
   static async getRolePermissions(role: string): Promise<any[]> {
@@ -1747,7 +1747,7 @@ export class AzureSqlDB {
       .input('scan_site', sql.NVarChar(50), scanSite)
       .input('limit', sql.Int, limit)
       .query(`
-        ;WITH EntryScan AS (
+        ;WITH AllowedScans AS (
           SELECT 
             s.scan_id,
             s.pass_id,
@@ -1762,35 +1762,33 @@ export class AzureSqlDB {
             s.contact_name,
             s.access_area,
             s.scan_site,
+            s.direction,
             a.contact_mobile,
             a.visitor_birth_date,
             a.vehicle_number,
             a.vehicle_model,
-            a.spark_arrestor,
-            ROW_NUMBER() OVER (
-              PARTITION BY s.pass_id, s.scan_site 
-              ORDER BY s.scanned_at
-            ) as rn
+            a.spark_arrestor
           FROM visit_pass_scans s
           LEFT JOIN visit_applications a ON s.application_id = a.application_id
-          WHERE s.scan_site = @scan_site AND s.direction = 'ENTRY' AND s.result = 'ALLOW'
+          WHERE s.scan_site = @scan_site AND s.result = 'ALLOW'
         ),
-        ExitScan AS (
-          SELECT 
-            s.scan_id,
-            s.pass_id,
-            s.scanned_at,
-            s.device_id,
-            s.result,
-            s.deny_reason,
-            s.scanned_ip,
-            s.scan_site,
+        EntryScanRanked AS (
+          SELECT *,
             ROW_NUMBER() OVER (
-              PARTITION BY s.pass_id, s.scan_site 
-              ORDER BY s.scanned_at
-            ) as rn
-          FROM visit_pass_scans s
-          WHERE s.scan_site = @scan_site AND s.direction = 'EXIT' AND s.result = 'ALLOW'
+              PARTITION BY pass_id, scan_site, CAST(scanned_at AS DATE)
+              ORDER BY scanned_at
+            ) as entry_rn
+          FROM AllowedScans
+          WHERE direction = 'ENTRY'
+        ),
+        ExitScanRanked AS (
+          SELECT *,
+            ROW_NUMBER() OVER (
+              PARTITION BY pass_id, scan_site, CAST(scanned_at AS DATE)
+              ORDER BY scanned_at
+            ) as exit_rn
+          FROM AllowedScans
+          WHERE direction = 'EXIT'
         )
         SELECT TOP (@limit)
           e.scan_id,
@@ -1818,11 +1816,11 @@ export class AzureSqlDB {
           x.result as exit_result,
           x.deny_reason as exit_deny_reason,
           COALESCE(x.scanned_at, e.scanned_at) as last_event_at
-        FROM EntryScan e
-        LEFT JOIN ExitScan x 
+        FROM EntryScanRanked e
+        LEFT JOIN ExitScanRanked x 
           ON e.pass_id = x.pass_id 
           AND e.scan_site = x.scan_site 
-          AND e.rn = x.rn
+          AND e.entry_rn = x.exit_rn
         ORDER BY last_event_at DESC
       `)
     return result.recordset
