@@ -358,7 +358,7 @@ export default function StatusDetailPage() {
                     <div className="text-center space-y-4">
                       <p className="text-xs text-white/60">신청 번호</p>
                       <a 
-                        href={`/verify/${application.receipt}`}
+                        href={`/qr/${application.receipt}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="inline-block text-base font-bold text-amber-400 hover:text-amber-300 underline break-all"
@@ -384,7 +384,7 @@ export default function StatusDetailPage() {
                                 <p className="text-xs text-white/60">신청 번호</p>
                                 {companion.receipt ? (
                                   <a 
-                                    href={`/verify/${companion.receipt}`}
+                                    href={`/qr/${companion.receipt}`}
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     className="inline-block text-base font-bold text-amber-400 hover:text-amber-300 underline break-all w-full"
