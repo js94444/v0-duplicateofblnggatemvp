@@ -60,14 +60,6 @@ export async function GET(
     const visitEnd = new Date(application.visit_end_date)
     visitEnd.setHours(23, 59, 59, 999) // 종료일 끝까지 유효
 
-    if (now < visitStart) {
-      return NextResponse.json({
-        result: "DENY",
-        message: "방문 기간이 아직 시작되지 않았습니다.",
-        errorDetail: `방문 시작일: ${visitStart.toLocaleDateString("ko-KR")}`,
-      })
-    }
-
     if (now > visitEnd) {
       return NextResponse.json({
         result: "DENY",

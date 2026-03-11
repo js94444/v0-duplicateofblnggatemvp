@@ -349,7 +349,7 @@ export class AzureSqlDB {
     if (uploadedFiles && uploadedFiles.length > 0) {
       console.log('[v0] Processing', uploadedFiles.length, 'uploaded files')
       for (const file of uploadedFiles) {
-        // ����������일명과 키가 유효한 경우에만 저장
+        // �������������������일명과 키가 유효한 경우에만 저장
         if (file && file.filename && file.fileKey && file.filename.trim() !== '' && file.fileKey.trim() !== '') {
           console.log('[v0] Saving file attachment:', { 
             filename: file.filename, 
@@ -1292,7 +1292,7 @@ export class AzureSqlDB {
       .query(`UPDATE admin_accounts SET last_login_at = @last_login_at WHERE account_id = @account_id`)
   }
 
-  // ─── 신청서 확인 체크 ────────────────────────────────────
+  // ─── 신청서 확인 체크 ─────────────────────���──────────────
 
   /** 확인 체크 조회 */
   static async getApplicationCheck(applicationId: number, accountId: number): Promise<{ checked: boolean; checked_at: Date | null; note: string | null } | null> {
@@ -1540,7 +1540,7 @@ export class AzureSqlDB {
   /** 신청 승인 시 pass_receipt 저장 */
   static async createPassForApplication(applicationId: string, pass_receipt: string): Promise<void> {
     const dbPool = await getPool()
-    // token 생성 (임시 토큰: UUID 대신 랜덤 스트���)
+    // token 생성 (임시 토큰: UUID 대신 ���� ���������)
     const token = `TOKEN-${Date.now()}-${Math.random().toString(36).substring(2, 10).toUpperCase()}`
     
     // 신청 정보에서 방문 기간 가져오기
@@ -1620,24 +1620,77 @@ export class AzureSqlDB {
     if (app.visit_start_date && now < new Date(app.visit_start_date)) {
       return { result: "DENY", message: "방문 예정 시간이 아닙니다", denyReason: "NOT_YET" }
     }
-    if (app.visit_end_date && now > new Date(app.visit_end_date)) {
+    
+    // visit_end_date는 DATE 타입이므로 23:59:59까지 유효
+    const visitEnd = new Date(app.visit_end_date)
+    visitEnd.setHours(23, 59, 59, 999)
+    if (app.visit_end_date && now > visitEnd) {
       return { result: "DENY", message: "방문 기간이 만료되었습니다", denyReason: "EXPIRED" }
     }
 
     // 스캔 기록 저장
+    // 퇴장(EXIT) 시 입장 이력 확인 - 최근 스캔이 ENTRY인지 확인
+    if (direction === 'EXIT') {
+      const lastScanResult = await dbPool.request()
+        .input('pass_id', sql.UniqueIdentifier, app.pass_id)
+        .query(`
+          SELECT TOP 1 direction FROM visit_pass_scans
+          WHERE pass_id = @pass_id
+          ORDER BY scanned_at DESC
+        `)
+      
+      // 최근 스캔이 없거나 EXIT면 입장 기록이 없는 것
+      if (lastScanResult.recordset.length === 0 || lastScanResult.recordset[0].direction === 'EXIT') {
+        return { 
+          result: "DENY", 
+          message: "입장 기록이 없습니다", 
+          denyReason: "NO_ENTRY_RECORD",
+          is_companion: !!app.companion_id
+        }
+      }
+    }
+
     try {
+      const now = getKoreaTime()
+      
+      // 중복 스캔 방지 - 같은 pass_id, direction, scan_site로 5초 이내 스캔 시 INSERT 생략
+      const recentScanCheck = await dbPool.request()
+        .input('pass_id', sql.UniqueIdentifier, app.pass_id)
+        .input('direction', sql.NVarChar(10), direction)
+        .input('scan_site', sql.NVarChar(50), scan_site)
+        .query(`
+          SELECT TOP 1 scan_id FROM visit_pass_scans
+          WHERE pass_id = @pass_id AND direction = @direction AND scan_site = @scan_site
+            AND scanned_at > DATEADD(SECOND, -5, GETDATE())
+        `)
+      
+      if (recentScanCheck.recordset.length > 0) {
+        // 최근 5초 이내 동일 스캔이 있으면 INSERT 생략
+        return { 
+          result: "ALLOW", 
+          message: `${direction === 'ENTRY' ? '입장' : '퇴장'} 처리되었습니다`,
+          visitor_name: displayName,
+          visitor_org: app.visitor_org,
+          access_area: app.access_area,
+          visit_start_date: app.visit_start_date,
+          visit_end_date: app.visit_end_date,
+          is_companion: !!app.companion_id,
+        }
+      }
+      
+      // 입장/퇴장 모두 새 행으로 INSERT
       await dbPool.request()
         .input('pass_id', sql.UniqueIdentifier, app.pass_id)
         .input('application_id', sql.BigInt, app.application_id)
         .input('direction', sql.NVarChar(10), direction)
-        .input('device_id', sql.NVarChar(100), device_id || 'WEB')
-        .input('result', sql.NVarChar(10), 'ALLOW')
-        .input('scanned_ip', sql.NVarChar(50), scanned_ip)
-        .input('user_agent', sql.NVarChar(500), user_agent)
+        .input('device_id', sql.NVarChar(100), device_id || null)
+        .input('result', sql.NVarChar(20), 'ALLOW')
+        .input('scanned_ip', sql.NVarChar(50), scanned_ip || null)
+        .input('user_agent', sql.NVarChar(500), user_agent || null)
         .input('visitor_name', sql.NVarChar(100), displayName)
-        .input('visitor_org', sql.NVarChar(100), app.visitor_org)
-        .input('contact_name', sql.NVarChar(100), app.contact_name)
-        .input('access_area', sql.NVarChar(100), app.access_area)
+        .input('visitor_org', sql.NVarChar(200), app.visitor_org || null)
+        .input('contact_name', sql.NVarChar(100), app.contact_name || null)
+        .input('access_area', sql.NVarChar(100), app.access_area || null)
         .input('scan_site', sql.NVarChar(50), scan_site)
         .input('scanned_at', sql.DateTime2, now)
         .query(`

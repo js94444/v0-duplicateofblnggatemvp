@@ -95,8 +95,6 @@ export default function AdminQrScanPage() {
       }
       const json = await res.json()
       const next: ScanRow[] = json.data || []
-      console.log("[v0] QR scans loaded:", next.length, "records")
-      console.log("[v0] Sample record with portCertFiles:", next[0])
       setScans(next)
       setStats(json.stats || null)
     } catch (e) {
@@ -133,9 +131,17 @@ export default function AdminQrScanPage() {
 
   const TEN_MINUTES_MS = 10 * 60 * 1000
 
-  // pass_id별로 묶어 1인 1행 (입장/퇴장 열 분리). 신청자+동행자 각각 행으로 표시
+  // pass_id별 입장/퇴장 이력을 쌍으로 매칭 (입장 건별 관리)
   const rowsByPerson = (() => {
     const byPass = new Map<
+      string,
+      Array<{
+        entryAt: string
+        exitAt: string | null
+        lastEventAt: number
+      }>
+    >()
+    const personInfo = new Map<
       string,
       {
         pass_id: string
@@ -150,16 +156,19 @@ export default function AdminQrScanPage() {
         visitor_birth_date: string | null
         spark_arrestor: string | null
         portCertFiles: Array<{ file_url: string; file_name: string }>
-        lastEntryAt: string | null
-        lastExitAt: string | null
-        lastEventAt: number
       }
     >()
+
+    // 먼저 ENTRY와 EXIT를 분리해서 수집
+    const entries: Map<string, typeof scans> = new Map()
+    const exits: Map<string, typeof scans> = new Map()
+
     for (const row of scans) {
       const key = row.pass_id || row.scan_id || `scan-${Math.random()}`
-      if (!byPass.has(key)) {
-        console.log("[v0] Creating byPass entry:", { visitor_name: row.visitor_name, portCertFiles: row.portCertFiles?.length || 0 })
-        byPass.set(key, {
+      
+      // 방문자 정보 저장 (최초 1회)
+      if (!personInfo.has(key)) {
+        personInfo.set(key, {
           pass_id: row.pass_id,
           application_id: row.application_id,
           visitor_name: row.visitor_name,
@@ -172,24 +181,82 @@ export default function AdminQrScanPage() {
           visitor_birth_date: row.visitor_birth_date,
           spark_arrestor: row.spark_arrestor,
           portCertFiles: row.portCertFiles || [],
-          lastEntryAt: null,
-          lastExitAt: null,
-          lastEventAt: 0,
         })
       }
-      const rec = byPass.get(key)!
+
+      // ENTRY/EXIT 분리
       if (row.result === "ALLOW" && row.direction === "ENTRY" && row.scanned_at) {
-        const t = new Date(row.scanned_at).getTime()
-        if (!rec.lastEntryAt || t > new Date(rec.lastEntryAt).getTime()) rec.lastEntryAt = row.scanned_at
-        if (t > rec.lastEventAt) rec.lastEventAt = t
-      }
-      if (row.result === "ALLOW" && row.direction === "EXIT" && row.scanned_at) {
-        const t = new Date(row.scanned_at).getTime()
-        if (!rec.lastExitAt || t > new Date(rec.lastExitAt).getTime()) rec.lastExitAt = row.scanned_at
-        if (t > rec.lastEventAt) rec.lastEventAt = t
+        if (!entries.has(key)) entries.set(key, [])
+        entries.get(key)!.push(row)
+      } else if (row.result === "ALLOW" && row.direction === "EXIT" && row.scanned_at) {
+        if (!exits.has(key)) exits.set(key, [])
+        exits.get(key)!.push(row)
       }
     }
-    return Array.from(byPass.values()).sort((a, b) => b.lastEventAt - a.lastEventAt)
+
+    // 입장/퇴장 쌍으로 매칭
+    for (const [key, entryRecords] of entries) {
+      const exitRecords = exits.get(key) || []
+      const pairs: Array<{ entryAt: string; exitAt: string | null; lastEventAt: number }> = []
+
+      // 시간순 정렬
+      entryRecords.sort((a, b) => new Date(a.scanned_at!).getTime() - new Date(b.scanned_at!).getTime())
+      exitRecords.sort((a, b) => new Date(a.scanned_at!).getTime() - new Date(b.scanned_at!).getTime())
+
+      // 입장과 퇴장을 순서대로 매칭
+      let exitIndex = 0
+      for (const entry of entryRecords) {
+        const entryTime = new Date(entry.scanned_at!).getTime()
+        let matchedExit: string | null = null
+
+        // 이 입장 이후의 첫 번째 퇴장 찾기
+        while (exitIndex < exitRecords.length) {
+          const exitTime = new Date(exitRecords[exitIndex].scanned_at!).getTime()
+          if (exitTime > entryTime) {
+            matchedExit = exitRecords[exitIndex].scanned_at!
+            exitIndex++
+            break
+          }
+          exitIndex++
+        }
+
+        pairs.push({
+          entryAt: entry.scanned_at!,
+          exitAt: matchedExit,
+          lastEventAt: matchedExit ? new Date(matchedExit).getTime() : entryTime,
+        })
+      }
+
+      byPass.set(key, pairs)
+    }
+
+    // 최종 결과: 방문자 정보와 입장/퇴장 쌍을 합쳐서 반환
+    const result = []
+    for (const [key, pairs] of byPass) {
+      const info = personInfo.get(key)
+      if (!info) continue
+      for (const pair of pairs) {
+        result.push({
+          pass_id: info.pass_id,
+          application_id: info.application_id,
+          visitor_name: info.visitor_name,
+          visitor_org: info.visitor_org,
+          contact_name: info.contact_name,
+          contact_mobile: info.contact_mobile,
+          access_area: info.access_area,
+          vehicle_number: info.vehicle_number,
+          vehicle_model: info.vehicle_model,
+          visitor_birth_date: info.visitor_birth_date,
+          spark_arrestor: info.spark_arrestor,
+          portCertFiles: info.portCertFiles,
+          lastEntryAt: pair.entryAt,
+          lastExitAt: pair.exitAt,
+          lastEventAt: pair.lastEventAt,
+        })
+      }
+    }
+
+    return result.sort((a, b) => b.lastEventAt - a.lastEventAt)
   })()
 
   // 최근 10분 이내 스캔 여부 (입장/퇴장 중 하나라도 10분 이내면 하이라이트)
