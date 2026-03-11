@@ -7,6 +7,8 @@ const CONTAINER_NAME = "attachments"
 
 function getContainerClient() {
   const connectionString = process.env.AZURE_STORAGE_CONNECTION_STRING
+  console.log("[v0] AZURE_STORAGE_CONNECTION_STRING length:", connectionString?.length || 0)
+  console.log("[v0] AZURE_STORAGE_CONNECTION_STRING starts with:", connectionString?.substring(0, 30) || "empty")
   if (!connectionString || connectionString.trim() === "") {
     throw new Error("AZURE_STORAGE_CONNECTION_STRING is not configured or empty")
   }
