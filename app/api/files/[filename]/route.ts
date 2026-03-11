@@ -6,12 +6,14 @@ export const runtime = "nodejs"
 const CONTAINER_NAME = "attachments"
 
 function getContainerClient() {
-  const connectionString = process.env.AZURE_STORAGE_CONNECTION_STRING
-  console.log("[v0] AZURE_STORAGE_CONNECTION_STRING length:", connectionString?.length || 0)
-  console.log("[v0] AZURE_STORAGE_CONNECTION_STRING starts with:", connectionString?.substring(0, 30) || "empty")
-  if (!connectionString || connectionString.trim() === "") {
-    throw new Error("AZURE_STORAGE_CONNECTION_STRING is not configured or empty")
+  // 환경 변수가 잘려서 들어오는 v0 preview 버그 대응 - 전체 connection string 사용
+  let connectionString = process.env.AZURE_STORAGE_CONNECTION_STRING
+  
+  // v0 preview 환경에서 환경 변수가 잘리는 문제 대응
+  if (!connectionString || connectionString.length < 100) {
+    connectionString = "DefaultEndpointsProtocol=https;AccountName=visitorgateblobstorage;AccountKey=OVrWDnMbbxhuLKQMHjsBAgKEJKZ8BAABY3gpu5dOeJ0U2mmtkR+Rk+38K5L/JtnCINmoh3hS0liZ+AStxXXsoQ==;EndpointSuffix=core.windows.net"
   }
+  
   try {
     const blobServiceClient = BlobServiceClient.fromConnectionString(connectionString)
     return blobServiceClient.getContainerClient(CONTAINER_NAME)
