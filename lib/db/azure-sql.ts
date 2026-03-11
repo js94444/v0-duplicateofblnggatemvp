@@ -349,7 +349,7 @@ export class AzureSqlDB {
     if (uploadedFiles && uploadedFiles.length > 0) {
       console.log('[v0] Processing', uploadedFiles.length, 'uploaded files')
       for (const file of uploadedFiles) {
-        // ����������일명과 키가 유효한 경우에만 저장
+        // �����������일명과 키가 유효한 경우에만 저장
         if (file && file.filename && file.fileKey && file.filename.trim() !== '' && file.fileKey.trim() !== '') {
           console.log('[v0] Saving file attachment:', { 
             filename: file.filename, 
@@ -1540,7 +1540,7 @@ export class AzureSqlDB {
   /** 신청 승인 시 pass_receipt 저장 */
   static async createPassForApplication(applicationId: string, pass_receipt: string): Promise<void> {
     const dbPool = await getPool()
-    // token 생성 (임시 토큰: UUID 대신 랜덤 스트���)
+    // token 생성 (임시 토큰: UUID 대신 랜덤 스������)
     const token = `TOKEN-${Date.now()}-${Math.random().toString(36).substring(2, 10).toUpperCase()}`
     
     // 신청 정보에서 방문 기간 가져오기
@@ -1620,7 +1620,11 @@ export class AzureSqlDB {
     if (app.visit_start_date && now < new Date(app.visit_start_date)) {
       return { result: "DENY", message: "방문 예정 시간이 아닙니다", denyReason: "NOT_YET" }
     }
-    if (app.visit_end_date && now > new Date(app.visit_end_date)) {
+    
+    // visit_end_date는 DATE 타입이므로 23:59:59까지 유효
+    const visitEnd = new Date(app.visit_end_date)
+    visitEnd.setHours(23, 59, 59, 999)
+    if (app.visit_end_date && now > visitEnd) {
       return { result: "DENY", message: "방문 기간이 만료되었습니다", denyReason: "EXPIRED" }
     }
 
