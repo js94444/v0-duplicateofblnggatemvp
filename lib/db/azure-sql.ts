@@ -349,7 +349,7 @@ export class AzureSqlDB {
     if (uploadedFiles && uploadedFiles.length > 0) {
       console.log('[v0] Processing', uploadedFiles.length, 'uploaded files')
       for (const file of uploadedFiles) {
-        // ��������일명과 키가 유효한 경우에만 저장
+        // ���������일명과 키가 유효한 경우에만 저장
         if (file && file.filename && file.fileKey && file.filename.trim() !== '' && file.fileKey.trim() !== '') {
           console.log('[v0] Saving file attachment:', { 
             filename: file.filename, 
@@ -658,7 +658,7 @@ export class AzureSqlDB {
     const row = result.recordset[0]
     
     // Fetch all related data in parallel
-    const [companionsResult, devicesResult, companionDevicesResult, filesResult, companionAttachmentsResult] = await Promise.all([
+    const [companionsResult, devicesResult, companionDevicesResult, filesResult, companionAttachmentsResult, companionPassesResult] = await Promise.all([
       dbPool.request()
         .input('application_id', sql.BigInt, row.application_id)
         .query('SELECT * FROM visit_companions WHERE application_id = @application_id'),
@@ -683,6 +683,14 @@ export class AzureSqlDB {
           FROM visit_companion_attachments vca
           JOIN visit_companions vc ON vca.companion_id = vc.companion_id
           WHERE vc.application_id = @application_id
+        `).catch(() => ({ recordset: [] })),
+      // Fetch companion passes (pass_receipt) from visit_passes
+      dbPool.request()
+        .input('application_id', sql.BigInt, row.application_id)
+        .query(`
+          SELECT companion_id, pass_receipt
+          FROM visit_passes
+          WHERE application_id = @application_id AND companion_id IS NOT NULL AND status = 'ACTIVE'
         `).catch(() => ({ recordset: [] })),
     ])
 
@@ -727,7 +735,13 @@ export class AzureSqlDB {
           size: a.file_size ? Number(a.file_size) : 0,
           attachment_type: a.attachment_type,
         }))
-      return { ...c, electronicDevices: devices, portCertFiles: companionPortCerts }
+      // Get companion's pass_receipt from visit_passes
+      const companionPass = (companionPassesResult.recordset || []).find((p: any) => {
+        const actualId = Array.isArray(p.companion_id) ? p.companion_id[0] : p.companion_id
+        return String(actualId) === String(c.companion_id)
+      })
+      const receipt = companionPass?.pass_receipt || null
+      return { ...c, electronicDevices: devices, portCertFiles: companionPortCerts, receipt }
     })
     
     const allFiles = filesResult.recordset.map((f: any) => ({

@@ -405,6 +405,8 @@ export default function StatusDetailPage() {
                 </div>
               </section>
             )}
+
+            {application.status?.toUpperCase() === "REJECTED" && application.rejection_reason && (
               <section className="bg-red-500/5 backdrop-blur-xl border border-red-500/20 rounded-[40px] p-10 shadow-2xl">
                 <div className="flex items-center gap-3 mb-6">
                   <div className="w-10 h-10 rounded-xl bg-red-500/10 flex items-center justify-center text-red-500">
