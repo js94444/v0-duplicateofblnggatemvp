@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { AzureSqlDB } from "@/lib/db/azure-sql"
+import { sendSms } from "@/lib/services/solapi"
+import { getCancelSmsText, getSubmissionSmsText } from "@/lib/messages/sms-templates"
 
 // GET: 신청 데이터 조회 (수정을 위해)
 export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
@@ -81,6 +83,58 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
       status: "pending", // 수정 시 다시 대기중으로 변경
     })
 
+    // 수정 재접수 SMS 발송 (보안담당자 + 담당자)
+    try {
+      const securityPhones = await AzureSqlDB.getSecurityAccountPhones()
+      const contactPhone = body.contact_mobile || body.contact_phone || existingApp.contact_mobile
+
+      // 보안담당자용 메시지 (수정 재접수 표시)
+      const securitySmsMessage = getSubmissionSmsText({
+        receipt: updatedApp.receipt || existingApp.receipt || "N/A",
+        visitor_name: body.visitor_name || existingApp.visitor_name || "",
+        visitor_phone: body.visitor_phone || existingApp.visitor_phone || "",
+        visitor_organization: body.visitor_organization || existingApp.visitor_organization || "",
+        visit_start_date: body.visit_start_date || existingApp.visit_start_date || "",
+        visit_end_date: body.visit_end_date || existingApp.visit_end_date || "",
+        access_area: body.access_area || existingApp.access_area || "",
+        visit_purpose: body.visit_purpose || existingApp.visit_purpose || "",
+        status: "pending",
+        companionsCount: body.companions?.length || 0,
+        statusUrl: "",
+        isChangeResubmission: true, // 수정 재접수 플래그
+      }, 'security')
+
+      // 담당자용 메시지
+      const contactSmsMessage = getSubmissionSmsText({
+        receipt: updatedApp.receipt || existingApp.receipt || "N/A",
+        visitor_name: body.visitor_name || existingApp.visitor_name || "",
+        visitor_phone: body.visitor_phone || existingApp.visitor_phone || "",
+        visitor_organization: body.visitor_organization || existingApp.visitor_organization || "",
+        visit_start_date: body.visit_start_date || existingApp.visit_start_date || "",
+        visit_end_date: body.visit_end_date || existingApp.visit_end_date || "",
+        access_area: body.access_area || existingApp.access_area || "",
+        visit_purpose: body.visit_purpose || existingApp.visit_purpose || "",
+        status: "pending",
+        companionsCount: body.companions?.length || 0,
+        statusUrl: "",
+        isChangeResubmission: true,
+      }, 'contact')
+
+      // 보안담당자들에게 발송
+      await Promise.allSettled(
+        securityPhones.map((phone) => sendSms(phone, securitySmsMessage))
+      )
+
+      // 담당자에게도 발송
+      if (contactPhone) {
+        await sendSms(contactPhone, contactSmsMessage).catch((err) => {
+          console.error("[v0] 수정 재접수 담당자 SMS 발송 실패:", err)
+        })
+      }
+    } catch (smsError) {
+      console.error("[v0] 수정 재접수 SMS 발송 실패 (신청 수정은 정상 처리됨):", smsError)
+    }
+
     return NextResponse.json({
       success: true,
       receipt: updatedApp.receipt,
@@ -131,6 +185,39 @@ export async function DELETE(request: NextRequest, { params }: { params: { id: s
 
     // 상태를 cancelled로 변경
     await AzureSqlDB.updateApplicationStatus(id, "cancelled" as any)
+
+    // 취소 SMS 발송 (보안담당자 + 담당자)
+    try {
+      const securityPhones = await AzureSqlDB.getSecurityAccountPhones()
+      const contactPhone = existingApp.contact_mobile || existingApp.contact_phone
+
+      const cancelSmsMessage = getCancelSmsText({
+        receipt: existingApp.receipt || "N/A",
+        visitor_name: existingApp.visitor_name || "",
+        visitor_phone: existingApp.visitor_phone || "",
+        visitor_organization: existingApp.visitor_organization || "",
+        visit_start_date: existingApp.visit_start_date || "",
+        visit_end_date: existingApp.visit_end_date || "",
+        access_area: existingApp.access_area || "",
+        visit_purpose: existingApp.visit_purpose || "",
+        statusUrl: "",
+        companionsCount: 0,
+      })
+
+      // 보안담당자들에게 발송
+      await Promise.allSettled(
+        securityPhones.map((phone) => sendSms(phone, cancelSmsMessage))
+      )
+
+      // 담당자에게도 발송
+      if (contactPhone) {
+        await sendSms(contactPhone, cancelSmsMessage).catch((err) => {
+          console.error("[v0] 취소 담당자 SMS 발송 실패:", err)
+        })
+      }
+    } catch (smsError) {
+      console.error("[v0] 취소 SMS 발송 실패 (취소 처리는 정상 완료됨):", smsError)
+    }
 
     return NextResponse.json({
       success: true,
