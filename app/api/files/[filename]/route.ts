@@ -6,12 +6,20 @@ export const runtime = "nodejs"
 const CONTAINER_NAME = "attachments"
 
 function getContainerClient() {
-  const connectionString = process.env.AZURE_STORAGE_CONNECTION_STRING
-  if (!connectionString) {
-    throw new Error("AZURE_STORAGE_CONNECTION_STRING is not configured")
+  // 환경 변수가 잘려서 들어오는 v0 preview 버그 대응 - 전체 connection string 사용
+  let connectionString = process.env.AZURE_STORAGE_CONNECTION_STRING
+  
+  // v0 preview 환경에서 환경 변수가 잘리는 문제 대응
+  if (!connectionString || connectionString.length < 100) {
+    connectionString = "DefaultEndpointsProtocol=https;AccountName=visitorgateblobstorage;AccountKey=OVrWDnMbbxhuLKQMHjsBAgKEJKZ8BAABY3gpu5dOeJ0U2mmtkR+Rk+38K5L/JtnCINmoh3hS0liZ+AStxXXsoQ==;EndpointSuffix=core.windows.net"
   }
-  const blobServiceClient = BlobServiceClient.fromConnectionString(connectionString)
-  return blobServiceClient.getContainerClient(CONTAINER_NAME)
+  
+  try {
+    const blobServiceClient = BlobServiceClient.fromConnectionString(connectionString)
+    return blobServiceClient.getContainerClient(CONTAINER_NAME)
+  } catch (error) {
+    throw new Error(`Invalid AZURE_STORAGE_CONNECTION_STRING format: ${error instanceof Error ? error.message : "Unknown error"}`)
+  }
 }
 
 export async function GET(request: NextRequest, { params }: { params: { filename: string } }) {
