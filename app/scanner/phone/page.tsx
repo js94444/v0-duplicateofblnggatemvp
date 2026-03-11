@@ -47,36 +47,36 @@ export default function ScannerPhonePage() {
 
   return (
     <div className="min-h-screen bg-neutral-950 text-white flex flex-col">
-      {/* 헤더: QR 스캔 페이지와 동일한 3단 중앙 정렬 레이아웃 및 폰트 크기 적용 */}
+      {/* 헤더: 좌측 '출입 인증' 버튼에 라운드 및 배경 처리 적용 */}
       <header className="px-6 py-6 border-b border-white/10 grid grid-cols-3 items-center">
         <div className="flex justify-start">
           <Link
             href="/scanner"
-            className="flex items-center gap-2 text-white/70 hover:text-white transition-colors"
+            className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 text-white/70 hover:text-white hover:bg-white/10 hover:border-white/20 transition-all active:scale-95"
           >
-            <ArrowLeft size={24} />
-            <span className="text-lg font-semibold">출입 인증</span>
+            <ArrowLeft size={20} />
+            <span className="text-base font-bold">출입 인증</span>
           </Link>
         </div>
 
         <div className="flex justify-center whitespace-nowrap">
           <span className="text-xl font-black text-amber-400 tracking-tight">
-            {direction === "ENTRY" ? "입장" : "퇴장"} · 휴대전화 번호 조회
+            {direction === "ENTRY" ? "입장" : "퇴장"} · 휴대폰 번호 조회
           </span>
         </div>
 
-        {/* 우측 밸런스를 위한 빈 공간 */}
         <div className="flex justify-end" />
       </header>
 
       <main className="flex-1 p-6 max-w-md mx-auto w-full">
-        {/* 라벨 및 입력부 크기 한 단계 확대 */}
         <label className="block text-base font-bold text-white/70 mb-3">휴대폰 번호</label>
         <div className="flex gap-3 mb-6">
           <input
             type="tel"
+            inputMode="numeric" // 모바일에서 숫자 패드를 강제로 띄움
+            pattern="[0-9]*"    // iOS 등 일부 브라우저 호환성 강화
             value={phone}
-            onChange={(e) => setPhone(e.target.value)}
+            onChange={(e) => setPhone(e.target.value.replace(/[^0-9]/g, ""))} // 숫자만 입력되도록 강제
             placeholder="01012345678"
             className="flex-1 px-4 py-4 rounded-xl bg-white/5 border border-white/20 text-lg text-white placeholder:text-white/30 focus:outline-none focus:border-amber-500/50"
           />
@@ -122,7 +122,6 @@ export default function ScannerPhonePage() {
         )}
       </main>
 
-      {/* 공용 푸터 적용 */}
       <PublicFooter />
     </div>
   )
