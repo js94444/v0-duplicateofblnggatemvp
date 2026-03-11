@@ -7,11 +7,15 @@ const CONTAINER_NAME = "attachments"
 
 function getContainerClient() {
   const connectionString = process.env.AZURE_STORAGE_CONNECTION_STRING
-  if (!connectionString) {
-    throw new Error("AZURE_STORAGE_CONNECTION_STRING is not configured")
+  if (!connectionString || connectionString.trim() === "") {
+    throw new Error("AZURE_STORAGE_CONNECTION_STRING is not configured or empty")
   }
-  const blobServiceClient = BlobServiceClient.fromConnectionString(connectionString)
-  return blobServiceClient.getContainerClient(CONTAINER_NAME)
+  try {
+    const blobServiceClient = BlobServiceClient.fromConnectionString(connectionString)
+    return blobServiceClient.getContainerClient(CONTAINER_NAME)
+  } catch (error) {
+    throw new Error(`Invalid AZURE_STORAGE_CONNECTION_STRING format: ${error instanceof Error ? error.message : "Unknown error"}`)
+  }
 }
 
 export async function GET(request: NextRequest, { params }: { params: { filename: string } }) {
