@@ -349,7 +349,7 @@ export class AzureSqlDB {
     if (uploadedFiles && uploadedFiles.length > 0) {
       console.log('[v0] Processing', uploadedFiles.length, 'uploaded files')
       for (const file of uploadedFiles) {
-        // ���������������������������������������������일명과 키가 유효한 경우에만 저장
+        // ����������������������������������������������일명과 키가 유효한 경우에만 저장
         if (file && file.filename && file.fileKey && file.filename.trim() !== '' && file.fileKey.trim() !== '') {
           console.log('[v0] Saving file attachment:', { 
             filename: file.filename, 
@@ -1771,7 +1771,7 @@ export class AzureSqlDB {
     
     const result = await request.query(`
         ;WITH 
-        -- 1. 승인된 모든 출입증 (신청인 + 동행인)
+        -- 1. 승인된 모든 출입증 (신청인 + 동행인) - visit_applications.visitor_organization 사용
         ApprovedPasses AS (
           SELECT 
             p.pass_id,
@@ -1897,7 +1897,7 @@ export class AzureSqlDB {
         
         UNION ALL
         
-        -- 스캔 기록이 없는 방문자 (아직 입장 전)
+        -- 스캔 기록이 없는 방��자 (아직 입장 전)
         SELECT TOP (@limit)
           ap.pass_id,
           ap.application_id,
