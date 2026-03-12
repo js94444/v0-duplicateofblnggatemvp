@@ -312,7 +312,7 @@ export default function VisitFormPage() {
     const isFormValid = validateForm()
     const areDevicesValid = validateDevices()
 
-    // 동행�� 동의 항목 검증
+    // 동���� 동의 항목 검증
     if (companions.length > 0) {
       const newCompanionErrors: CompanionErrors = {}
       let hasCompanionError = false
@@ -529,23 +529,23 @@ export default function VisitFormPage() {
     })
   }
 
-const addCompanionDevice = (companionIndex: number) => {
-  setCompanions((prev) => {
-    const updated = prev.map((companion, idx) => {
-      if (idx === companionIndex) {
-        return {
-          ...companion,
-          electronic_devices: [
-            ...companion.electronic_devices,
-            { item_name: "", model_name: "", serial_number: "", reason: "" }
-          ]
+  const addCompanionDevice = (companionIndex: number) => {
+    setCompanions((prev) => {
+      const updated = prev.map((companion, idx) => {
+        if (idx === companionIndex) {
+          return {
+            ...companion,
+            electronic_devices: [
+              ...companion.electronic_devices,
+              { item_name: "", model_name: "", serial_number: "", reason: "" }
+            ]
+          }
         }
-      }
-      return companion
+        return companion
+      })
+      return updated
     })
-    return updated
-  })
-}
+  }
 
   const updateCompanionDevice = (
     companionIndex: number,
@@ -1052,7 +1052,7 @@ const addCompanionDevice = (companionIndex: number) => {
                       <div className="p-2 bg-amber-500/10 text-amber-500 rounded-lg group-hover:bg-amber-500 group-hover:text-black transition-all">
                         <Plus size={18} strokeWidth={3} />
                       </div>
-                      <span className="text-base font-bold group-hover:text-amber-500 transition-colors">{t("동행인을 추가하시려면 클릭하세요", "Click to add a companion")}</span>
+                      <span className="text-base font-bold group-hover:text-amber-500 transition-colors">{t("동행인을 추��하시려면 클릭하세요", "Click to add a companion")}</span>
                     </Button>
                   </div>
                 )}
