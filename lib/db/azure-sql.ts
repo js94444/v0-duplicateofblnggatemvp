@@ -349,7 +349,7 @@ export class AzureSqlDB {
     if (uploadedFiles && uploadedFiles.length > 0) {
       console.log('[v0] Processing', uploadedFiles.length, 'uploaded files')
       for (const file of uploadedFiles) {
-        // ����������������������������������������일명과 키가 유효한 경우에만 저장
+        // �����������������������������������������일명과 키가 유효한 경우에만 저장
         if (file && file.filename && file.fileKey && file.filename.trim() !== '' && file.fileKey.trim() !== '') {
           console.log('[v0] Saving file attachment:', { 
             filename: file.filename, 
@@ -1292,7 +1292,7 @@ export class AzureSqlDB {
       .query(`UPDATE admin_accounts SET last_login_at = @last_login_at WHERE account_id = @account_id`)
   }
 
-  // ─── 신청서 확인 체크 ────────���────���─���─────���──────────────
+  // ─── 신청서 확인 체�� ────────���────���─���─────���──────────────
 
   /** 확인 체크 조회 */
   static async getApplicationCheck(applicationId: number, accountId: number): Promise<{ checked: boolean; checked_at: Date | null; note: string | null } | null> {
@@ -1758,12 +1758,14 @@ export class AzureSqlDB {
         .input('start_date', sql.Date, startDate || new Date().toISOString().split('T')[0])
         .input('end_date', sql.Date, endDate || new Date().toISOString().split('T')[0])
       scanWhereClause = `AND CAST(s.scanned_at AS DATE) >= @start_date AND CAST(s.scanned_at AS DATE) <= @end_date`
-      passWhereClause = `AND CAST(p.issued_at AS DATE) >= @start_date AND CAST(p.issued_at AS DATE) <= @end_date`
+      // 방문 기간이 검색 범위와 겹치는 경우 포함 (visit_start_date ~ visit_end_date가 start_date ~ end_date와 겹침)
+      passWhereClause = `AND CAST(a.visit_start_date AS DATE) <= @end_date AND CAST(a.visit_end_date AS DATE) >= @start_date`
     } else {
       const targetDate = filterParams && 'date' in filterParams ? filterParams.date : new Date().toISOString().split('T')[0]
       request.input('filter_date', sql.Date, targetDate)
       scanWhereClause = `AND CAST(s.scanned_at AS DATE) = @filter_date`
-      passWhereClause = `AND CAST(p.issued_at AS DATE) = @filter_date`
+      // 검색 날짜가 방문 기간(visit_start_date ~ visit_end_date) 안에 포함되는 경우
+      passWhereClause = `AND CAST(a.visit_start_date AS DATE) <= @filter_date AND CAST(a.visit_end_date AS DATE) >= @filter_date`
     }
     
     const result = await request.query(`
@@ -1871,19 +1873,21 @@ export class AzureSqlDB {
         .input('start_date', sql.Date, startDate || new Date().toISOString().split('T')[0])
         .input('end_date', sql.Date, endDate || new Date().toISOString().split('T')[0])
       scanWhereClause = `AND CAST(scanned_at AS DATE) >= @start_date AND CAST(scanned_at AS DATE) <= @end_date`
-      passWhereClause = `AND CAST(issued_at AS DATE) >= @start_date AND CAST(issued_at AS DATE) <= @end_date`
+      // 방문 기간이 검색 범위와 겹치는 경우 포함
+      passWhereClause = `AND p.pass_id IN (SELECT vp.pass_id FROM visit_passes vp LEFT JOIN visit_applications va ON vp.application_id = va.application_id WHERE vp.status = 'active' AND CAST(va.visit_start_date AS DATE) <= @end_date AND CAST(va.visit_end_date AS DATE) >= @start_date)`
     } else {
       const targetDate = filterParams && 'date' in filterParams ? filterParams.date : new Date().toISOString().split('T')[0]
       request.input('filter_date', sql.Date, targetDate)
       scanWhereClause = `AND CAST(scanned_at AS DATE) = @filter_date`
-      passWhereClause = `AND CAST(issued_at AS DATE) = @filter_date`
+      // 검색 날짜가 방문 기간 안에 포함되는 경우
+      passWhereClause = `AND p.pass_id IN (SELECT vp.pass_id FROM visit_passes vp LEFT JOIN visit_applications va ON vp.application_id = va.application_id WHERE vp.status = 'active' AND CAST(va.visit_start_date AS DATE) <= @filter_date AND CAST(va.visit_end_date AS DATE) >= @filter_date)`
     }
     
     const result = await request.query(`
-        -- 1. visit_passes에서 날짜 기준 승인된 인원 (신청인 + 동행인)
+        -- 1. visit_passes에서 날짜 기준 승인된 인원 (신청인 + 동행인, 방문 기간 포함)
         DECLARE @approvedCount INT = (
-          SELECT COUNT(*) FROM visit_passes 
-          WHERE status = 'active' ${passWhereClause}
+          SELECT COUNT(*) FROM visit_passes p
+          WHERE p.status = 'active' ${passWhereClause}
         );
         
         -- 2. 입장 스캔한 고유 pass_id 수
