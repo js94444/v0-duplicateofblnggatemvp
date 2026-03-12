@@ -66,8 +66,8 @@ export default function AdminQrScanPage() {
   const [pierTab, setPierTab] = useState<PierKind>("1부두")
   const [selectedDate, setSelectedDate] = useState<Date>(new Date())
   const [useRangeSearch, setUseRangeSearch] = useState(false)
-  const [rangeStartDate, setRangeStartDate] = useState<Date>(subDays(new Date(), 7))
-  const [rangeEndDate, setRangeEndDate] = useState<Date>(new Date())
+  const [rangeStartDate, setRangeStartDate] = useState<Date | null>(null)
+  const [rangeEndDate, setRangeEndDate] = useState<Date | null>(null)
   const [cardFilter, setCardFilter] = useState<"all" | "pending" | "checkIn" | "checkOut">("all")
   const [selectedApplicationId, setSelectedApplicationId] = useState<number | null>(null)
   const [selectedApplication, setSelectedApplication] = useState<Application | null>(null)
@@ -100,7 +100,7 @@ export default function AdminQrScanPage() {
   const scanSiteParam =
     activeTab === "main" ? "main" : pierTab === "1부두" ? "pier_1" : "pier_2"
 
-  const dateParam = useRangeSearch
+  const dateParam = (useRangeSearch && rangeStartDate && rangeEndDate)
     ? `startDate=${format(rangeStartDate, "yyyy-MM-dd")}&endDate=${format(rangeEndDate, "yyyy-MM-dd")}`
     : `date=${format(selectedDate, "yyyy-MM-dd")}`
 
@@ -266,7 +266,7 @@ export default function AdminQrScanPage() {
             </button>
           </div>
           <p className="text-xs uppercase tracking-[0.2em] text-white/40 font-bold">
-            {activeTab === "main" ? "정문 QR 스캔 · Visit Pass Scans" : "부두별 출입 이��"}
+            {activeTab === "main" ? "정문 QR 스캔 · Visit Pass Scans" : "부두별 출입 이���"}
           </p>
         </div>
         <div className="flex items-center gap-3">
@@ -338,19 +338,19 @@ export default function AdminQrScanPage() {
             <PopoverTrigger asChild>
               <Button
                 variant="ghost"
-                className="h-7 px-2 text-white font-mono text-sm hover:bg-white/10"
+                className={`h-7 px-2 font-mono text-sm hover:bg-white/10 ${rangeStartDate ? "text-white" : "text-white/30"}`}
               >
-                {format(rangeStartDate, "yyyy-MM-dd")}
+                {rangeStartDate ? format(rangeStartDate, "yyyy-MM-dd") : "시작날짜"}
               </Button>
             </PopoverTrigger>
             <PopoverContent className="w-auto p-0 bg-zinc-900 border-white/10" align="end">
               <CalendarComponent
                 mode="single"
-                selected={rangeStartDate}
+                selected={rangeStartDate ?? undefined}
                 onSelect={(date) => {
                   if (date) {
                     setRangeStartDate(date)
-                    setUseRangeSearch(true)
+                    if (rangeEndDate) setUseRangeSearch(true)
                     setRangeCalendarOpen(false)
                   }
                 }}
@@ -370,19 +370,19 @@ export default function AdminQrScanPage() {
             <PopoverTrigger asChild>
               <Button
                 variant="ghost"
-                className="h-7 px-2 text-white font-mono text-sm hover:bg-white/10"
+                className={`h-7 px-2 font-mono text-sm hover:bg-white/10 ${rangeEndDate ? "text-white" : "text-white/30"}`}
               >
-                {format(rangeEndDate, "yyyy-MM-dd")}
+                {rangeEndDate ? format(rangeEndDate, "yyyy-MM-dd") : "종료날짜"}
               </Button>
             </PopoverTrigger>
             <PopoverContent className="w-auto p-0 bg-zinc-900 border-white/10" align="end">
               <CalendarComponent
                 mode="single"
-                selected={rangeEndDate}
+                selected={rangeEndDate ?? undefined}
                 onSelect={(date) => {
                   if (date) {
                     setRangeEndDate(date)
-                    setUseRangeSearch(true)
+                    if (rangeStartDate) setUseRangeSearch(true)
                   }
                 }}
                 locale={ko}
@@ -393,12 +393,16 @@ export default function AdminQrScanPage() {
         </div>
 
         {/* 범위 초기화 */}
-        {useRangeSearch && (
+        {(rangeStartDate || rangeEndDate) && (
           <Button
             size="sm"
             variant="ghost"
             className="h-8 px-2 text-white/40 hover:text-white hover:bg-white/10 text-xs"
-            onClick={() => setUseRangeSearch(false)}
+            onClick={() => {
+              setRangeStartDate(null)
+              setRangeEndDate(null)
+              setUseRangeSearch(false)
+            }}
           >
             초기화
           </Button>
