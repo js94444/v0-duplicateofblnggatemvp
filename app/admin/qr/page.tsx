@@ -281,21 +281,17 @@ export default function AdminQrScanPage() {
             >
               <ChevronLeft size={18} />
             </Button>
-            <Popover open={calendarOpen} onOpenChange={(open) => {
-              console.log("[v0] Calendar popover onOpenChange:", open)
-              setCalendarOpen(open)
-            }}>
+            <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
               <PopoverTrigger asChild>
                 <Button
                   variant="ghost"
                   className="h-8 px-3 text-white font-mono text-sm hover:bg-white/10"
-                  onClick={() => console.log("[v0] Calendar trigger clicked")}
                 >
                   <Calendar size={14} className="mr-2 text-white/60" />
                   {format(selectedDate, "yyyy-MM-dd")}
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-auto p-0 bg-zinc-900 border-white/10" align="end">
+              <PopoverContent className="w-auto p-0 bg-zinc-900 border-white/10 z-[100]" align="end">
                 <CalendarComponent
                   mode="single"
                   selected={selectedDate}
@@ -307,6 +303,7 @@ export default function AdminQrScanPage() {
                   }}
                   locale={ko}
                   className="rounded-md"
+                  initialFocus
                 />
               </PopoverContent>
             </Popover>
@@ -339,20 +336,16 @@ export default function AdminQrScanPage() {
         {/* 시작날짜 */}
         <div className="flex items-center gap-1 bg-white/5 border border-white/10 rounded-xl px-2 py-1">
           <Calendar size={14} className="text-white/60" />
-          <Popover open={rangeStartCalendarOpen} onOpenChange={(open) => {
-            console.log("[v0] Range start popover onOpenChange:", open)
-            setRangeStartCalendarOpen(open)
-          }}>
+          <Popover open={rangeStartCalendarOpen} onOpenChange={setRangeStartCalendarOpen}>
             <PopoverTrigger asChild>
               <Button
                 variant="ghost"
                 className={`h-7 px-2 font-mono text-sm hover:bg-white/10 ${rangeStartDate ? "text-white" : "text-white/30"}`}
-                onClick={() => console.log("[v0] Range start trigger clicked")}
               >
                 {rangeStartDate ? format(rangeStartDate, "yyyy-MM-dd") : "시작날짜"}
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-auto p-0 bg-zinc-900 border-white/10" align="end">
+            <PopoverContent className="w-auto p-0 bg-zinc-900 border-white/10 z-[100]" align="end">
               <CalendarComponent
                 mode="single"
                 selected={rangeStartDate ?? undefined}
@@ -365,6 +358,7 @@ export default function AdminQrScanPage() {
                 }}
                 locale={ko}
                 className="rounded-md"
+                initialFocus
               />
             </PopoverContent>
           </Popover>
@@ -375,20 +369,16 @@ export default function AdminQrScanPage() {
         {/* 종료날짜 */}
         <div className="flex items-center gap-1 bg-white/5 border border-white/10 rounded-xl px-2 py-1">
           <Calendar size={14} className="text-white/60" />
-          <Popover open={rangeEndCalendarOpen} onOpenChange={(open) => {
-            console.log("[v0] Range end popover onOpenChange:", open)
-            setRangeEndCalendarOpen(open)
-          }}>
+          <Popover open={rangeEndCalendarOpen} onOpenChange={setRangeEndCalendarOpen}>
             <PopoverTrigger asChild>
               <Button
                 variant="ghost"
                 className={`h-7 px-2 font-mono text-sm hover:bg-white/10 ${rangeEndDate ? "text-white" : "text-white/30"}`}
-                onClick={() => console.log("[v0] Range end trigger clicked")}
               >
                 {rangeEndDate ? format(rangeEndDate, "yyyy-MM-dd") : "종료날짜"}
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-auto p-0 bg-zinc-900 border-white/10" align="end">
+            <PopoverContent className="w-auto p-0 bg-zinc-900 border-white/10 z-[100]" align="end">
               <CalendarComponent
                 mode="single"
                 selected={rangeEndDate ?? undefined}
@@ -401,6 +391,7 @@ export default function AdminQrScanPage() {
                 }}
                 locale={ko}
                 className="rounded-md"
+                initialFocus
               />
             </PopoverContent>
           </Popover>
