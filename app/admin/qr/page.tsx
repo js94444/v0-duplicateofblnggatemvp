@@ -74,7 +74,8 @@ export default function AdminQrScanPage() {
   const [modalLoading, setModalLoading] = useState(false)
   const [portCertModal, setPortCertModal] = useState<{ open: boolean; files: Array<{ file_url: string; file_name: string }>; visitorName: string; birthDate: string }>({ open: false, files: [], visitorName: "", birthDate: "" })
   const [calendarOpen, setCalendarOpen] = useState(false)
-  const [rangeCalendarOpen, setRangeCalendarOpen] = useState(false)
+  const [rangeStartCalendarOpen, setRangeStartCalendarOpen] = useState(false)
+  const [rangeEndCalendarOpen, setRangeEndCalendarOpen] = useState(false)
 
   // SWR fetcher
   const fetcher = (url: string) => fetch(url, { cache: "no-store" }).then(res => {
@@ -334,7 +335,7 @@ export default function AdminQrScanPage() {
         {/* 시작날짜 */}
         <div className="flex items-center gap-1 bg-white/5 border border-white/10 rounded-xl px-2 py-1">
           <Calendar size={14} className="text-white/60" />
-          <Popover open={rangeCalendarOpen} onOpenChange={setRangeCalendarOpen}>
+          <Popover open={rangeStartCalendarOpen} onOpenChange={setRangeStartCalendarOpen}>
             <PopoverTrigger asChild>
               <Button
                 variant="ghost"
@@ -351,7 +352,7 @@ export default function AdminQrScanPage() {
                   if (date) {
                     setRangeStartDate(date)
                     if (rangeEndDate) setUseRangeSearch(true)
-                    setRangeCalendarOpen(false)
+                    setRangeStartCalendarOpen(false)
                   }
                 }}
                 locale={ko}
@@ -366,7 +367,7 @@ export default function AdminQrScanPage() {
         {/* 종료날짜 */}
         <div className="flex items-center gap-1 bg-white/5 border border-white/10 rounded-xl px-2 py-1">
           <Calendar size={14} className="text-white/60" />
-          <Popover>
+          <Popover open={rangeEndCalendarOpen} onOpenChange={setRangeEndCalendarOpen}>
             <PopoverTrigger asChild>
               <Button
                 variant="ghost"
@@ -383,6 +384,7 @@ export default function AdminQrScanPage() {
                   if (date) {
                     setRangeEndDate(date)
                     if (rangeStartDate) setUseRangeSearch(true)
+                    setRangeEndCalendarOpen(false)
                   }
                 }}
                 locale={ko}
