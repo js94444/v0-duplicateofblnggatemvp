@@ -283,15 +283,15 @@ export default function AdminQrScanPage() {
             </Button>
             <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
               <PopoverTrigger asChild>
-                <Button
-                  variant="ghost"
-                  className="h-8 px-3 text-white font-mono text-sm hover:bg-white/10"
+                <button
+                  type="button"
+                  className="flex items-center h-8 px-3 text-white font-mono text-sm hover:bg-white/10 rounded-md transition-colors"
                 >
                   <Calendar size={14} className="mr-2 text-white/60" />
                   {format(selectedDate, "yyyy-MM-dd")}
-                </Button>
+                </button>
               </PopoverTrigger>
-              <PopoverContent className="w-auto p-0 bg-zinc-900 border-white/10 z-[100]" align="end">
+              <PopoverContent className="w-auto p-0 bg-zinc-900 border-white/10 z-[100]" align="end" sideOffset={8}>
                 <CalendarComponent
                   mode="single"
                   selected={selectedDate}
@@ -338,14 +338,14 @@ export default function AdminQrScanPage() {
           <Calendar size={14} className="text-white/60" />
           <Popover open={rangeStartCalendarOpen} onOpenChange={setRangeStartCalendarOpen}>
             <PopoverTrigger asChild>
-              <Button
-                variant="ghost"
-                className={`h-7 px-2 font-mono text-sm hover:bg-white/10 ${rangeStartDate ? "text-white" : "text-white/30"}`}
+              <button
+                type="button"
+                className={`h-7 px-2 font-mono text-sm hover:bg-white/10 rounded-md transition-colors ${rangeStartDate ? "text-white" : "text-white/30"}`}
               >
                 {rangeStartDate ? format(rangeStartDate, "yyyy-MM-dd") : "시작날짜"}
-              </Button>
+              </button>
             </PopoverTrigger>
-            <PopoverContent className="w-auto p-0 bg-zinc-900 border-white/10 z-[100]" align="end">
+            <PopoverContent className="w-auto p-0 bg-zinc-900 border-white/10 z-[100]" align="end" sideOffset={4}>
               <CalendarComponent
                 mode="single"
                 selected={rangeStartDate ?? undefined}
@@ -371,14 +371,14 @@ export default function AdminQrScanPage() {
           <Calendar size={14} className="text-white/60" />
           <Popover open={rangeEndCalendarOpen} onOpenChange={setRangeEndCalendarOpen}>
             <PopoverTrigger asChild>
-              <Button
-                variant="ghost"
-                className={`h-7 px-2 font-mono text-sm hover:bg-white/10 ${rangeEndDate ? "text-white" : "text-white/30"}`}
+              <button
+                type="button"
+                className={`h-7 px-2 font-mono text-sm hover:bg-white/10 rounded-md transition-colors ${rangeEndDate ? "text-white" : "text-white/30"}`}
               >
                 {rangeEndDate ? format(rangeEndDate, "yyyy-MM-dd") : "종료날짜"}
-              </Button>
+              </button>
             </PopoverTrigger>
-            <PopoverContent className="w-auto p-0 bg-zinc-900 border-white/10 z-[100]" align="end">
+            <PopoverContent className="w-auto p-0 bg-zinc-900 border-white/10 z-[100]" align="end" sideOffset={4}>
               <CalendarComponent
                 mode="single"
                 selected={rangeEndDate ?? undefined}
