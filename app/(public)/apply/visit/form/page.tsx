@@ -312,7 +312,7 @@ export default function VisitFormPage() {
     const isFormValid = validateForm()
     const areDevicesValid = validateDevices()
 
-    // 동행인 동의 항목 검증
+    // 동행�� 동의 항목 검증
     if (companions.length > 0) {
       const newCompanionErrors: CompanionErrors = {}
       let hasCompanionError = false
@@ -529,18 +529,23 @@ export default function VisitFormPage() {
     })
   }
 
-  const addCompanionDevice = (companionIndex: number) => {
-    setCompanions((prev) => {
-      const updated = [...prev]
-      updated[companionIndex].electronic_devices.push({
-        item_name: "",
-        model_name: "",
-        serial_number: "",
-        reason: "",
-      })
-      return updated
+const addCompanionDevice = (companionIndex: number) => {
+  setCompanions((prev) => {
+    const updated = prev.map((companion, idx) => {
+      if (idx === companionIndex) {
+        return {
+          ...companion,
+          electronic_devices: [
+            ...companion.electronic_devices,
+            { item_name: "", model_name: "", serial_number: "", reason: "" }
+          ]
+        }
+      }
+      return companion
     })
-  }
+    return updated
+  })
+}
 
   const updateCompanionDevice = (
     companionIndex: number,
