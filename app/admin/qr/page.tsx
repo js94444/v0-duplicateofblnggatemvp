@@ -425,13 +425,13 @@ export default function AdminQrScanPage() {
                       <TableHead className="text-white/70 min-w-[130px]">소속</TableHead>
                       <TableHead className="text-white/70 min-w-[120px]">방문일</TableHead>
                       <TableHead className="text-white/70 min-w-[140px]">담당자</TableHead>
-                      <TableHead className="text-white/70 min-w-[100px]">출입 구역</TableHead>
-                      <TableHead className="text-white/70 min-w-[140px]">입장 시각</TableHead>
-                      <TableHead className="text-white/70 min-w-[140px]">퇴장 시각</TableHead>
-                      <TableHead className="text-white/70 min-w-[100px]">차량 번호</TableHead>
+                      <TableHead className="text-white/70 min-w-[100px]">출입구역</TableHead>
+                      <TableHead className="text-white/70 min-w-[140px]">입장시각</TableHead>
+                      <TableHead className="text-white/70 min-w-[140px]">퇴장시각</TableHead>
+                      <TableHead className="text-white/70 min-w-[90px]">차량번호</TableHead>
                       <TableHead className="text-white/70 min-w-[70px]">차량유종</TableHead>
                       <TableHead className="text-white/70 min-w-[70px]">불꽃방지망</TableHead>
-                      <TableHead className="text-white/70 min-w-[80px]">상세</TableHead>
+                      <TableHead className="text-white/70 min-w-[70px]">상세</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -550,10 +550,10 @@ export default function AdminQrScanPage() {
                       <TableHead className="text-white/70 min-w-[100px]">출입 구역</TableHead>
                       <TableHead className="text-white/70 min-w-[140px]">입장 시각</TableHead>
                       <TableHead className="text-white/70 min-w-[140px]">퇴장 시각</TableHead>
-                      <TableHead className="text-white/70 min-w-[100px]">차량 번호</TableHead>
+                      <TableHead className="text-white/70 min-w-[90px]">차량번호</TableHead>
                       <TableHead className="text-white/70 min-w-[70px]">차량유종</TableHead>
                       <TableHead className="text-white/70 min-w-[70px]">불꽃방지망</TableHead>
-                      <TableHead className="text-white/70 min-w-[80px]">상세</TableHead>
+                      <TableHead className="text-white/70 min-w-[70px]">상세</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
