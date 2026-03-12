@@ -429,7 +429,7 @@ export default function AdminQrScanPage() {
                       <TableHead className="text-white/70 min-w-[140px]">입장 시각</TableHead>
                       <TableHead className="text-white/70 min-w-[140px]">퇴장 시각</TableHead>
                       <TableHead className="text-white/70 min-w-[100px]">차량 번호</TableHead>
-                      <TableHead className="text-white/70 min-w-[80px]">차량유종</TableHead>
+                      <TableHead className="text-white/70 min-w-[70px]">차량유종</TableHead>
                       <TableHead className="text-white/70 min-w-[70px]">불꽃방지망</TableHead>
                       <TableHead className="text-white/70 min-w-[80px]">상세</TableHead>
                     </TableRow>
@@ -551,7 +551,7 @@ export default function AdminQrScanPage() {
                       <TableHead className="text-white/70 min-w-[140px]">입장 시각</TableHead>
                       <TableHead className="text-white/70 min-w-[140px]">퇴장 시각</TableHead>
                       <TableHead className="text-white/70 min-w-[100px]">차량 번호</TableHead>
-                      <TableHead className="text-white/70 min-w-[80px]">차량유종</TableHead>
+                      <TableHead className="text-white/70 min-w-[70px]">차량유종</TableHead>
                       <TableHead className="text-white/70 min-w-[70px]">불꽃방지망</TableHead>
                       <TableHead className="text-white/70 min-w-[80px]">상세</TableHead>
                     </TableRow>
