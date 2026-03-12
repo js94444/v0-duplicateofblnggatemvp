@@ -9,10 +9,11 @@ export async function GET(request: NextRequest) {
   try {
     const url = new URL(request.url)
     const scanSite = url.searchParams.get("scan_site") || "main"
+    const filterDate = url.searchParams.get("date") || undefined // YYYY-MM-DD 형식
     
     // 정문(main), 1부두(pier_1), 2부두(pier_2) 각각 해당 scan_site로 필터링
-    const data = await AzureSqlDB.getQrScanLogs(scanSite)
-    const stats = await AzureSqlDB.getQrScanStats(scanSite)
+    const data = await AzureSqlDB.getQrScanLogs(scanSite, 100, filterDate)
+    const stats = await AzureSqlDB.getQrScanStats(scanSite, filterDate)
 
     // 고유 application_id 목록 추출
     const applicationIds = [...new Set(data.map((d: any) => d.application_id).filter(Boolean))]
