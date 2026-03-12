@@ -95,7 +95,7 @@ export default function AdminQrScanPage() {
 
   const scanSiteParam =
     activeTab === "main" ? "main" : pierTab === "1부두" ? "pier_1" : "pier_2"
-  
+
   const dateParam = format(selectedDate, "yyyy-MM-dd")
 
   // SWR로 데이터 fetching - 캐시가 자동으로 유지됨
@@ -163,7 +163,7 @@ export default function AdminQrScanPage() {
       visit_end_date: row.visit_end_date,
     }))
   }, [scans])
-  
+
   // 카드 필터링된 리스트
   const filteredRows = useMemo(() => {
     if (cardFilter === "all") return rowsByPerson
@@ -190,38 +190,39 @@ export default function AdminQrScanPage() {
     // DB에 이미 한국시간으로 저장되어 있으므로 UTC로 파싱하여 그대로 표시
     const d = new Date(iso)
     if (Number.isNaN(d.getTime())) return "-"
+
     // UTC 시간 그대로 사용 (DB 저장값이 이미 KST)
     const year = d.getUTCFullYear().toString().slice(-2)
     const month = (d.getUTCMonth() + 1).toString().padStart(2, '0')
     const day = d.getUTCDate().toString().padStart(2, '0')
-    const hour = d.getUTCHours()
-    const minute = d.getUTCMinutes().toString().padStart(2, '0')
-    const ampm = hour < 12 ? '오전' : '오후'
-    const hour12 = hour % 12 || 12
-    return `${year}. ${month}. ${day}. ${ampm} ${hour12}:${minute}`
-  }
 
+    // 24시간 형식: 오전/오후 없이 00~23시로 표현
+    const hour24 = d.getUTCHours().toString().padStart(2, '0')
+    const minute = d.getUTCMinutes().toString().padStart(2, '0')
+
+    return `${year}. ${month}. ${day}. ${hour24}:${minute}`
+  }
   // 방문일 포맷: YY.MM.DD~MM.DD
   const formatVisitPeriod = (startDate: string | null, endDate: string | null) => {
     if (!startDate) return "-"
     const start = new Date(startDate)
     if (Number.isNaN(start.getTime())) return "-"
-    
+
     const startYear = start.getUTCFullYear().toString().slice(-2)
     const startMonth = (start.getUTCMonth() + 1).toString().padStart(2, '0')
     const startDay = start.getUTCDate().toString().padStart(2, '0')
-    
+
     if (!endDate) return `${startYear}.${startMonth}.${startDay}`
-    
+
     const end = new Date(endDate)
     if (Number.isNaN(end.getTime())) return `${startYear}.${startMonth}.${startDay}`
-    
+
     const endMonth = (end.getUTCMonth() + 1).toString().padStart(2, '0')
     const endDay = end.getUTCDate().toString().padStart(2, '0')
-    
+
     // 같은 날짜면 단일 표시
     if (startDate === endDate) return `${startYear}.${startMonth}.${startDay}`
-    
+
     return `${startYear}.${startMonth}.${startDay}~${endMonth}.${endDay}`
   }
 
@@ -324,7 +325,7 @@ export default function AdminQrScanPage() {
       {/* Summary cards: 정문 탭에서만 */}
       {activeTab === "main" && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-          <Card 
+          <Card
             className={`bg-white/5 border-white/10 text-white cursor-pointer transition-all hover:bg-white/10 ${cardFilter === "pending" ? "ring-2 ring-amber-500" : ""}`}
             onClick={() => setCardFilter(cardFilter === "pending" ? "all" : "pending")}
           >
@@ -336,7 +337,7 @@ export default function AdminQrScanPage() {
               <p className="text-xs text-white/40 mt-1">아직 입장 전</p>
             </CardContent>
           </Card>
-          <Card 
+          <Card
             className={`bg-white/5 border-white/10 text-white cursor-pointer transition-all hover:bg-white/10 ${cardFilter === "checkIn" ? "ring-2 ring-emerald-500" : ""}`}
             onClick={() => setCardFilter(cardFilter === "checkIn" ? "all" : "checkIn")}
           >
@@ -350,7 +351,7 @@ export default function AdminQrScanPage() {
               <p className="text-xs text-white/40 mt-1">오늘 입장</p>
             </CardContent>
           </Card>
-          <Card 
+          <Card
             className={`bg-white/5 border-white/10 text-white cursor-pointer transition-all hover:bg-white/10 ${cardFilter === "checkOut" ? "ring-2 ring-blue-500" : ""}`}
             onClick={() => setCardFilter(cardFilter === "checkOut" ? "all" : "checkOut")}
           >
@@ -364,7 +365,7 @@ export default function AdminQrScanPage() {
               <p className="text-xs text-white/40 mt-1">오늘 퇴장</p>
             </CardContent>
           </Card>
-          <Card 
+          <Card
             className={`bg-white/5 border-white/10 text-white cursor-pointer transition-all hover:bg-white/10 ${cardFilter === "all" ? "ring-2 ring-white/50" : ""}`}
             onClick={() => setCardFilter("all")}
           >
