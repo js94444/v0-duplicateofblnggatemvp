@@ -44,6 +44,7 @@ interface ScanRow {
   last_scan_direction: 'ENTRY' | 'EXIT' | null
   entry_count: number
   exit_count: number
+  cycle_num: number | null  // 입장/퇴장 사이클 번호
   last_event_at: string
 }
 
@@ -167,6 +168,7 @@ export default function AdminQrScanPage() {
       lastScanDirection: row.last_scan_direction,
       entryCount: row.entry_count || 0,
       exitCount: row.exit_count || 0,
+      cycleNum: row.cycle_num,
       lastEventAt: new Date(row.last_event_at).getTime(),
       visit_start_date: row.visit_start_date,
       visit_end_date: row.visit_end_date,
@@ -558,7 +560,7 @@ export default function AdminQrScanPage() {
                       const recentClass = getRecentHighlight(row)
                       return (
                         <TableRow
-                          key={row.pass_id}
+                          key={`${row.pass_id}-${row.cycleNum || 0}`}
                           className={`border-white/5 hover:bg-white/5 transition-colors ${recentClass}`}
                         >
                           <TableCell
@@ -570,7 +572,14 @@ export default function AdminQrScanPage() {
                               }
                             }}
                           >
-                            {row.visitor_name || "-"}
+                            <div className="flex items-center gap-1.5">
+                              <span>{row.visitor_name || "-"}</span>
+                              {row.cycleNum && row.cycleNum > 1 && (
+                                <span className="text-[10px] px-1.5 py-0.5 rounded bg-purple-500/20 text-purple-400 font-medium">
+                                  {row.cycleNum}회차
+                                </span>
+                              )}
+                            </div>
                           </TableCell>
                           <TableCell className="text-sm text-white/80">
                             {row.visitor_birth_date ? new Date(row.visitor_birth_date).toLocaleDateString("ko-KR") : "-"}
