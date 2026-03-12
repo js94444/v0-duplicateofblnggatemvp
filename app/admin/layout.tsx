@@ -81,7 +81,7 @@ function AdminLayoutContent({ children }: { children: React.ReactNode }) {
   const visiblePages = ALL_PAGES.filter((p) => allowedPaths.has(p.path))
 
   return (
-    <div className="min-h-screen bg-black text-white font-sans relative overflow-hidden">
+    <div className="min-h-screen bg-black text-white font-sans relative">
       {/* Background */}
       <div className="fixed inset-0 z-0">
         <div className="absolute inset-0 bg-cover bg-center" style={bgStyle} />

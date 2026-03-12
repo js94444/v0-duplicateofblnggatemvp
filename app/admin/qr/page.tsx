@@ -16,16 +16,9 @@ import { ApplicationDetailModal } from "@/components/admin/application-detail-mo
 import { Application } from "@/lib/types"
 
 interface ScanRow {
-  scan_id: string
   pass_id: string
   application_id: number
-  entry_direction: string
-  entry_at: string
-  entry_device_id: string | null
-  entry_scanned_ip: string | null
-  scan_site: string
-  entry_result: "ALLOW" | "DENY"
-  entry_deny_reason: string | null
+  companion_id: number | null
   visitor_name: string | null
   visitor_org: string | null
   contact_name: string | null
@@ -38,22 +31,24 @@ interface ScanRow {
   visit_start_date: string | null
   visit_end_date: string | null
   portCertFiles: Array<{ file_url: string; file_name: string }>
+  // 입장 데이터 (있으면)
+  entry_at: string | null
+  entry_device_id: string | null
+  entry_scanned_ip: string | null
+  scan_site: string | null
   // 퇴장 데이터 (있으면)
-  exit_scan_id?: string | null
-  exit_direction?: string | null
-  exit_at?: string | null
-  exit_device_id?: string | null
-  exit_scanned_ip?: string | null
-  exit_result?: string | null
-  exit_deny_reason?: string | null
+  exit_at: string | null
+  exit_device_id: string | null
+  exit_scanned_ip: string | null
   last_event_at: string
 }
 
 interface ScanStats {
-  checkInCount: number    // 체크인(입장) 건수
-  checkOutCount: number   // 체크아웃(퇴장) 건수
-  totalVisitCount: number // 전체 방문 예정 건수 (방문시작일 = 선택날짜)
-  pendingCount: number    // 아직 액션 없는 건수
+  checkInCount: number       // 체크인: 현재 내부 체류 중 (입장O, 퇴장X)
+  checkOutCount: number      // 체크아웃: 퇴장 완료 (입장O, 퇴장O)
+  pendingCount: number       // 방문신청: 아직 입장 안 한 인원 (승인 - 입장스캔)
+  totalApprovedCount: number // 전체: 승인된 인원 수
+  reentryCount: number       // 전체: 재입장자 수 (당일 입장+퇴장 각 2회 이상)
 }
 
 type TabKind = "main" | "pier"
@@ -65,12 +60,17 @@ export default function AdminQrScanPage() {
   const [activeTab, setActiveTab] = useState<TabKind>("main")
   const [pierTab, setPierTab] = useState<PierKind>("1부두")
   const [selectedDate, setSelectedDate] = useState<Date>(new Date())
+  const [useRangeSearch, setUseRangeSearch] = useState(false)
+  const [rangeStartDate, setRangeStartDate] = useState<Date | null>(null)
+  const [rangeEndDate, setRangeEndDate] = useState<Date | null>(null)
   const [cardFilter, setCardFilter] = useState<"all" | "pending" | "checkIn" | "checkOut">("all")
   const [selectedApplicationId, setSelectedApplicationId] = useState<number | null>(null)
   const [selectedApplication, setSelectedApplication] = useState<Application | null>(null)
   const [modalLoading, setModalLoading] = useState(false)
   const [portCertModal, setPortCertModal] = useState<{ open: boolean; files: Array<{ file_url: string; file_name: string }>; visitorName: string; birthDate: string }>({ open: false, files: [], visitorName: "", birthDate: "" })
   const [calendarOpen, setCalendarOpen] = useState(false)
+  const [rangeStartCalendarOpen, setRangeStartCalendarOpen] = useState(false)
+  const [rangeEndCalendarOpen, setRangeEndCalendarOpen] = useState(false)
 
   // SWR fetcher
   const fetcher = (url: string) => fetch(url, { cache: "no-store" }).then(res => {
@@ -96,11 +96,13 @@ export default function AdminQrScanPage() {
   const scanSiteParam =
     activeTab === "main" ? "main" : pierTab === "1부두" ? "pier_1" : "pier_2"
 
-  const dateParam = format(selectedDate, "yyyy-MM-dd")
+  const dateParam = (useRangeSearch && rangeStartDate && rangeEndDate)
+    ? `startDate=${format(rangeStartDate, "yyyy-MM-dd")}&endDate=${format(rangeEndDate, "yyyy-MM-dd")}`
+    : `date=${format(selectedDate, "yyyy-MM-dd")}`
 
   // SWR로 데이터 fetching - 캐시가 자동으로 유지됨
   const { data: swrData, error, isLoading: loading, mutate } = useSWR(
-    `/api/admin/qr-scans?scan_site=${scanSiteParam}&date=${dateParam}`,
+    `/api/admin/qr-scans?scan_site=${scanSiteParam}&${dateParam}`,
     fetcher,
     {
       revalidateOnFocus: false, // 포커스 시 재요청 방지
@@ -167,9 +169,12 @@ export default function AdminQrScanPage() {
   // 카드 필터링된 리스트
   const filteredRows = useMemo(() => {
     if (cardFilter === "all") return rowsByPerson
-    if (cardFilter === "pending") return rowsByPerson.filter(r => !r.lastEntryAt && !r.lastExitAt)
-    if (cardFilter === "checkIn") return rowsByPerson.filter(r => r.lastEntryAt)
-    if (cardFilter === "checkOut") return rowsByPerson.filter(r => r.lastExitAt)
+    // 방문신청: 아직 입장 안 한 인원 (입장 스캔 기록 없음)
+    if (cardFilter === "pending") return rowsByPerson.filter(r => !r.lastEntryAt)
+    // 체크인: 현재 내부 체류 중 (입장O, 퇴장X)
+    if (cardFilter === "checkIn") return rowsByPerson.filter(r => r.lastEntryAt && !r.lastExitAt)
+    // 체크아웃: 퇴장 완료 (입장O, 퇴장O)
+    if (cardFilter === "checkOut") return rowsByPerson.filter(r => r.lastEntryAt && r.lastExitAt)
     return rowsByPerson
   }, [rowsByPerson, cardFilter])
 
@@ -227,10 +232,16 @@ export default function AdminQrScanPage() {
   }
 
   const currentStats: ScanStats = {
-    checkInCount: stats?.checkInCount ?? rowsByPerson.filter(r => r.lastEntryAt).length,
-    checkOutCount: stats?.checkOutCount ?? rowsByPerson.filter(r => r.lastExitAt).length,
-    totalVisitCount: stats?.totalVisitCount ?? 0,
-    pendingCount: stats?.pendingCount ?? 0,
+    // 체크인: 현재 내부 체류 중 (입장O, 퇴장X)
+    checkInCount: stats?.checkInCount ?? rowsByPerson.filter(r => r.lastEntryAt && !r.lastExitAt).length,
+    // 체크아웃: 퇴장 완료 (입장O, 퇴장O)
+    checkOutCount: stats?.checkOutCount ?? rowsByPerson.filter(r => r.lastEntryAt && r.lastExitAt).length,
+    // 방문신청: 아직 입장 안 한 인원
+    pendingCount: stats?.pendingCount ?? rowsByPerson.filter(r => !r.lastEntryAt).length,
+    // 전체: 승인된 인원 수
+    totalApprovedCount: stats?.totalApprovedCount ?? 0,
+    // 재입장자 수
+    reentryCount: stats?.reentryCount ?? 0,
   }
 
   return (
@@ -260,7 +271,7 @@ export default function AdminQrScanPage() {
             </button>
           </div>
           <p className="text-xs uppercase tracking-[0.2em] text-white/40 font-bold">
-            {activeTab === "main" ? "정문 QR 스캔 · Visit Pass Scans" : "부두별 출입 이력"}
+            {activeTab === "main" ? "정문 QR 스캔 · Visit Pass Scans" : "부두별 출입 이���"}
           </p>
         </div>
         <div className="flex items-center gap-3">
@@ -276,15 +287,15 @@ export default function AdminQrScanPage() {
             </Button>
             <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
               <PopoverTrigger asChild>
-                <Button
-                  variant="ghost"
-                  className="h-8 px-3 text-white font-mono text-sm hover:bg-white/10"
+                <button
+                  type="button"
+                  className="flex items-center h-8 px-3 text-white font-mono text-sm hover:bg-white/10 rounded-md transition-colors"
                 >
                   <Calendar size={14} className="mr-2 text-white/60" />
                   {format(selectedDate, "yyyy-MM-dd")}
-                </Button>
+                </button>
               </PopoverTrigger>
-              <PopoverContent className="w-auto p-0 bg-zinc-900 border-white/10" align="end">
+              <PopoverContent className="w-auto p-0 bg-zinc-900 border-white/10 z-[100]" align="end" sideOffset={8}>
                 <CalendarComponent
                   mode="single"
                   selected={selectedDate}
@@ -296,6 +307,7 @@ export default function AdminQrScanPage() {
                   }}
                   locale={ko}
                   className="rounded-md"
+                  initialFocus
                 />
               </PopoverContent>
             </Popover>
@@ -322,6 +334,90 @@ export default function AdminQrScanPage() {
         </div>
       </div>
 
+      {/* 날짜 범위 검색 */}
+      <div className="mb-6 flex items-center justify-end gap-2">
+        <span className="text-sm text-white/50">범위 검색</span>
+        {/* 시작날짜 */}
+        <div className="flex items-center gap-1 bg-white/5 border border-white/10 rounded-xl px-2 py-1">
+          <Calendar size={14} className="text-white/60" />
+          <Popover open={rangeStartCalendarOpen} onOpenChange={setRangeStartCalendarOpen}>
+            <PopoverTrigger asChild>
+              <button
+                type="button"
+                className={`h-7 px-2 font-mono text-sm hover:bg-white/10 rounded-md transition-colors ${rangeStartDate ? "text-white" : "text-white/30"}`}
+              >
+                {rangeStartDate ? format(rangeStartDate, "yyyy-MM-dd") : "시작날짜"}
+              </button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0 bg-zinc-900 border-white/10 z-[100]" align="end" sideOffset={4}>
+              <CalendarComponent
+                mode="single"
+                selected={rangeStartDate ?? undefined}
+                onSelect={(date) => {
+                  if (date) {
+                    setRangeStartDate(date)
+                    if (rangeEndDate) setUseRangeSearch(true)
+                    setRangeStartCalendarOpen(false)
+                  }
+                }}
+                locale={ko}
+                className="rounded-md"
+                initialFocus
+              />
+            </PopoverContent>
+          </Popover>
+        </div>
+
+        <span className="text-white/40 text-sm">~</span>
+
+        {/* 종료날짜 */}
+        <div className="flex items-center gap-1 bg-white/5 border border-white/10 rounded-xl px-2 py-1">
+          <Calendar size={14} className="text-white/60" />
+          <Popover open={rangeEndCalendarOpen} onOpenChange={setRangeEndCalendarOpen}>
+            <PopoverTrigger asChild>
+              <button
+                type="button"
+                className={`h-7 px-2 font-mono text-sm hover:bg-white/10 rounded-md transition-colors ${rangeEndDate ? "text-white" : "text-white/30"}`}
+              >
+                {rangeEndDate ? format(rangeEndDate, "yyyy-MM-dd") : "종료날짜"}
+              </button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0 bg-zinc-900 border-white/10 z-[100]" align="end" sideOffset={4}>
+              <CalendarComponent
+                mode="single"
+                selected={rangeEndDate ?? undefined}
+                onSelect={(date) => {
+                  if (date) {
+                    setRangeEndDate(date)
+                    if (rangeStartDate) setUseRangeSearch(true)
+                    setRangeEndCalendarOpen(false)
+                  }
+                }}
+                locale={ko}
+                className="rounded-md"
+                initialFocus
+              />
+            </PopoverContent>
+          </Popover>
+        </div>
+
+        {/* 범위 초기화 */}
+        {(rangeStartDate || rangeEndDate) && (
+          <Button
+            size="sm"
+            variant="ghost"
+            className="h-8 px-2 text-white/40 hover:text-white hover:bg-white/10 text-xs"
+            onClick={() => {
+              setRangeStartDate(null)
+              setRangeEndDate(null)
+              setUseRangeSearch(false)
+            }}
+          >
+            초기화
+          </Button>
+        )}
+      </div>
+
       {/* Summary cards: 정문 탭에서만 */}
       {activeTab === "main" && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
@@ -333,7 +429,7 @@ export default function AdminQrScanPage() {
               <CardTitle className="text-sm text-white/60">방문 신청</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-3xl font-black">{currentStats.pendingCount.toLocaleString("ko-KR")}</p>
+              <p className="text-3xl font-black text-amber-400">{currentStats.pendingCount.toLocaleString("ko-KR")}</p>
               <p className="text-xs text-white/40 mt-1">아직 입장 전</p>
             </CardContent>
           </Card>
@@ -348,7 +444,7 @@ export default function AdminQrScanPage() {
               <p className="text-3xl font-black text-emerald-400">
                 {currentStats.checkInCount.toLocaleString("ko-KR")}
               </p>
-              <p className="text-xs text-white/40 mt-1">오늘 입장</p>
+              <p className="text-xs text-white/40 mt-1">현재 내부 체류 중</p>
             </CardContent>
           </Card>
           <Card
@@ -362,7 +458,7 @@ export default function AdminQrScanPage() {
               <p className="text-3xl font-black text-blue-400">
                 {currentStats.checkOutCount.toLocaleString("ko-KR")}
               </p>
-              <p className="text-xs text-white/40 mt-1">오늘 퇴장</p>
+              <p className="text-xs text-white/40 mt-1">퇴장 완료</p>
             </CardContent>
           </Card>
           <Card
@@ -373,10 +469,17 @@ export default function AdminQrScanPage() {
               <CardTitle className="text-sm text-white/60">전체</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-3xl font-black">
-                {currentStats.totalVisitCount.toLocaleString("ko-KR")}
-              </p>
-              <p className="text-xs text-white/40 mt-1">방문 예정</p>
+              <div className="flex items-baseline gap-2">
+                <p className="text-3xl font-black">
+                  {(currentStats.totalApprovedCount || 0).toLocaleString("ko-KR")}
+                </p>
+                {(currentStats.reentryCount || 0) > 0 && (
+                  <span className="text-sm text-purple-400 font-medium">
+                    +{currentStats.reentryCount.toLocaleString("ko-KR")} 재입장
+                  </span>
+                )}
+              </div>
+              <p className="text-xs text-white/40 mt-1">승인 인원</p>
             </CardContent>
           </Card>
         </div>
@@ -388,10 +491,10 @@ export default function AdminQrScanPage() {
             <div className="mb-6">
               <h2 className="text-2xl font-black text-white">정문 출입 이력 ({filteredRows.length}명)</h2>
               <p className="text-sm text-white/40 mt-1">
-                {cardFilter === "all" && "전체 방문자 목록"}
+                {cardFilter === "all" && "승인된 전체 방문자 목록"}
                 {cardFilter === "pending" && "아직 입장하지 않은 방문자 목록"}
-                {cardFilter === "checkIn" && "오늘 입장한 방문자 목록"}
-                {cardFilter === "checkOut" && "오늘 퇴장한 방문자 목록"}
+                {cardFilter === "checkIn" && "현재 내부 체류 중인 방문자 목록"}
+                {cardFilter === "checkOut" && "퇴장 완료된 방문자 목록"}
               </p>
             </div>
 
