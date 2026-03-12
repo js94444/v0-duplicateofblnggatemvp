@@ -349,7 +349,7 @@ export class AzureSqlDB {
     if (uploadedFiles && uploadedFiles.length > 0) {
       console.log('[v0] Processing', uploadedFiles.length, 'uploaded files')
       for (const file of uploadedFiles) {
-        // ��������������������������������������������일명과 키가 유효한 경우에만 저장
+        // ���������������������������������������������일명과 키가 유효한 경우에만 저장
         if (file && file.filename && file.fileKey && file.filename.trim() !== '' && file.fileKey.trim() !== '') {
           console.log('[v0] Saving file attachment:', { 
             filename: file.filename, 
@@ -1740,6 +1740,7 @@ export class AzureSqlDB {
   }
 
   /** QR 스캔 로그 조회 (출입현황) */
+  /** QR 스캔 로그 조회 (입장/퇴장 사이클별) */
   static async getQrScanLogs(scanSite: string, limit: number = 100, filterParams?: { date?: string } | { startDate?: string; endDate?: string }): Promise<any[]> {
     const dbPool = await getPool()
     
