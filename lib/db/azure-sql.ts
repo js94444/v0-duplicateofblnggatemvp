@@ -349,7 +349,7 @@ export class AzureSqlDB {
     if (uploadedFiles && uploadedFiles.length > 0) {
       console.log('[v0] Processing', uploadedFiles.length, 'uploaded files')
       for (const file of uploadedFiles) {
-        // ������������������������������������일명과 키가 유효한 경우에만 저장
+        // �������������������������������������일명과 키가 유효한 경우에만 저장
         if (file && file.filename && file.fileKey && file.filename.trim() !== '' && file.fileKey.trim() !== '') {
           console.log('[v0] Saving file attachment:', { 
             filename: file.filename, 
@@ -1740,17 +1740,30 @@ export class AzureSqlDB {
   }
 
   /** QR 스캔 로그 조회 (출입현황) */
-  static async getQrScanLogs(scanSite: string, limit: number = 100, filterDate?: string): Promise<any[]> {
+  static async getQrScanLogs(scanSite: string, limit: number = 100, filterParams?: { date?: string } | { startDate?: string; endDate?: string }): Promise<any[]> {
     const dbPool = await getPool()
     
-    // filterDate가 없으면 오늘 날짜 사용
-    const targetDate = filterDate || new Date().toISOString().split('T')[0]
+    // 범위 검색 여부 판단
+    const isRangeSearch = filterParams && 'startDate' in filterParams && 'endDate' in filterParams
     
-    const result = await dbPool.request()
+    let whereClause = ""
+    const request = dbPool.request()
       .input('scan_site', sql.NVarChar(50), scanSite)
       .input('limit', sql.Int, limit)
-      .input('filter_date', sql.Date, targetDate)
-      .query(`
+    
+    if (isRangeSearch && filterParams) {
+      const { startDate, endDate } = filterParams
+      request
+        .input('start_date', sql.Date, startDate || new Date().toISOString().split('T')[0])
+        .input('end_date', sql.Date, endDate || new Date().toISOString().split('T')[0])
+      whereClause = `AND CAST(s.scanned_at AS DATE) >= @start_date AND CAST(s.scanned_at AS DATE) <= @end_date`
+    } else {
+      const targetDate = filterParams && 'date' in filterParams ? filterParams.date : new Date().toISOString().split('T')[0]
+      request.input('filter_date', sql.Date, targetDate)
+      whereClause = `AND CAST(s.scanned_at AS DATE) = @filter_date`
+    }
+    
+    const result = await request.query(`
         ;WITH AllowedScans AS (
           SELECT 
             s.scan_id,
@@ -1778,7 +1791,7 @@ export class AzureSqlDB {
           LEFT JOIN visit_applications a ON s.application_id = a.application_id
           WHERE s.scan_site = @scan_site 
             AND s.result = 'ALLOW'
-            AND CAST(s.scanned_at AS DATE) = @filter_date
+            ${whereClause}
         ),
         EntryScanRanked AS (
           SELECT *,
@@ -1837,26 +1850,39 @@ export class AzureSqlDB {
   }
 
   /** QR 스캔 통계 조회 */
-  static async getQrScanStats(scanSite: string, filterDate?: string): Promise<any> {
+  static async getQrScanStats(scanSite: string, filterParams?: { date?: string } | { startDate?: string; endDate?: string }): Promise<any> {
     const dbPool = await getPool()
     
-    // filterDate가 없으면 오늘 날짜 사용
-    const targetDate = filterDate || new Date().toISOString().split('T')[0]
+    // 범위 검색 여부 판단
+    const isRangeSearch = filterParams && 'startDate' in filterParams && 'endDate' in filterParams
     
-    const result = await dbPool.request()
+    let whereClause = ""
+    const request = dbPool.request()
       .input('scan_site', sql.NVarChar(50), scanSite)
-      .input('filter_date', sql.Date, targetDate)
-      .query(`
-        -- 해당 날짜의 스캔 통계
+    
+    if (isRangeSearch && filterParams) {
+      const { startDate, endDate } = filterParams
+      request
+        .input('start_date', sql.Date, startDate || new Date().toISOString().split('T')[0])
+        .input('end_date', sql.Date, endDate || new Date().toISOString().split('T')[0])
+      whereClause = `AND CAST(scanned_at AS DATE) >= @start_date AND CAST(scanned_at AS DATE) <= @end_date`
+    } else {
+      const targetDate = filterParams && 'date' in filterParams ? filterParams.date : new Date().toISOString().split('T')[0]
+      request.input('filter_date', sql.Date, targetDate)
+      whereClause = `AND CAST(scanned_at AS DATE) = @filter_date`
+    }
+    
+    const result = await request.query(`
+        -- 해당 날짜(범위)의 스캔 통계
         SELECT 
           (SELECT COUNT(DISTINCT pass_id) FROM visit_pass_scans 
            WHERE scan_site = @scan_site AND direction = 'ENTRY' AND result = 'ALLOW' 
-           AND CAST(scanned_at AS DATE) = @filter_date) as checkInCount,
+           ${whereClause}) as checkInCount,
           (SELECT COUNT(DISTINCT pass_id) FROM visit_pass_scans 
            WHERE scan_site = @scan_site AND direction = 'EXIT' AND result = 'ALLOW' 
-           AND CAST(scanned_at AS DATE) = @filter_date) as checkOutCount,
+           ${whereClause}) as checkOutCount,
           (SELECT COUNT(*) FROM visit_applications 
-           WHERE CAST(visit_start_date AS DATE) = @filter_date 
+           WHERE CAST(visit_start_date AS DATE) >= (SELECT CAST(MIN(CAST(scanned_at AS DATE)) AS DATE) FROM visit_pass_scans WHERE scan_site = @scan_site AND result = 'ALLOW' ${whereClause.replace('scanned_at', 'scanned_at').replace(whereClause.substring(0, 15), '')})
            AND status = 'approved') as totalVisitCount
       `)
     

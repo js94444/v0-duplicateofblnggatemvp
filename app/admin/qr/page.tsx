@@ -65,12 +65,16 @@ export default function AdminQrScanPage() {
   const [activeTab, setActiveTab] = useState<TabKind>("main")
   const [pierTab, setPierTab] = useState<PierKind>("1부두")
   const [selectedDate, setSelectedDate] = useState<Date>(new Date())
+  const [useRangeSearch, setUseRangeSearch] = useState(false)
+  const [rangeStartDate, setRangeStartDate] = useState<Date>(subDays(new Date(), 7))
+  const [rangeEndDate, setRangeEndDate] = useState<Date>(new Date())
   const [cardFilter, setCardFilter] = useState<"all" | "pending" | "checkIn" | "checkOut">("all")
   const [selectedApplicationId, setSelectedApplicationId] = useState<number | null>(null)
   const [selectedApplication, setSelectedApplication] = useState<Application | null>(null)
   const [modalLoading, setModalLoading] = useState(false)
   const [portCertModal, setPortCertModal] = useState<{ open: boolean; files: Array<{ file_url: string; file_name: string }>; visitorName: string; birthDate: string }>({ open: false, files: [], visitorName: "", birthDate: "" })
   const [calendarOpen, setCalendarOpen] = useState(false)
+  const [rangeCalendarOpen, setRangeCalendarOpen] = useState(false)
 
   // SWR fetcher
   const fetcher = (url: string) => fetch(url, { cache: "no-store" }).then(res => {
@@ -96,11 +100,13 @@ export default function AdminQrScanPage() {
   const scanSiteParam =
     activeTab === "main" ? "main" : pierTab === "1부두" ? "pier_1" : "pier_2"
 
-  const dateParam = format(selectedDate, "yyyy-MM-dd")
+  const dateParam = useRangeSearch
+    ? `startDate=${format(rangeStartDate, "yyyy-MM-dd")}&endDate=${format(rangeEndDate, "yyyy-MM-dd")}`
+    : `date=${format(selectedDate, "yyyy-MM-dd")}`
 
   // SWR로 데이터 fetching - 캐시가 자동으로 유지됨
   const { data: swrData, error, isLoading: loading, mutate } = useSWR(
-    `/api/admin/qr-scans?scan_site=${scanSiteParam}&date=${dateParam}`,
+    `/api/admin/qr-scans?scan_site=${scanSiteParam}&${dateParam}`,
     fetcher,
     {
       revalidateOnFocus: false, // 포커스 시 재요청 방지
@@ -321,6 +327,111 @@ export default function AdminQrScanPage() {
           </Button>
         </div>
       </div>
+
+      {/* 날짜 범위 검색 */}
+      <div className="mb-6 p-4 bg-white/5 border border-white/10 rounded-xl">
+        <div className="flex items-center gap-4 flex-wrap">
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={useRangeSearch}
+              onChange={(e) => setUseRangeSearch(e.target.checked)}
+              className="w-4 h-4 rounded border-white/30 cursor-pointer"
+            />
+            <span className="text-sm text-white/70">날짜 범위 검색</span>
+          </label>
+          
+          {useRangeSearch && (
+            <div className="flex items-center gap-3 flex-wrap">
+              {/* 시작날짜 */}
+              <div className="flex items-center gap-2 bg-white/5 border border-white/10 rounded-lg px-3 py-2">
+                <Calendar size={16} className="text-white/60" />
+                <Popover open={rangeCalendarOpen && !false} onOpenChange={(open) => rangeCalendarOpen || setRangeCalendarOpen(open)}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      className="h-7 px-2 text-white text-sm hover:bg-white/10"
+                      onClick={() => setRangeCalendarOpen(true)}
+                    >
+                      {format(rangeStartDate, "yyyy-MM-dd")}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0 bg-zinc-900 border-white/10" align="start">
+                    <CalendarComponent
+                      mode="single"
+                      selected={rangeStartDate}
+                      onSelect={(date) => {
+                        if (date) {
+                          setRangeStartDate(date)
+                          setRangeCalendarOpen(false)
+                        }
+                      }}
+                      locale={ko}
+                      className="rounded-md"
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
+
+              {/* 구분선 */}
+              <span className="text-white/40 text-sm">~</span>
+
+              {/* 종료날짜 */}
+              <div className="flex items-center gap-2 bg-white/5 border border-white/10 rounded-lg px-3 py-2">
+                <Calendar size={16} className="text-white/60" />
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      className="h-7 px-2 text-white text-sm hover:bg-white/10"
+                    >
+                      {format(rangeEndDate, "yyyy-MM-dd")}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0 bg-zinc-900 border-white/10" align="start">
+                    <CalendarComponent
+                      mode="single"
+                      selected={rangeEndDate}
+                      onSelect={(date) => {
+                        if (date) {
+                          setRangeEndDate(date)
+                        }
+                      }}
+                      locale={ko}
+                      className="rounded-md"
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
+
+              {/* 빠른 범위 선택 버튼들 */}
+              <div className="flex items-center gap-2">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="h-7 text-xs bg-white/5 hover:bg-white/10 border-white/20 text-white/70 hover:text-white"
+                  onClick={() => {
+                    setRangeStartDate(subDays(new Date(), 7))
+                    setRangeEndDate(new Date())
+                  }}
+                >
+                  지난 7일
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="h-7 text-xs bg-white/5 hover:bg-white/10 border-white/20 text-white/70 hover:text-white"
+                  onClick={() => {
+                    setRangeStartDate(subDays(new Date(), 30))
+                    setRangeEndDate(new Date())
+                  }}
+                >
+                  지난 30일
+                </Button>
+              </div>
+            </div>
+          )}
+        </div>
 
       {/* Summary cards: 정문 탭에서만 */}
       {activeTab === "main" && (
