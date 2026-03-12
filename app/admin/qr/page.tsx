@@ -40,6 +40,10 @@ interface ScanRow {
   exit_at: string | null
   exit_device_id: string | null
   exit_scanned_ip: string | null
+  // 마지막 스캔 방향 및 횟수
+  last_scan_direction: 'ENTRY' | 'EXIT' | null
+  entry_count: number
+  exit_count: number
   last_event_at: string
 }
 
@@ -160,6 +164,9 @@ export default function AdminQrScanPage() {
       portCertFiles: row.portCertFiles || [],
       lastEntryAt: row.entry_at,
       lastExitAt: row.exit_at,
+      lastScanDirection: row.last_scan_direction,
+      entryCount: row.entry_count || 0,
+      exitCount: row.exit_count || 0,
       lastEventAt: new Date(row.last_event_at).getTime(),
       visit_start_date: row.visit_start_date,
       visit_end_date: row.visit_end_date,
@@ -171,10 +178,10 @@ export default function AdminQrScanPage() {
     if (cardFilter === "all") return rowsByPerson
     // 방문신청: 아직 입장 안 한 인원 (입장 스캔 기록 없음)
     if (cardFilter === "pending") return rowsByPerson.filter(r => !r.lastEntryAt)
-    // 체크인: 현재 내부 체류 중 (입장O, 퇴장X)
-    if (cardFilter === "checkIn") return rowsByPerson.filter(r => r.lastEntryAt && !r.lastExitAt)
-    // 체크아웃: 퇴장 완료 (입장O, 퇴장O)
-    if (cardFilter === "checkOut") return rowsByPerson.filter(r => r.lastEntryAt && r.lastExitAt)
+    // 체크인: 현재 내부 체류 중 (마지막 스캔이 ENTRY인 사람)
+    if (cardFilter === "checkIn") return rowsByPerson.filter(r => r.lastScanDirection === 'ENTRY')
+    // 체크아웃: 퇴장 완료 (마지막 스캔이 EXIT인 사람)
+    if (cardFilter === "checkOut") return rowsByPerson.filter(r => r.lastScanDirection === 'EXIT')
     return rowsByPerson
   }, [rowsByPerson, cardFilter])
 
@@ -232,10 +239,10 @@ export default function AdminQrScanPage() {
   }
 
   const currentStats: ScanStats = {
-    // 체크인: 현재 내부 체류 중 (입장O, 퇴장X)
-    checkInCount: stats?.checkInCount ?? rowsByPerson.filter(r => r.lastEntryAt && !r.lastExitAt).length,
-    // 체크아웃: 퇴장 완료 (입장O, 퇴장O)
-    checkOutCount: stats?.checkOutCount ?? rowsByPerson.filter(r => r.lastEntryAt && r.lastExitAt).length,
+    // 체크인: 현재 내부 체류 중 (마지막 스캔이 ENTRY인 사람)
+    checkInCount: stats?.checkInCount ?? rowsByPerson.filter(r => r.lastScanDirection === 'ENTRY').length,
+    // 체크아웃: 퇴장 완료 (마지막 스캔이 EXIT인 사람)
+    checkOutCount: stats?.checkOutCount ?? rowsByPerson.filter(r => r.lastScanDirection === 'EXIT').length,
     // 방문신청: 아직 입장 안 한 인원
     pendingCount: stats?.pendingCount ?? rowsByPerson.filter(r => !r.lastEntryAt).length,
     // 전체: 승인된 인원 수
@@ -469,17 +476,26 @@ export default function AdminQrScanPage() {
               <CardTitle className="text-sm text-white/60">전체</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="flex items-baseline gap-2">
-                <p className="text-3xl font-black">
-                  {(currentStats.totalApprovedCount || 0).toLocaleString("ko-KR")}
-                </p>
-                {(currentStats.reentryCount || 0) > 0 && (
-                  <span className="text-sm text-purple-400 font-medium">
-                    +{currentStats.reentryCount.toLocaleString("ko-KR")} 재입장
-                  </span>
-                )}
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-3xl font-black">
+                    {(currentStats.totalApprovedCount || 0).toLocaleString("ko-KR")}
+                  </p>
+                  <p className="text-xs text-white/40 mt-1">승인 인원</p>
+                </div>
+                <div className="text-right space-y-1">
+                  <div className="flex items-center justify-end gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-white/40"></span>
+                    <span className="text-xs text-white/50">신청</span>
+                    <span className="text-sm font-bold text-white">{(currentStats.totalApprovedCount || 0).toLocaleString("ko-KR")}</span>
+                  </div>
+                  <div className="flex items-center justify-end gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-purple-400"></span>
+                    <span className="text-xs text-white/50">재입장</span>
+                    <span className="text-sm font-bold text-purple-400">{(currentStats.reentryCount || 0).toLocaleString("ko-KR")}</span>
+                  </div>
+                </div>
               </div>
-              <p className="text-xs text-white/40 mt-1">승인 인원</p>
             </CardContent>
           </Card>
         </div>

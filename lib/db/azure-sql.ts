@@ -349,7 +349,7 @@ export class AzureSqlDB {
     if (uploadedFiles && uploadedFiles.length > 0) {
       console.log('[v0] Processing', uploadedFiles.length, 'uploaded files')
       for (const file of uploadedFiles) {
-        // �����������������������������������������일명과 키가 유효한 경우에만 저장
+        // ������������������������������������������일명과 키가 유효한 경우에만 저장
         if (file && file.filename && file.fileKey && file.filename.trim() !== '' && file.fileKey.trim() !== '') {
           console.log('[v0] Saving file attachment:', { 
             filename: file.filename, 
@@ -1795,7 +1795,22 @@ export class AzureSqlDB {
           LEFT JOIN visit_companions c ON p.companion_id = c.companion_id
           WHERE p.status = 'active' ${passWhereClause}
         ),
-        -- 2. 해당 날짜의 입장 스캔 기록 (마지막 입장만)
+        -- 2. 해당 날짜의 마지막 스캔 기록 (ENTRY/EXIT 구분 없이 가장 최근)
+        LastScan AS (
+          SELECT 
+            s.pass_id,
+            s.scanned_at,
+            s.direction,
+            s.device_id,
+            s.scanned_ip,
+            s.scan_site,
+            ROW_NUMBER() OVER (PARTITION BY s.pass_id ORDER BY s.scanned_at DESC) as rn
+          FROM visit_pass_scans s
+          WHERE s.scan_site = @scan_site 
+            AND s.result = 'ALLOW'
+            ${scanWhereClause}
+        ),
+        -- 3. 해당 날짜의 입장 스캔 기록 (마지막 입장 시각)
         LastEntryScans AS (
           SELECT 
             s.pass_id,
@@ -1810,7 +1825,7 @@ export class AzureSqlDB {
             AND s.result = 'ALLOW'
             ${scanWhereClause}
         ),
-        -- 3. 해당 날짜의 퇴장 스캔 기록 (마지막 퇴장만)
+        -- 4. 해당 날짜의 퇴장 스캔 기록 (마지막 퇴장 시각)
         LastExitScans AS (
           SELECT 
             s.pass_id,
@@ -1823,6 +1838,18 @@ export class AzureSqlDB {
             AND s.direction = 'EXIT' 
             AND s.result = 'ALLOW'
             ${scanWhereClause}
+        ),
+        -- 5. 입장/퇴장 횟수 (재입장 판단용)
+        ScanCounts AS (
+          SELECT 
+            s.pass_id,
+            SUM(CASE WHEN s.direction = 'ENTRY' THEN 1 ELSE 0 END) as entry_count,
+            SUM(CASE WHEN s.direction = 'EXIT' THEN 1 ELSE 0 END) as exit_count
+          FROM visit_pass_scans s
+          WHERE s.scan_site = @scan_site 
+            AND s.result = 'ALLOW'
+            ${scanWhereClause}
+          GROUP BY s.pass_id
         )
         SELECT TOP (@limit)
           ap.pass_id,
@@ -1846,10 +1873,15 @@ export class AzureSqlDB {
           x.exit_at,
           x.exit_device_id,
           x.exit_scanned_ip,
-          COALESCE(x.exit_at, e.entry_at, ap.issued_at) as last_event_at
+          ls.direction as last_scan_direction,
+          COALESCE(sc.entry_count, 0) as entry_count,
+          COALESCE(sc.exit_count, 0) as exit_count,
+          COALESCE(ls.scanned_at, ap.issued_at) as last_event_at
         FROM ApprovedPasses ap
+        LEFT JOIN LastScan ls ON ap.pass_id = ls.pass_id AND ls.rn = 1
         LEFT JOIN LastEntryScans e ON ap.pass_id = e.pass_id AND e.rn = 1
         LEFT JOIN LastExitScans x ON ap.pass_id = x.pass_id AND x.rn = 1
+        LEFT JOIN ScanCounts sc ON ap.pass_id = sc.pass_id
         ORDER BY last_event_at DESC
       `)
     return result.recordset
@@ -1902,21 +1934,24 @@ export class AzureSqlDB {
           WHERE scan_site = @scan_site AND direction = 'EXIT' AND result = 'ALLOW' ${scanWhereClause}
         );
         
-        -- 4. 현재 내부 체류 중 (입장O, 퇴장X)
+        -- 4. 현재 내부 체류 중 (마지막 스캔이 ENTRY인 사람)
         DECLARE @currentlyInsideCount INT = (
-          SELECT COUNT(DISTINCT e.pass_id)
-          FROM (SELECT DISTINCT pass_id FROM visit_pass_scans WHERE scan_site = @scan_site AND direction = 'ENTRY' AND result = 'ALLOW' ${scanWhereClause}) e
-          LEFT JOIN (SELECT DISTINCT pass_id FROM visit_pass_scans WHERE scan_site = @scan_site AND direction = 'EXIT' AND result = 'ALLOW' ${scanWhereClause}) x
-          ON e.pass_id = x.pass_id
-          WHERE x.pass_id IS NULL
+          SELECT COUNT(*) FROM (
+            SELECT pass_id, direction,
+              ROW_NUMBER() OVER (PARTITION BY pass_id ORDER BY scanned_at DESC) as rn
+            FROM visit_pass_scans
+            WHERE scan_site = @scan_site AND result = 'ALLOW' ${scanWhereClause}
+          ) t WHERE t.rn = 1 AND t.direction = 'ENTRY'
         );
         
-        -- 5. 퇴장 완료 (입장O, 퇴장O)
+        -- 5. 퇴장 완료 (마지막 스캔이 EXIT인 사람)
         DECLARE @checkedOutCount INT = (
-          SELECT COUNT(DISTINCT e.pass_id)
-          FROM (SELECT DISTINCT pass_id FROM visit_pass_scans WHERE scan_site = @scan_site AND direction = 'ENTRY' AND result = 'ALLOW' ${scanWhereClause}) e
-          INNER JOIN (SELECT DISTINCT pass_id FROM visit_pass_scans WHERE scan_site = @scan_site AND direction = 'EXIT' AND result = 'ALLOW' ${scanWhereClause}) x
-          ON e.pass_id = x.pass_id
+          SELECT COUNT(*) FROM (
+            SELECT pass_id, direction,
+              ROW_NUMBER() OVER (PARTITION BY pass_id ORDER BY scanned_at DESC) as rn
+            FROM visit_pass_scans
+            WHERE scan_site = @scan_site AND result = 'ALLOW' ${scanWhereClause}
+          ) t WHERE t.rn = 1 AND t.direction = 'EXIT'
         );
         
         -- 6. 재입장자 수 (당일 입장+퇴장 각각 2회 이상 스캔된 사람)
