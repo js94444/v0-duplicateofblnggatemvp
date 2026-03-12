@@ -349,7 +349,7 @@ export class AzureSqlDB {
     if (uploadedFiles && uploadedFiles.length > 0) {
       console.log('[v0] Processing', uploadedFiles.length, 'uploaded files')
       for (const file of uploadedFiles) {
-        // ���������������������������������������������������일명과 키가 유효한 경우에만 저장
+        // ����������������������������������������������������일명과 키가 유효한 경우에만 저장
         if (file && file.filename && file.fileKey && file.filename.trim() !== '' && file.fileKey.trim() !== '') {
           console.log('[v0] Saving file attachment:', { 
             filename: file.filename, 
@@ -1834,6 +1834,7 @@ export class AzureSqlDB {
         ),
         -- 5. 입장/퇴장 사이클 매칭 (N번째 입장 - N번째 퇴장)
         EntryCycles AS (
+          -- 입장 기록이 있는 경우 (입장 기준으로 퇴장 매칭)
           SELECT 
             e.pass_id,
             e.entry_at,
@@ -1847,6 +1848,25 @@ export class AzureSqlDB {
             CASE WHEN x.exit_at IS NOT NULL THEN 'EXIT' ELSE 'ENTRY' END as cycle_status
           FROM EntryScans e
           LEFT JOIN ExitScans x ON e.pass_id = x.pass_id AND e.entry_rn = x.exit_rn
+          
+          UNION ALL
+          
+          -- 퇴장만 있고 입장이 없는 경우 (다른 날 입장 후 오늘 퇴장)
+          SELECT 
+            x.pass_id,
+            NULL as entry_at,
+            NULL as entry_device_id,
+            NULL as entry_scanned_ip,
+            @scan_site as scan_site,
+            x.exit_rn as cycle_num,
+            x.exit_at,
+            x.exit_device_id,
+            x.exit_scanned_ip,
+            'EXIT' as cycle_status
+          FROM ExitScans x
+          WHERE NOT EXISTS (
+            SELECT 1 FROM EntryScans e WHERE e.pass_id = x.pass_id
+          )
         ),
         -- 6. 입장/퇴장 총 횟수
         ScanCounts AS (
