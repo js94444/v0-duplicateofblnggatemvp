@@ -349,7 +349,7 @@ export class AzureSqlDB {
     if (uploadedFiles && uploadedFiles.length > 0) {
       console.log('[v0] Processing', uploadedFiles.length, 'uploaded files')
       for (const file of uploadedFiles) {
-        // �����������������������������������일명과 키가 유효한 경우에만 저장
+        // ������������������������������������일명과 키가 유효한 경우에만 저장
         if (file && file.filename && file.fileKey && file.filename.trim() !== '' && file.fileKey.trim() !== '') {
           console.log('[v0] Saving file attachment:', { 
             filename: file.filename, 
@@ -1740,12 +1740,16 @@ export class AzureSqlDB {
   }
 
   /** QR 스캔 로그 조회 (출입현황) */
-  static async getQrScanLogs(scanSite: string, limit: number = 100): Promise<any[]> {
+  static async getQrScanLogs(scanSite: string, limit: number = 100, filterDate?: string): Promise<any[]> {
     const dbPool = await getPool()
+    
+    // filterDate가 없으면 오늘 날짜 사용
+    const targetDate = filterDate || new Date().toISOString().split('T')[0]
     
     const result = await dbPool.request()
       .input('scan_site', sql.NVarChar(50), scanSite)
       .input('limit', sql.Int, limit)
+      .input('filter_date', sql.Date, targetDate)
       .query(`
         ;WITH AllowedScans AS (
           SELECT 
@@ -1767,10 +1771,14 @@ export class AzureSqlDB {
             a.visitor_birth_date,
             a.vehicle_number,
             a.vehicle_model,
-            a.spark_arrestor
+            a.spark_arrestor,
+            a.visit_start_date,
+            a.visit_end_date
           FROM visit_pass_scans s
           LEFT JOIN visit_applications a ON s.application_id = a.application_id
-          WHERE s.scan_site = @scan_site AND s.result = 'ALLOW'
+          WHERE s.scan_site = @scan_site 
+            AND s.result = 'ALLOW'
+            AND CAST(s.scanned_at AS DATE) = @filter_date
         ),
         EntryScanRanked AS (
           SELECT *,
@@ -1809,6 +1817,8 @@ export class AzureSqlDB {
           e.vehicle_number,
           e.vehicle_model,
           e.spark_arrestor,
+          e.visit_start_date,
+          e.visit_end_date,
           x.scan_id as exit_scan_id,
           x.scanned_at as exit_at,
           x.device_id as exit_device_id,
@@ -1827,22 +1837,38 @@ export class AzureSqlDB {
   }
 
   /** QR 스캔 통계 조회 */
-  static async getQrScanStats(scanSite: string): Promise<any> {
+  static async getQrScanStats(scanSite: string, filterDate?: string): Promise<any> {
     const dbPool = await getPool()
+    
+    // filterDate가 없으면 오늘 날짜 사용
+    const targetDate = filterDate || new Date().toISOString().split('T')[0]
     
     const result = await dbPool.request()
       .input('scan_site', sql.NVarChar(50), scanSite)
+      .input('filter_date', sql.Date, targetDate)
       .query(`
+        -- 해당 날짜의 스캔 통계
         SELECT 
-          COUNT(*) as total,
-          SUM(CASE WHEN direction = 'ENTRY' THEN 1 ELSE 0 END) as entryCount,
-          SUM(CASE WHEN direction = 'EXIT' THEN 1 ELSE 0 END) as exitCount,
-          SUM(CASE WHEN result = 'ALLOW' THEN 1 ELSE 0 END) as allowCount,
-          SUM(CASE WHEN result = 'DENY' THEN 1 ELSE 0 END) as denyCount
-        FROM visit_pass_scans
-        WHERE scan_site = @scan_site
+          (SELECT COUNT(DISTINCT pass_id) FROM visit_pass_scans 
+           WHERE scan_site = @scan_site AND direction = 'ENTRY' AND result = 'ALLOW' 
+           AND CAST(scanned_at AS DATE) = @filter_date) as checkInCount,
+          (SELECT COUNT(DISTINCT pass_id) FROM visit_pass_scans 
+           WHERE scan_site = @scan_site AND direction = 'EXIT' AND result = 'ALLOW' 
+           AND CAST(scanned_at AS DATE) = @filter_date) as checkOutCount,
+          (SELECT COUNT(*) FROM visit_applications 
+           WHERE CAST(visit_start_date AS DATE) = @filter_date 
+           AND status = 'approved') as totalVisitCount
       `)
-    return result.recordset[0] || { total: 0, entryCount: 0, exitCount: 0, allowCount: 0, denyCount: 0 }
+    
+    const stats = result.recordset[0] || { checkInCount: 0, checkOutCount: 0, totalVisitCount: 0 }
+    
+    // 방문신청 카드: 전체 - 체크인 - 체크아웃 (아직 액션 없는 건수)
+    const pendingCount = Math.max(0, stats.totalVisitCount - stats.checkInCount)
+    
+    return {
+      ...stats,
+      pendingCount
+    }
   }
 
   /** 보안담당자 계정의 전화번호 목록 조회 (is_security_contact = 1) */
