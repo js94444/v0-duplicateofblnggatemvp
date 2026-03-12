@@ -1036,37 +1036,23 @@ export default function VisitFormPage() {
                 </div>
               </CardHeader>
               <CardContent className="space-y-6 p-8">
-                {/* 동행인 추가 버튼 - 마지막 카드 아래 */}
-                {companions.length > 0 && (
-                  <Button
-                    type="button"
-                    onClick={addCompanion}
-                    className="group flex items-center gap-3 bg-black/40 border border-white/10 hover:border-amber-500/50 hover:bg-black/60 text-white backdrop-blur-sm transition-all duration-300 hover:shadow-[0_0_15px_rgba(245,158,11,0.1)] px-6 py-5 rounded-xl w-full justify-center"
-                  >
-                    <div className="p-2 bg-amber-500/10 text-amber-500 rounded-lg group-hover:bg-amber-500 group-hover:text-black transition-all">
-                      <Plus size={18} strokeWidth={3} />
-                    </div>
-                    <span className="text-base font-bold group-hover:text-amber-500 transition-colors">{t("동행인을 추가하시려면 클릭하세요", "Click to add a companion")}</span>
-                  </Button>
-                )}
-              </CardContent>
-            </Card>
-
-            {/* 동행인이 없을 때만 상단에 버튼 표시 */}
-            {companions.length === 0 && (
-              <div className="flex justify-center">
-                <Button
-                  type="button"
-                  onClick={addCompanion}
-                  className="group flex items-center gap-3 bg-black/40 border border-white/10 hover:border-amber-500/50 hover:bg-black/60 text-white backdrop-blur-sm transition-all duration-300 hover:shadow-[0_0_15px_rgba(245,158,11,0.1)] px-6 py-5 rounded-xl"
-                >
-                  <div className="p-2 bg-amber-500/10 text-amber-500 rounded-lg group-hover:bg-amber-500 group-hover:text-black transition-all">
-                    <Plus size={18} strokeWidth={3} />
+                {/* 동행인이 없을 때만 상단에 버튼 표시 */}
+                {companions.length === 0 && (
+                  <div className="flex justify-center">
+                    <Button
+                      type="button"
+                      onClick={addCompanion}
+                      className="group flex items-center gap-3 bg-black/40 border border-white/10 hover:border-amber-500/50 hover:bg-black/60 text-white backdrop-blur-sm transition-all duration-300 hover:shadow-[0_0_15px_rgba(245,158,11,0.1)] px-6 py-5 rounded-xl"
+                    >
+                      <div className="p-2 bg-amber-500/10 text-amber-500 rounded-lg group-hover:bg-amber-500 group-hover:text-black transition-all">
+                        <Plus size={18} strokeWidth={3} />
+                      </div>
+                      <span className="text-base font-bold group-hover:text-amber-500 transition-colors">{t("동행인을 추가하시려면 클릭하세요", "Click to add a companion")}</span>
+                    </Button>
                   </div>
-                  <span className="text-base font-bold group-hover:text-amber-500 transition-colors">{t("동행인을 추가하시려면 클릭하세요", "Click to add a companion")}</span>
-                </Button>
-              </div>
-            )}
+                )}
+
+                {companions.map((companion, companionIndex) => (
                   <Card key={companionIndex} className="bg-black/30 backdrop-blur-sm border border-amber-500/20 rounded-2xl">
                     <CardHeader className="pb-4 p-6">
                       <div className="flex justify-between items-center">
@@ -1285,6 +1271,22 @@ export default function VisitFormPage() {
                     </CardContent>
                   </Card>
                 ))}
+
+                {/* 동행인 추가 버튼 - 마지막 카드 아래 (동행인 1명 이상일 때) */}
+                {companions.length > 0 && (
+                  <div className="flex justify-center">
+                    <Button
+                      type="button"
+                      onClick={addCompanion}
+                      className="group flex items-center gap-3 bg-black/40 border border-white/10 hover:border-amber-500/50 hover:bg-black/60 text-white backdrop-blur-sm transition-all duration-300 hover:shadow-[0_0_15px_rgba(245,158,11,0.1)] px-6 py-5 rounded-xl"
+                    >
+                      <div className="p-2 bg-amber-500/10 text-amber-500 rounded-lg group-hover:bg-amber-500 group-hover:text-black transition-all">
+                        <Plus size={18} strokeWidth={3} />
+                      </div>
+                      <span className="text-base font-bold group-hover:text-amber-500 transition-colors">{t("동행인을 추가하시려면 클릭하세요", "Click to add a companion")}</span>
+                    </Button>
+                  </div>
+                )}
               </CardContent>
             </Card>
 
