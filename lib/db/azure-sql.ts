@@ -349,7 +349,7 @@ export class AzureSqlDB {
     if (uploadedFiles && uploadedFiles.length > 0) {
       console.log('[v0] Processing', uploadedFiles.length, 'uploaded files')
       for (const file of uploadedFiles) {
-        // �������������������������������������일명과 키가 유효한 경우에만 저장
+        // ��������������������������������������일명과 키가 유효한 경우에만 저장
         if (file && file.filename && file.fileKey && file.filename.trim() !== '' && file.fileKey.trim() !== '') {
           console.log('[v0] Saving file attachment:', { 
             filename: file.filename, 
@@ -1856,7 +1856,8 @@ export class AzureSqlDB {
     // 범위 검색 여부 판단
     const isRangeSearch = filterParams && 'startDate' in filterParams && 'endDate' in filterParams
     
-    let whereClause = ""
+    let scanWhereClause = ""
+    let visitWhereClause = ""
     const request = dbPool.request()
       .input('scan_site', sql.NVarChar(50), scanSite)
     
@@ -1865,11 +1866,13 @@ export class AzureSqlDB {
       request
         .input('start_date', sql.Date, startDate || new Date().toISOString().split('T')[0])
         .input('end_date', sql.Date, endDate || new Date().toISOString().split('T')[0])
-      whereClause = `AND CAST(scanned_at AS DATE) >= @start_date AND CAST(scanned_at AS DATE) <= @end_date`
+      scanWhereClause = `AND CAST(scanned_at AS DATE) >= @start_date AND CAST(scanned_at AS DATE) <= @end_date`
+      visitWhereClause = `AND CAST(visit_start_date AS DATE) >= @start_date AND CAST(visit_start_date AS DATE) <= @end_date`
     } else {
       const targetDate = filterParams && 'date' in filterParams ? filterParams.date : new Date().toISOString().split('T')[0]
       request.input('filter_date', sql.Date, targetDate)
-      whereClause = `AND CAST(scanned_at AS DATE) = @filter_date`
+      scanWhereClause = `AND CAST(scanned_at AS DATE) = @filter_date`
+      visitWhereClause = `AND CAST(visit_start_date AS DATE) = @filter_date`
     }
     
     const result = await request.query(`
@@ -1877,18 +1880,17 @@ export class AzureSqlDB {
         SELECT 
           (SELECT COUNT(DISTINCT pass_id) FROM visit_pass_scans 
            WHERE scan_site = @scan_site AND direction = 'ENTRY' AND result = 'ALLOW' 
-           ${whereClause}) as checkInCount,
+           ${scanWhereClause}) as checkInCount,
           (SELECT COUNT(DISTINCT pass_id) FROM visit_pass_scans 
            WHERE scan_site = @scan_site AND direction = 'EXIT' AND result = 'ALLOW' 
-           ${whereClause}) as checkOutCount,
+           ${scanWhereClause}) as checkOutCount,
           (SELECT COUNT(*) FROM visit_applications 
-           WHERE CAST(visit_start_date AS DATE) >= (SELECT CAST(MIN(CAST(scanned_at AS DATE)) AS DATE) FROM visit_pass_scans WHERE scan_site = @scan_site AND result = 'ALLOW' ${whereClause.replace('scanned_at', 'scanned_at').replace(whereClause.substring(0, 15), '')})
-           AND status = 'approved') as totalVisitCount
+           WHERE status = 'approved' ${visitWhereClause}) as totalVisitCount
       `)
     
     const stats = result.recordset[0] || { checkInCount: 0, checkOutCount: 0, totalVisitCount: 0 }
     
-    // 방문신청 카드: 전체 - 체크인 - 체크아웃 (아직 액션 없는 건수)
+    // 방문신청 카드: 전체 - 체크인 (아직 입장 전 건수)
     const pendingCount = Math.max(0, stats.totalVisitCount - stats.checkInCount)
     
     return {
@@ -1908,7 +1910,7 @@ export class AzureSqlDB {
     return result.recordset.map((r: any) => r.phone)
   }
 
-  /** 신청 ID로 동행인 전화번호 목록 조회 */
+  /** 신청 ID로 동행인 전화번��� 목록 조회 */
   static async getCompanionPhonesByApplicationId(applicationId: string): Promise<string[]> {
     const dbPool = await getPool()
     const result = await dbPool.request()
