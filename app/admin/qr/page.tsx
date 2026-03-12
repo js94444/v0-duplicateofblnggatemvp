@@ -20,7 +20,7 @@ interface ScanRow {
   application_id: number
   companion_id: number | null
   visitor_name: string | null
-  visitor_org: string | null
+  visitor_organization: string | null
   contact_name: string | null
   access_area: string | null
   contact_mobile: string | null
@@ -40,6 +40,11 @@ interface ScanRow {
   exit_at: string | null
   exit_device_id: string | null
   exit_scanned_ip: string | null
+  // 마지막 스캔 방향 및 횟수
+  last_scan_direction: 'ENTRY' | 'EXIT' | null
+  entry_count: number
+  exit_count: number
+  cycle_num: number | null  // 입장/퇴장 사이클 번호
   last_event_at: string
 }
 
@@ -149,7 +154,7 @@ export default function AdminQrScanPage() {
       pass_id: row.pass_id,
       application_id: row.application_id,
       visitor_name: row.visitor_name,
-      visitor_org: row.visitor_org,
+      visitor_organization: row.visitor_organization,
       contact_name: row.contact_name,
       access_area: row.access_area,
       vehicle_number: row.vehicle_number,
@@ -160,6 +165,10 @@ export default function AdminQrScanPage() {
       portCertFiles: row.portCertFiles || [],
       lastEntryAt: row.entry_at,
       lastExitAt: row.exit_at,
+      lastScanDirection: row.last_scan_direction,
+      entryCount: row.entry_count || 0,
+      exitCount: row.exit_count || 0,
+      cycleNum: row.cycle_num,
       lastEventAt: new Date(row.last_event_at).getTime(),
       visit_start_date: row.visit_start_date,
       visit_end_date: row.visit_end_date,
@@ -171,10 +180,10 @@ export default function AdminQrScanPage() {
     if (cardFilter === "all") return rowsByPerson
     // 방문신청: 아직 입장 안 한 인원 (입장 스캔 기록 없음)
     if (cardFilter === "pending") return rowsByPerson.filter(r => !r.lastEntryAt)
-    // 체크인: 현재 내부 체류 중 (입장O, 퇴장X)
-    if (cardFilter === "checkIn") return rowsByPerson.filter(r => r.lastEntryAt && !r.lastExitAt)
-    // 체크아웃: 퇴장 완료 (입장O, 퇴장O)
-    if (cardFilter === "checkOut") return rowsByPerson.filter(r => r.lastEntryAt && r.lastExitAt)
+    // 체크인: 현재 내부 체류 중 (마지막 스캔이 ENTRY인 사람)
+    if (cardFilter === "checkIn") return rowsByPerson.filter(r => r.lastScanDirection === 'ENTRY')
+    // 체크아웃: 퇴장 완료 (마지막 스캔이 EXIT인 사람)
+    if (cardFilter === "checkOut") return rowsByPerson.filter(r => r.lastScanDirection === 'EXIT')
     return rowsByPerson
   }, [rowsByPerson, cardFilter])
 
@@ -232,10 +241,10 @@ export default function AdminQrScanPage() {
   }
 
   const currentStats: ScanStats = {
-    // 체크인: 현재 내부 체류 중 (입장O, 퇴장X)
-    checkInCount: stats?.checkInCount ?? rowsByPerson.filter(r => r.lastEntryAt && !r.lastExitAt).length,
-    // 체크아웃: 퇴장 완료 (입장O, 퇴장O)
-    checkOutCount: stats?.checkOutCount ?? rowsByPerson.filter(r => r.lastEntryAt && r.lastExitAt).length,
+    // 체크인: 현재 내부 체류 중 (마지막 스캔이 ENTRY인 사람)
+    checkInCount: stats?.checkInCount ?? rowsByPerson.filter(r => r.lastScanDirection === 'ENTRY').length,
+    // 체크아웃: 퇴장 완료 (마지막 스캔이 EXIT인 사람)
+    checkOutCount: stats?.checkOutCount ?? rowsByPerson.filter(r => r.lastScanDirection === 'EXIT').length,
     // 방문신청: 아직 입장 안 한 인원
     pendingCount: stats?.pendingCount ?? rowsByPerson.filter(r => !r.lastEntryAt).length,
     // 전체: 승인된 인원 수
@@ -469,17 +478,26 @@ export default function AdminQrScanPage() {
               <CardTitle className="text-sm text-white/60">전체</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="flex items-baseline gap-2">
-                <p className="text-3xl font-black">
-                  {(currentStats.totalApprovedCount || 0).toLocaleString("ko-KR")}
-                </p>
-                {(currentStats.reentryCount || 0) > 0 && (
-                  <span className="text-sm text-purple-400 font-medium">
-                    +{currentStats.reentryCount.toLocaleString("ko-KR")} 재입장
-                  </span>
-                )}
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-3xl font-black">
+                    {(currentStats.totalApprovedCount || 0).toLocaleString("ko-KR")}
+                  </p>
+                  <p className="text-xs text-white/40 mt-1">승인 인원</p>
+                </div>
+                <div className="text-right space-y-1">
+                  <div className="flex items-center justify-end gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-white/40"></span>
+                    <span className="text-xs text-white/50">신청</span>
+                    <span className="text-sm font-bold text-white">{(currentStats.totalApprovedCount || 0).toLocaleString("ko-KR")}</span>
+                  </div>
+                  <div className="flex items-center justify-end gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-purple-400"></span>
+                    <span className="text-xs text-white/50">재입장</span>
+                    <span className="text-sm font-bold text-purple-400">{(currentStats.reentryCount || 0).toLocaleString("ko-KR")}</span>
+                  </div>
+                </div>
               </div>
-              <p className="text-xs text-white/40 mt-1">승인 인원</p>
             </CardContent>
           </Card>
         </div>
@@ -542,7 +560,7 @@ export default function AdminQrScanPage() {
                       const recentClass = getRecentHighlight(row)
                       return (
                         <TableRow
-                          key={row.pass_id}
+                          key={`${row.pass_id}-${row.cycleNum || 0}`}
                           className={`border-white/5 hover:bg-white/5 transition-colors ${recentClass}`}
                         >
                           <TableCell
@@ -554,13 +572,20 @@ export default function AdminQrScanPage() {
                               }
                             }}
                           >
-                            {row.visitor_name || "-"}
+                            <div className="flex items-center gap-1.5">
+                              <span>{row.visitor_name || "-"}</span>
+                              {row.cycleNum && row.cycleNum > 1 && (
+                                <span className="text-[10px] px-1.5 py-0.5 rounded bg-purple-500/20 text-purple-400 font-medium">
+                                  {row.cycleNum}회차
+                                </span>
+                              )}
+                            </div>
                           </TableCell>
                           <TableCell className="text-sm text-white/80">
                             {row.visitor_birth_date ? new Date(row.visitor_birth_date).toLocaleDateString("ko-KR") : "-"}
                           </TableCell>
                           <TableCell className="text-sm text-white/60 max-w-[140px] truncate">
-                            {row.visitor_org || "-"}
+                            {row.visitor_organization || "-"}
                           </TableCell>
                           <TableCell className="text-sm text-white/60">
                             {formatVisitPeriod(row.visit_start_date, row.visit_end_date)}
@@ -682,7 +707,7 @@ export default function AdminQrScanPage() {
                             {row.visitor_birth_date ? new Date(row.visitor_birth_date).toLocaleDateString("ko-KR") : "-"}
                           </TableCell>
                           <TableCell className="text-sm text-white/60 max-w-[140px] truncate">
-                            {row.visitor_org || "-"}
+                            {row.visitor_organization || "-"}
                           </TableCell>
                           <TableCell className="max-w-[140px]">
                             <div className="flex flex-col gap-0.5">
