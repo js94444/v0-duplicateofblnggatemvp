@@ -432,6 +432,7 @@ export default function AdminQrScanPage() {
             </div>
           )}
         </div>
+      </div>
 
       {/* Summary cards: 정문 탭에서만 */}
       {activeTab === "main" && (
