@@ -420,9 +420,9 @@ export default function AdminQrScanPage() {
                 <Table>
                   <TableHeader className="bg-white/5">
                     <TableRow className="border-white/10 hover:bg-transparent">
-                      <TableHead className="text-white/70 min-w-[100px]">방문자</TableHead>
+                      <TableHead className="text-white/70 min-w-[90px]">방문자</TableHead>
                       <TableHead className="text-white/70 min-w-[100px]">생년월일</TableHead>
-                      <TableHead className="text-white/70 min-w-[140px]">소속</TableHead>
+                      <TableHead className="text-white/70 min-w-[130px]">소속</TableHead>
                       <TableHead className="text-white/70 min-w-[120px]">방문일</TableHead>
                       <TableHead className="text-white/70 min-w-[140px]">담당자</TableHead>
                       <TableHead className="text-white/70 min-w-[100px]">출입 구역</TableHead>
@@ -543,9 +543,9 @@ export default function AdminQrScanPage() {
                 <Table>
                   <TableHeader className="bg-white/5">
                     <TableRow className="border-white/10 hover:bg-transparent">
-                      <TableHead className="text-white/70 min-w-[100px]">방문자</TableHead>
+                      <TableHead className="text-white/70 min-w-[90px]">방문자</TableHead>
                       <TableHead className="text-white/70 min-w-[100px]">생년월일</TableHead>
-                      <TableHead className="text-white/70 min-w-[140px]">소속</TableHead>
+                      <TableHead className="text-white/70 min-w-[130px]">소속</TableHead>
                       <TableHead className="text-white/70 min-w-[140px]">담당자</TableHead>
                       <TableHead className="text-white/70 min-w-[100px]">출입 구역</TableHead>
                       <TableHead className="text-white/70 min-w-[140px]">입장 시각</TableHead>
