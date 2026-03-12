@@ -16,16 +16,9 @@ import { ApplicationDetailModal } from "@/components/admin/application-detail-mo
 import { Application } from "@/lib/types"
 
 interface ScanRow {
-  scan_id: string
   pass_id: string
   application_id: number
-  entry_direction: string
-  entry_at: string
-  entry_device_id: string | null
-  entry_scanned_ip: string | null
-  scan_site: string
-  entry_result: "ALLOW" | "DENY"
-  entry_deny_reason: string | null
+  companion_id: number | null
   visitor_name: string | null
   visitor_org: string | null
   contact_name: string | null
@@ -38,22 +31,24 @@ interface ScanRow {
   visit_start_date: string | null
   visit_end_date: string | null
   portCertFiles: Array<{ file_url: string; file_name: string }>
+  // 입장 데이터 (있으면)
+  entry_at: string | null
+  entry_device_id: string | null
+  entry_scanned_ip: string | null
+  scan_site: string | null
   // 퇴장 데이터 (있으면)
-  exit_scan_id?: string | null
-  exit_direction?: string | null
-  exit_at?: string | null
-  exit_device_id?: string | null
-  exit_scanned_ip?: string | null
-  exit_result?: string | null
-  exit_deny_reason?: string | null
+  exit_at: string | null
+  exit_device_id: string | null
+  exit_scanned_ip: string | null
   last_event_at: string
 }
 
 interface ScanStats {
-  checkInCount: number    // 체크인(입장) 건수
-  checkOutCount: number   // 체크아웃(퇴장) 건수
-  totalVisitCount: number // 전체 방문 예정 건수 (방문시작일 = 선택날짜)
-  pendingCount: number    // 아직 액션 없는 건수
+  checkInCount: number       // 체크인: 현재 내부 체류 중 (입장O, 퇴장X)
+  checkOutCount: number      // 체크아웃: 퇴장 완료 (입장O, 퇴장O)
+  pendingCount: number       // 방문신청: 아직 입장 안 한 인원 (승인 - 입장스캔)
+  totalApprovedCount: number // 전체: 승인된 인원 수
+  reentryCount: number       // 전체: 재입장자 수 (당일 입장+퇴장 각 2회 이상)
 }
 
 type TabKind = "main" | "pier"
@@ -174,9 +169,12 @@ export default function AdminQrScanPage() {
   // 카드 필터링된 리스트
   const filteredRows = useMemo(() => {
     if (cardFilter === "all") return rowsByPerson
-    if (cardFilter === "pending") return rowsByPerson.filter(r => !r.lastEntryAt && !r.lastExitAt)
-    if (cardFilter === "checkIn") return rowsByPerson.filter(r => r.lastEntryAt)
-    if (cardFilter === "checkOut") return rowsByPerson.filter(r => r.lastExitAt)
+    // 방문신청: 아직 입장 안 한 인원 (입장 스캔 기록 없음)
+    if (cardFilter === "pending") return rowsByPerson.filter(r => !r.lastEntryAt)
+    // 체크인: 현재 내부 체류 중 (입장O, 퇴장X)
+    if (cardFilter === "checkIn") return rowsByPerson.filter(r => r.lastEntryAt && !r.lastExitAt)
+    // 체크아웃: 퇴장 완료 (입장O, 퇴장O)
+    if (cardFilter === "checkOut") return rowsByPerson.filter(r => r.lastEntryAt && r.lastExitAt)
     return rowsByPerson
   }, [rowsByPerson, cardFilter])
 
@@ -234,10 +232,16 @@ export default function AdminQrScanPage() {
   }
 
   const currentStats: ScanStats = {
-    checkInCount: stats?.checkInCount ?? rowsByPerson.filter(r => r.lastEntryAt).length,
-    checkOutCount: stats?.checkOutCount ?? rowsByPerson.filter(r => r.lastExitAt).length,
-    totalVisitCount: stats?.totalVisitCount ?? 0,
-    pendingCount: stats?.pendingCount ?? 0,
+    // 체크인: 현재 내부 체류 중 (입장O, 퇴장X)
+    checkInCount: stats?.checkInCount ?? rowsByPerson.filter(r => r.lastEntryAt && !r.lastExitAt).length,
+    // 체크아웃: 퇴장 완료 (입장O, 퇴장O)
+    checkOutCount: stats?.checkOutCount ?? rowsByPerson.filter(r => r.lastEntryAt && r.lastExitAt).length,
+    // 방문신청: 아직 입장 안 한 인원
+    pendingCount: stats?.pendingCount ?? rowsByPerson.filter(r => !r.lastEntryAt).length,
+    // 전체: 승인된 인원 수
+    totalApprovedCount: stats?.totalApprovedCount ?? 0,
+    // 재입장자 수
+    reentryCount: stats?.reentryCount ?? 0,
   }
 
   return (
@@ -425,7 +429,7 @@ export default function AdminQrScanPage() {
               <CardTitle className="text-sm text-white/60">방문 신청</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-3xl font-black">{currentStats.pendingCount.toLocaleString("ko-KR")}</p>
+              <p className="text-3xl font-black text-amber-400">{currentStats.pendingCount.toLocaleString("ko-KR")}</p>
               <p className="text-xs text-white/40 mt-1">아직 입장 전</p>
             </CardContent>
           </Card>
@@ -440,7 +444,7 @@ export default function AdminQrScanPage() {
               <p className="text-3xl font-black text-emerald-400">
                 {currentStats.checkInCount.toLocaleString("ko-KR")}
               </p>
-              <p className="text-xs text-white/40 mt-1">오늘 입장</p>
+              <p className="text-xs text-white/40 mt-1">현재 내부 체류 중</p>
             </CardContent>
           </Card>
           <Card
@@ -454,7 +458,7 @@ export default function AdminQrScanPage() {
               <p className="text-3xl font-black text-blue-400">
                 {currentStats.checkOutCount.toLocaleString("ko-KR")}
               </p>
-              <p className="text-xs text-white/40 mt-1">오늘 퇴장</p>
+              <p className="text-xs text-white/40 mt-1">퇴장 완료</p>
             </CardContent>
           </Card>
           <Card
@@ -465,10 +469,17 @@ export default function AdminQrScanPage() {
               <CardTitle className="text-sm text-white/60">전체</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-3xl font-black">
-                {currentStats.totalVisitCount.toLocaleString("ko-KR")}
-              </p>
-              <p className="text-xs text-white/40 mt-1">방문 예정</p>
+              <div className="flex items-baseline gap-2">
+                <p className="text-3xl font-black">
+                  {(currentStats.totalApprovedCount || 0).toLocaleString("ko-KR")}
+                </p>
+                {(currentStats.reentryCount || 0) > 0 && (
+                  <span className="text-sm text-purple-400 font-medium">
+                    +{currentStats.reentryCount.toLocaleString("ko-KR")} 재입장
+                  </span>
+                )}
+              </div>
+              <p className="text-xs text-white/40 mt-1">승인 인원</p>
             </CardContent>
           </Card>
         </div>
@@ -480,10 +491,10 @@ export default function AdminQrScanPage() {
             <div className="mb-6">
               <h2 className="text-2xl font-black text-white">정문 출입 이력 ({filteredRows.length}명)</h2>
               <p className="text-sm text-white/40 mt-1">
-                {cardFilter === "all" && "전체 방문자 목록"}
+                {cardFilter === "all" && "승인된 전체 방문자 목록"}
                 {cardFilter === "pending" && "아직 입장하지 않은 방문자 목록"}
-                {cardFilter === "checkIn" && "오늘 입장한 방문자 목록"}
-                {cardFilter === "checkOut" && "오늘 퇴장한 방문자 목록"}
+                {cardFilter === "checkIn" && "현재 내부 체류 중인 방문자 목록"}
+                {cardFilter === "checkOut" && "퇴장 완료된 방문자 목록"}
               </p>
             </div>
 
