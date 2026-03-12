@@ -349,7 +349,7 @@ export class AzureSqlDB {
     if (uploadedFiles && uploadedFiles.length > 0) {
       console.log('[v0] Processing', uploadedFiles.length, 'uploaded files')
       for (const file of uploadedFiles) {
-        // ������������������������������������������������일명과 키가 유효한 경우에만 저장
+        // �������������������������������������������������일명과 키가 유효한 경우에만 저장
         if (file && file.filename && file.fileKey && file.filename.trim() !== '' && file.fileKey.trim() !== '') {
           console.log('[v0] Saving file attachment:', { 
             filename: file.filename, 
@@ -1795,7 +1795,7 @@ export class AzureSqlDB {
           LEFT JOIN visit_companions c ON p.companion_id = c.companion_id
           WHERE p.status = 'active' ${passWhereClause}
         ),
-        -- 2. 모든 입장 스캔 기록에 순번 부여
+        -- 2. 방문 기간 내 모든 입장 스캔 기록 (날짜 제한 없이 전체)
         AllEntryScans AS (
           SELECT 
             s.pass_id,
@@ -1805,12 +1805,12 @@ export class AzureSqlDB {
             s.scan_site,
             ROW_NUMBER() OVER (PARTITION BY s.pass_id ORDER BY s.scanned_at ASC) as entry_rn
           FROM visit_pass_scans s
+          INNER JOIN ApprovedPasses ap ON s.pass_id = ap.pass_id
           WHERE s.scan_site = @scan_site 
             AND s.direction = 'ENTRY' 
             AND s.result = 'ALLOW'
-            AND CAST(s.scanned_at AS DATE) ${isRangeSearch ? `>= @start_date AND CAST(s.scanned_at AS DATE) <= @end_date` : `= @filter_date`}
         ),
-        -- 3. 모든 퇴장 스캔 기록에 순번 부여
+        -- 3. 방문 기간 내 모든 퇴장 스캔 기록 (날짜 제한 없이 전체)
         AllExitScans AS (
           SELECT 
             s.pass_id,
@@ -1819,34 +1819,12 @@ export class AzureSqlDB {
             s.scanned_ip as exit_scanned_ip,
             ROW_NUMBER() OVER (PARTITION BY s.pass_id ORDER BY s.scanned_at ASC) as exit_rn
           FROM visit_pass_scans s
+          INNER JOIN ApprovedPasses ap ON s.pass_id = ap.pass_id
           WHERE s.scan_site = @scan_site 
             AND s.direction = 'EXIT' 
             AND s.result = 'ALLOW'
-            AND CAST(s.scanned_at AS DATE) ${isRangeSearch ? `>= @start_date AND CAST(s.scanned_at AS DATE) <= @end_date` : `= @filter_date`}
         ),
-        -- 4. 입장/퇴장 총 횟수 (재입장 판단용)
-        ScanCounts AS (
-          SELECT 
-            s.pass_id,
-            SUM(CASE WHEN s.direction = 'ENTRY' THEN 1 ELSE 0 END) as entry_count,
-            SUM(CASE WHEN s.direction = 'EXIT' THEN 1 ELSE 0 END) as exit_count
-          FROM visit_pass_scans s
-          WHERE s.scan_site = @scan_site 
-            AND s.result = 'ALLOW'
-            AND CAST(s.scanned_at AS DATE) ${isRangeSearch ? `>= @start_date AND CAST(s.scanned_at AS DATE) <= @end_date` : `= @filter_date`}
-          GROUP BY s.pass_id
-        ),
-        -- 5. 마지막 스캔 방향 (체크인/체크아웃 상태 판단용)
-        LastScanDirection AS (
-          SELECT pass_id, direction as last_scan_direction
-          FROM (
-            SELECT s.pass_id, s.direction, ROW_NUMBER() OVER (PARTITION BY s.pass_id ORDER BY s.scanned_at DESC) as rn
-            FROM visit_pass_scans s
-            WHERE s.scan_site = @scan_site AND s.result = 'ALLOW' 
-            AND CAST(s.scanned_at AS DATE) ${isRangeSearch ? `>= @start_date AND CAST(s.scanned_at AS DATE) <= @end_date` : `= @filter_date`}
-          ) t WHERE rn = 1
-        ),
-        -- 6. 입장/퇴장 사이클 매칭 (각 사이클별로 행 생성)
+        -- 4. 입장/퇴장 사이클 매칭 (각 사이클별로 행 생성)
         EntryCycles AS (
           SELECT 
             e.pass_id,
@@ -1860,8 +1838,37 @@ export class AzureSqlDB {
             x.exit_scanned_ip
           FROM AllEntryScans e
           LEFT JOIN AllExitScans x ON e.pass_id = x.pass_id AND e.entry_rn = x.exit_rn
+        ),
+        -- 5. 검색 날짜 범위 내 스캔 기록이 있는지 확인 (필터용)
+        ScansInDateRange AS (
+          SELECT DISTINCT s.pass_id
+          FROM visit_pass_scans s
+          INNER JOIN ApprovedPasses ap ON s.pass_id = ap.pass_id
+          WHERE s.scan_site = @scan_site AND s.result = 'ALLOW'
+            AND CAST(s.scanned_at AS DATE) ${isRangeSearch ? `>= @start_date AND CAST(s.scanned_at AS DATE) <= @end_date` : `= @filter_date`}
+        ),
+        -- 6. 마지막 스캔 방향 (체크인/체크아웃 상태 판단용 - 전체 기록 기준)
+        LastScanDirection AS (
+          SELECT pass_id, direction as last_scan_direction, scanned_at as last_scan_at
+          FROM (
+            SELECT s.pass_id, s.direction, s.scanned_at, ROW_NUMBER() OVER (PARTITION BY s.pass_id ORDER BY s.scanned_at DESC) as rn
+            FROM visit_pass_scans s
+            INNER JOIN ApprovedPasses ap ON s.pass_id = ap.pass_id
+            WHERE s.scan_site = @scan_site AND s.result = 'ALLOW'
+          ) t WHERE rn = 1
+        ),
+        -- 7. 입장/퇴장 횟수 (전체 기록 기준)
+        ScanCounts AS (
+          SELECT 
+            s.pass_id,
+            SUM(CASE WHEN s.direction = 'ENTRY' THEN 1 ELSE 0 END) as entry_count,
+            SUM(CASE WHEN s.direction = 'EXIT' THEN 1 ELSE 0 END) as exit_count
+          FROM visit_pass_scans s
+          INNER JOIN ApprovedPasses ap ON s.pass_id = ap.pass_id
+          WHERE s.scan_site = @scan_site AND s.result = 'ALLOW'
+          GROUP BY s.pass_id
         )
-        -- 스캔 기록이 있는 방문자 (각 사이클별로 별도 행)
+        -- 스캔 기록이 있는 방문자 (각 사이클별로 별도 행, 검색 날짜에 관련된 사이클만)
         SELECT TOP (@limit)
           ap.pass_id,
           ap.application_id,
@@ -1890,14 +1897,18 @@ export class AzureSqlDB {
           COALESCE(sc.exit_count, 0) as exit_count,
           COALESCE(ec.exit_at, ec.entry_at, ap.issued_at) as last_event_at
         FROM ApprovedPasses ap
-        LEFT JOIN EntryCycles ec ON ap.pass_id = ec.pass_id
+        INNER JOIN EntryCycles ec ON ap.pass_id = ec.pass_id
         LEFT JOIN LastScanDirection lsd ON ap.pass_id = lsd.pass_id
         LEFT JOIN ScanCounts sc ON ap.pass_id = sc.pass_id
-        WHERE ec.entry_at IS NOT NULL  -- 스캔 기록이 있는 경우만
+        -- 검색 날짜에 입장 또는 퇴장이 있는 사이클만 표시
+        WHERE (
+          CAST(ec.entry_at AS DATE) ${isRangeSearch ? `>= @start_date AND CAST(ec.entry_at AS DATE) <= @end_date` : `= @filter_date`}
+          OR (ec.exit_at IS NOT NULL AND CAST(ec.exit_at AS DATE) ${isRangeSearch ? `>= @start_date AND CAST(ec.exit_at AS DATE) <= @end_date` : `= @filter_date`})
+        )
         
         UNION ALL
         
-        -- 스캔 기록이 없는 방��자 (아직 입장 전)
+        -- 스캔 기록이 없는 방문자 (아직 입장 전)
         SELECT TOP (@limit)
           ap.pass_id,
           ap.application_id,
@@ -1928,8 +1939,7 @@ export class AzureSqlDB {
         FROM ApprovedPasses ap
         WHERE NOT EXISTS (
           SELECT 1 FROM visit_pass_scans s 
-          WHERE s.pass_id = ap.pass_id AND s.scan_site = @scan_site AND s.result = 'ALLOW' 
-          AND CAST(s.scanned_at AS DATE) ${isRangeSearch ? `>= @start_date AND CAST(s.scanned_at AS DATE) <= @end_date` : `= @filter_date`}
+          WHERE s.pass_id = ap.pass_id AND s.scan_site = @scan_site AND s.result = 'ALLOW'
         )
         
         ORDER BY last_event_at DESC
