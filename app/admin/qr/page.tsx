@@ -20,7 +20,7 @@ interface ScanRow {
   application_id: number
   companion_id: number | null
   visitor_name: string | null
-  visitor_org: string | null
+  visitor_organization: string | null
   contact_name: string | null
   access_area: string | null
   contact_mobile: string | null
@@ -149,7 +149,7 @@ export default function AdminQrScanPage() {
       pass_id: row.pass_id,
       application_id: row.application_id,
       visitor_name: row.visitor_name,
-      visitor_org: row.visitor_org,
+      visitor_organization: row.visitor_organization,
       contact_name: row.contact_name,
       access_area: row.access_area,
       vehicle_number: row.vehicle_number,
@@ -560,7 +560,7 @@ export default function AdminQrScanPage() {
                             {row.visitor_birth_date ? new Date(row.visitor_birth_date).toLocaleDateString("ko-KR") : "-"}
                           </TableCell>
                           <TableCell className="text-sm text-white/60 max-w-[140px] truncate">
-                            {row.visitor_org || "-"}
+                            {row.visitor_organization || "-"}
                           </TableCell>
                           <TableCell className="text-sm text-white/60">
                             {formatVisitPeriod(row.visit_start_date, row.visit_end_date)}
@@ -682,7 +682,7 @@ export default function AdminQrScanPage() {
                             {row.visitor_birth_date ? new Date(row.visitor_birth_date).toLocaleDateString("ko-KR") : "-"}
                           </TableCell>
                           <TableCell className="text-sm text-white/60 max-w-[140px] truncate">
-                            {row.visitor_org || "-"}
+                            {row.visitor_organization || "-"}
                           </TableCell>
                           <TableCell className="max-w-[140px]">
                             <div className="flex flex-col gap-0.5">

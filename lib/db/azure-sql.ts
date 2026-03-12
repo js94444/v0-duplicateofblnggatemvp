@@ -349,7 +349,7 @@ export class AzureSqlDB {
     if (uploadedFiles && uploadedFiles.length > 0) {
       console.log('[v0] Processing', uploadedFiles.length, 'uploaded files')
       for (const file of uploadedFiles) {
-        // ���������������������������������������일명과 키가 유효한 경우에만 저장
+        // ����������������������������������������일명과 키가 유효한 경우에만 저장
         if (file && file.filename && file.fileKey && file.filename.trim() !== '' && file.fileKey.trim() !== '') {
           console.log('[v0] Saving file attachment:', { 
             filename: file.filename, 
@@ -1776,7 +1776,7 @@ export class AzureSqlDB {
             p.companion_id,
             p.issued_at,
             a.visitor_name,
-            a.visitor_org,
+            a.visitor_organization,
             a.contact_name,
             a.contact_mobile,
             a.visitor_birth_date,
@@ -1827,7 +1827,7 @@ export class AzureSqlDB {
           ap.application_id,
           ap.companion_id,
           COALESCE(ap.companion_name, ap.visitor_name) as visitor_name,
-          ap.visitor_org,
+          ap.visitor_organization,
           ap.contact_name,
           ap.contact_mobile,
           COALESCE(ap.companion_birth_date, ap.visitor_birth_date) as visitor_birth_date,
