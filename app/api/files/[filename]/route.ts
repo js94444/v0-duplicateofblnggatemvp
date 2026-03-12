@@ -9,14 +9,22 @@ function getContainerClient() {
   const connectionString = process.env.AZURE_STORAGE_CONNECTION_STRING
   
   if (!connectionString || connectionString.trim() === "") {
-    throw new Error("AZURE_STORAGE_CONNECTION_STRING is not configured")
+    console.error("[v0] AZURE_STORAGE_CONNECTION_STRING is not configured")
+    return null
+  }
+  
+  // Connection string 형식 검증 (DefaultEndpointsProtocol 또는 BlobEndpoint 포함 여부)
+  if (!connectionString.includes("DefaultEndpointsProtocol=") && !connectionString.includes("BlobEndpoint=")) {
+    console.error("[v0] Invalid AZURE_STORAGE_CONNECTION_STRING format - missing required keys")
+    return null
   }
   
   try {
     const blobServiceClient = BlobServiceClient.fromConnectionString(connectionString)
     return blobServiceClient.getContainerClient(CONTAINER_NAME)
   } catch (error) {
-    throw new Error(`Invalid AZURE_STORAGE_CONNECTION_STRING format: ${error instanceof Error ? error.message : "Unknown error"}`)
+    console.error("[v0] Failed to create BlobServiceClient:", error)
+    return null
   }
 }
 
@@ -32,6 +40,12 @@ export async function GET(request: NextRequest, { params }: { params: { filename
     console.log("[v0] Downloading file:", decodedFilename)
 
     const container = getContainerClient()
+    if (!container) {
+      return NextResponse.json(
+        { code: "STORAGE_NOT_CONFIGURED", message: "Azure Storage가 설정되지 않았습니다" },
+        { status: 503 }
+      )
+    }
 
     // blob name 후보: decodedFilename이 전체 URL인 경우 blob 이름만 추출
     let blobName = decodedFilename
