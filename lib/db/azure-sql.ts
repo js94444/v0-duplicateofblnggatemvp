@@ -349,7 +349,7 @@ export class AzureSqlDB {
     if (uploadedFiles && uploadedFiles.length > 0) {
       console.log('[v0] Processing', uploadedFiles.length, 'uploaded files')
       for (const file of uploadedFiles) {
-        // ����������������������������������������������일명과 키가 유효한 경우에만 저장
+        // �����������������������������������������������일명과 키가 유효한 경우에만 저장
         if (file && file.filename && file.fileKey && file.filename.trim() !== '' && file.fileKey.trim() !== '') {
           console.log('[v0] Saving file attachment:', { 
             filename: file.filename, 
@@ -1758,14 +1758,13 @@ export class AzureSqlDB {
       request
         .input('start_date', sql.Date, startDate || new Date().toISOString().split('T')[0])
         .input('end_date', sql.Date, endDate || new Date().toISOString().split('T')[0])
-      scanWhereClause = `AND CAST(s.scanned_at AS DATE) >= @start_date AND CAST(s.scanned_at AS DATE) <= @end_date`
-      // 방문 기간이 검색 범위와 겹치는 경우 포함 (visit_start_date ~ visit_end_date가 start_date ~ end_date와 겹침)
+      // 별칭 없이 컬럼명만 사용 (CTE 내부에서 s. 별칭은 각 쿼리에서 직접 지정)
+      scanWhereClause = `AND CAST(scanned_at AS DATE) >= @start_date AND CAST(scanned_at AS DATE) <= @end_date`
       passWhereClause = `AND CAST(a.visit_start_date AS DATE) <= @end_date AND CAST(a.visit_end_date AS DATE) >= @start_date`
     } else {
       const targetDate = filterParams && 'date' in filterParams ? filterParams.date : new Date().toISOString().split('T')[0]
       request.input('filter_date', sql.Date, targetDate)
-      scanWhereClause = `AND CAST(s.scanned_at AS DATE) = @filter_date`
-      // 검색 날짜가 방문 기간(visit_start_date ~ visit_end_date) 안에 포함되는 경우
+      scanWhereClause = `AND CAST(scanned_at AS DATE) = @filter_date`
       passWhereClause = `AND CAST(a.visit_start_date AS DATE) <= @filter_date AND CAST(a.visit_end_date AS DATE) >= @filter_date`
     }
     
