@@ -349,7 +349,7 @@ export class AzureSqlDB {
     if (uploadedFiles && uploadedFiles.length > 0) {
       console.log('[v0] Processing', uploadedFiles.length, 'uploaded files')
       for (const file of uploadedFiles) {
-        // �����������������������������������������������일명과 키가 유효한 경우에만 저장
+        // ������������������������������������������������일명과 키가 유효한 경우에만 저장
         if (file && file.filename && file.fileKey && file.filename.trim() !== '' && file.fileKey.trim() !== '') {
           console.log('[v0] Saving file attachment:', { 
             filename: file.filename, 
@@ -1808,7 +1808,7 @@ export class AzureSqlDB {
           WHERE s.scan_site = @scan_site 
             AND s.direction = 'ENTRY' 
             AND s.result = 'ALLOW'
-            ${scanWhereClause}
+            AND CAST(s.scanned_at AS DATE) ${isRangeSearch ? `>= @start_date AND CAST(s.scanned_at AS DATE) <= @end_date` : `= @filter_date`}
         ),
         -- 3. 모든 퇴장 스캔 기록에 순번 부여
         AllExitScans AS (
@@ -1822,7 +1822,7 @@ export class AzureSqlDB {
           WHERE s.scan_site = @scan_site 
             AND s.direction = 'EXIT' 
             AND s.result = 'ALLOW'
-            ${scanWhereClause}
+            AND CAST(s.scanned_at AS DATE) ${isRangeSearch ? `>= @start_date AND CAST(s.scanned_at AS DATE) <= @end_date` : `= @filter_date`}
         ),
         -- 4. 입장/퇴장 총 횟수 (재입장 판단용)
         ScanCounts AS (
@@ -1833,7 +1833,7 @@ export class AzureSqlDB {
           FROM visit_pass_scans s
           WHERE s.scan_site = @scan_site 
             AND s.result = 'ALLOW'
-            ${scanWhereClause}
+            AND CAST(s.scanned_at AS DATE) ${isRangeSearch ? `>= @start_date AND CAST(s.scanned_at AS DATE) <= @end_date` : `= @filter_date`}
           GROUP BY s.pass_id
         ),
         -- 5. 마지막 스캔 방향 (체크인/체크아웃 상태 판단용)
@@ -1842,7 +1842,8 @@ export class AzureSqlDB {
           FROM (
             SELECT s.pass_id, s.direction, ROW_NUMBER() OVER (PARTITION BY s.pass_id ORDER BY s.scanned_at DESC) as rn
             FROM visit_pass_scans s
-            WHERE s.scan_site = @scan_site AND s.result = 'ALLOW' ${scanWhereClause}
+            WHERE s.scan_site = @scan_site AND s.result = 'ALLOW' 
+            AND CAST(s.scanned_at AS DATE) ${isRangeSearch ? `>= @start_date AND CAST(s.scanned_at AS DATE) <= @end_date` : `= @filter_date`}
           ) t WHERE rn = 1
         ),
         -- 6. 입장/퇴장 사이클 매칭 (각 사이클별로 행 생성)
@@ -1927,7 +1928,8 @@ export class AzureSqlDB {
         FROM ApprovedPasses ap
         WHERE NOT EXISTS (
           SELECT 1 FROM visit_pass_scans s 
-          WHERE s.pass_id = ap.pass_id AND s.scan_site = @scan_site AND s.result = 'ALLOW' ${scanWhereClause}
+          WHERE s.pass_id = ap.pass_id AND s.scan_site = @scan_site AND s.result = 'ALLOW' 
+          AND CAST(s.scanned_at AS DATE) ${isRangeSearch ? `>= @start_date AND CAST(s.scanned_at AS DATE) <= @end_date` : `= @filter_date`}
         )
         
         ORDER BY last_event_at DESC
