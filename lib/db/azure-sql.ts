@@ -349,7 +349,7 @@ export class AzureSqlDB {
     if (uploadedFiles && uploadedFiles.length > 0) {
       console.log('[v0] Processing', uploadedFiles.length, 'uploaded files')
       for (const file of uploadedFiles) {
-        // �������������������������������������������일명과 키가 유효한 경우에만 저장
+        // ��������������������������������������������일명과 키가 유효한 경우에만 저장
         if (file && file.filename && file.fileKey && file.filename.trim() !== '' && file.fileKey.trim() !== '') {
           console.log('[v0] Saving file attachment:', { 
             filename: file.filename, 
@@ -1840,9 +1840,9 @@ export class AzureSqlDB {
         LastScanDirection AS (
           SELECT pass_id, direction as last_scan_direction
           FROM (
-            SELECT pass_id, direction, ROW_NUMBER() OVER (PARTITION BY pass_id ORDER BY scanned_at DESC) as rn
-            FROM visit_pass_scans
-            WHERE scan_site = @scan_site AND result = 'ALLOW' ${scanWhereClause}
+            SELECT s.pass_id, s.direction, ROW_NUMBER() OVER (PARTITION BY s.pass_id ORDER BY s.scanned_at DESC) as rn
+            FROM visit_pass_scans s
+            WHERE s.scan_site = @scan_site AND s.result = 'ALLOW' ${scanWhereClause}
           ) t WHERE rn = 1
         ),
         -- 6. 입장/퇴장 사이클 매칭 (각 사이클별로 행 생성)
