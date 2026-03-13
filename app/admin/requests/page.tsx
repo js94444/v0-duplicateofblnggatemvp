@@ -94,7 +94,7 @@ export default function AdminRequestsPage() {
               setCheckStates((prev) => ({ ...prev, [String(app.id)]: !!data.my_check.checked }))
             }
           })
-          .catch(() => {})
+          .catch(() => { })
       })
     }
   }, [applications, token])
@@ -526,7 +526,7 @@ export default function AdminRequestsPage() {
                               )}
                             </button>
                           </TableHead>
-                          <TableHead className="min-w-[70px] text-white/80 font-bold">확인</TableHead>
+                          <TableHead className="min-w-[80px] text-white/80 font-bold"> 담당자 확인</TableHead>
                           <TableHead className="min-w-[120px] text-white/80 font-bold">상세보기</TableHead>
                         </TableRow>
                       </TableHeader>
@@ -641,7 +641,11 @@ export default function AdminRequestsPage() {
                                   })()}
                                 </span>
                               </TableCell>
-                              <TableCell>
+                              <TableCell className={`${
+                                user?.name && contactInfo.name && user.name === contactInfo.name 
+                                  ? "bg-amber-500/10 backdrop-blur-sm" 
+                                  : ""
+                              }`}>
                                 <div className="flex items-center justify-center">
                                   <Checkbox
                                     checked={!!checkStates[String(application.id)]}
