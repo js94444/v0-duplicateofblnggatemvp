@@ -189,8 +189,8 @@ export function ApplicationDetailModal({ application, open, loading = false, onC
   // application이 null일 때 로딩 상태로 처리
   const app = application as any
 
-  // 모달이 열리고 데이터 로딩 중이거나 application이 없으면 로딩 UI 표시
-  const isLoading = loading || !application
+  // 모달이 열리고 데이터 로딩 중이면 로딩 UI 표시
+  const isLoading = loading
 
   const getStatusColor = (status: string) => {
     const statusUpper = status?.toUpperCase() || ""
