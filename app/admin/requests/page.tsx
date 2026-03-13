@@ -208,16 +208,16 @@ export default function AdminRequestsPage() {
   }
 
   const fetchFullApplication = async (receipt: string, baseApplication?: Application) => {
-    // 캐시에 있으면 즉시 표시
+    // 캐시에 있으면 즉시 표시 (로딩 상태 없음)
     if (detailCache[receipt]) {
       setSelectedApplication(detailCache[receipt])
       return
     }
-    // 모달 즉시 열기 (기본 데이터로 먼저 표시)
+    // 캐시가 없으면 로딩 시작 후 기본 데이터 표시
+    setModalLoading(true)
     if (baseApplication) {
       setSelectedApplication(baseApplication)
     }
-    setModalLoading(true)
     try {
       const response = await fetch(`/api/status/${receipt}`)
       if (response.ok) {
@@ -308,7 +308,7 @@ export default function AdminRequestsPage() {
       case "PORT_ACCESS":
         return <span className="text-sm">🚢</span>
       case "GOODS_INOUT":
-        return <span className="text-sm">📦</span>
+        return <span className="text-sm">���</span>
       case "VISIT_R3":
         return <span className="text-sm">👤</span>
       default:
