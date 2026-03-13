@@ -121,17 +121,27 @@ export default function AdminQrScanPage() {
   // 새로고침 함수 - 날짜 내비게이션의 selectedDate 기준으로 새로고침
   const loadData = async (forceRefresh = false) => {
     if (forceRefresh) {
-      // 1. 상태를 먼저 초기화 (UI 반영용)
-      setRangeStartDate(null)
-      setRangeEndDate(null)
-      setUseRangeSearch(false)
+      try {
+        // 1. 로딩 상태 시작
+        setLoading(true)
 
-      // 2. 초기화될 URL을 직접 계산해서 mutate에 전달
-      // 이렇게 하면 현재 state와 상관없이 즉시 해당 API를 호출합니다.
-      const defaultDateParam = `date=${format(selectedDate, "yyyy-MM-dd")}`
-      const targetUrl = `/api/admin/qr-scans?scan_site=${scanSiteParam}&${defaultDateParam}`
-      
-      mutate(targetUrl)
+        // 2. 범위검색 상태 초기화
+        setRangeStartDate(null)
+        setRangeEndDate(null)
+        setUseRangeSearch(false)
+
+        // 3. 초기화될 URL을 직접 계산해서 mutate에 전달
+        const defaultDateParam = `date=${format(selectedDate, "yyyy-MM-dd")}`
+        const targetUrl = `/api/admin/qr-scans?scan_site=${scanSiteParam}&${defaultDateParam}`
+        
+        // 4. API 호출 및 완료 대기
+        await mutate(targetUrl)
+      } catch (error) {
+        console.error("[v0] Failed to refresh QR scan logs:", error)
+      } finally {
+        // 5. 로딩 상태 종료 (성공/실패 관계없이)
+        setLoading(false)
+      }
     }
   }
 
