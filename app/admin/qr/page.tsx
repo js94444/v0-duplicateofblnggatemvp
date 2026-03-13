@@ -121,11 +121,17 @@ export default function AdminQrScanPage() {
   // 새로고침 함수 - 날짜 내비게이션의 selectedDate 기준으로 새로고침
   const loadData = async (forceRefresh = false) => {
     if (forceRefresh) {
-      // 범위검색 초기화 후 날짜 내비게이션 기준으로 새로고침
+      // 1. 상태를 먼저 초기화 (UI 반영용)
       setRangeStartDate(null)
       setRangeEndDate(null)
-      // selectedDate 기준으로 SWR 캐시 갱신
-      mutate()
+      setUseRangeSearch(false)
+
+      // 2. 초기화될 URL을 직접 계산해서 mutate에 전달
+      // 이렇게 하면 현재 state와 상관없이 즉시 해당 API를 호출합니다.
+      const defaultDateParam = `date=${format(selectedDate, "yyyy-MM-dd")}`
+      const targetUrl = `/api/admin/qr-scans?scan_site=${scanSiteParam}&${defaultDateParam}`
+      
+      mutate(targetUrl)
     }
   }
 
@@ -522,7 +528,7 @@ export default function AdminQrScanPage() {
 
             {error && (
               <div className="mb-4 px-4 py-3 rounded-xl bg-red-500/20 border border-red-500/40 text-red-200 text-sm">
-                {error instanceof Error ? error.message : "데이터 로드 중 오류가 발생했습니다."}
+                {error instanceof Error ? error.message : "���이터 로드 중 오류가 발생했습니다."}
               </div>
             )}
 
