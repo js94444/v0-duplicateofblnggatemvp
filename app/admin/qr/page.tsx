@@ -118,9 +118,13 @@ export default function AdminQrScanPage() {
   const scans: ScanRow[] = swrData?.data || []
   const stats: ScanStats | null = swrData?.stats || null
 
-  // 새로고침 함수
-  const loadData = (forceRefresh = false) => {
+  // 새로고침 함수 - 날짜 내비게이션의 selectedDate 기준으로 새로고침
+  const loadData = async (forceRefresh = false) => {
     if (forceRefresh) {
+      // 범위검색 초기화 후 날짜 내비게이션 기준으로 새로고침
+      setRangeStartDate(null)
+      setRangeEndDate(null)
+      // selectedDate 기준으로 SWR 캐시 갱신
       mutate()
     }
   }
@@ -182,7 +186,7 @@ export default function AdminQrScanPage() {
     if (cardFilter === "pending") return rowsByPerson.filter(r => !r.lastEntryAt)
     // 체크인: 현재 내부 체류 중 (마지막 스캔이 ENTRY인 사람)
     if (cardFilter === "checkIn") return rowsByPerson.filter(r => r.lastScanDirection === 'ENTRY')
-    // 체크아웃: 퇴장 완료 (마지막 스캔이 EXIT인 사람)
+    // 체크아웃: 퇴장 완료 (마지막 스캔이 EXIT인 ��람)
     if (cardFilter === "checkOut") return rowsByPerson.filter(r => r.lastScanDirection === 'EXIT')
     return rowsByPerson
   }, [rowsByPerson, cardFilter])
