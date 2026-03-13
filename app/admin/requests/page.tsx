@@ -641,7 +641,11 @@ export default function AdminRequestsPage() {
                                   })()}
                                 </span>
                               </TableCell>
-                              <TableCell>
+                              <TableCell className={`${
+                                user?.name && contactInfo.name && user.name === contactInfo.name 
+                                  ? "bg-amber-500/10 backdrop-blur-sm" 
+                                  : ""
+                              }`}>
                                 <div className="flex items-center justify-center">
                                   <Checkbox
                                     checked={!!checkStates[String(application.id)]}
