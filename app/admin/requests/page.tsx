@@ -526,7 +526,7 @@ export default function AdminRequestsPage() {
                               )}
                             </button>
                           </TableHead>
-                          <TableHead className="min-w-[70px] text-white/80 font-bold">담당자확인</TableHead>
+                          <TableHead className="min-w-[70px] text-white/80 font-bold">확인</TableHead>
                           <TableHead className="min-w-[120px] text-white/80 font-bold">상세보기</TableHead>
                         </TableRow>
                       </TableHeader>
