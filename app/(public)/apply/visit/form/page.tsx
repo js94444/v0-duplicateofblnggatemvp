@@ -312,7 +312,7 @@ export default function VisitFormPage() {
     const isFormValid = validateForm()
     const areDevicesValid = validateDevices()
 
-    // 동���� 동의 항목 검증
+    // 동의 항목 검증
     if (companions.length > 0) {
       const newCompanionErrors: CompanionErrors = {}
       let hasCompanionError = false
@@ -424,7 +424,7 @@ export default function VisitFormPage() {
       if (isEditMode) {
         toast({
           title: t("변경이 완료되었습니다", "Changes Saved"),
-          description: t("신청 내용�� 수정되어 재심사 대기중입니다.", "Your application has been updated and is pending review."),
+          description: t("신청 내용이 수정되어 재심사 대기중입니다.", "Your application has been updated and is pending review."),
         })
       } else {
         toast({
