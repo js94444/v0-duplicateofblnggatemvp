@@ -469,8 +469,5 @@ export default function StatusDetailPage() {
 
 
     </div>
-
-
-    </div >
   )
 }
