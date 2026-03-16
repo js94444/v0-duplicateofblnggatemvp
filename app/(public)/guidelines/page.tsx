@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import Image from "next/image"
-import { ArrowLeft, Download } from "lucide-react"
+import { ArrowLeft, Download, AlertCircle, MapPin, Clock } from "lucide-react"
 import { PublicHeader } from "@/components/public/public-header"
 import { PublicFooter } from "@/components/public/public-footer"
 import { useLang } from "@/lib/language-context"
@@ -75,6 +75,53 @@ export default function GuidelinesPage() {
             <ArrowLeft size={20} className="group-hover:-translate-x-1 transition-transform" />
             <span className="text-sm font-bold tracking-widest uppercase">Go Back</span>
           </Link>
+
+          <div className="text-center mb-12">
+            <h2 className="text-4xl md:text-5xl font-black mb-3 text-white">안전 교육 안내</h2>
+            <p className="text-white/40 text-sm uppercase tracking-widest font-bold mb-8">{t("현장 출입 전 필수 확인", "Safety Education Information")}</p>
+            
+            {/* 안전교육 안내 섹션 */}
+            <div className="bg-emerald-500/5 backdrop-blur-xl border border-emerald-500/20 rounded-[40px] p-10 shadow-2xl mb-12 text-left">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-400">
+                  <AlertCircle className="h-5 w-5" />
+                </div>
+                <h3 className="text-2xl font-black text-white">현장 출입 전 필수 확인</h3>
+              </div>
+
+              <div className="bg-black/30 rounded-2xl p-6 border border-emerald-500/10 mb-6">
+                <p className="text-white/80 leading-relaxed mb-4">
+                  안전한 작업을 위해 <span className="text-emerald-400 font-bold">안전교육 이수</span>가 필요합니다.<br />
+                  아직 교육을 받지 않으셨나요?
+                </p>
+                <div className="flex flex-col gap-3 text-sm">
+                  <div className="flex items-center gap-2 text-white/60">
+                    <MapPin className="h-4 w-4 text-emerald-400 shrink-0" />
+                    <span>교육장 위치: <span className="text-white font-semibold">본관동 1층 BLT Hall</span></span>
+                  </div>
+                  <div className="flex items-center gap-2 text-white/60">
+                    <Clock className="h-4 w-4 text-emerald-400 shrink-0" />
+                    <span>문의: <span className="text-white font-semibold">안전환경팀 041-939-9984</span></span>
+                  </div>
+                </div>
+              </div>
+
+              {/* 지도 이미지 */}
+              <div className="rounded-2xl overflow-hidden border border-emerald-500/20">
+                <div className="bg-black/40 px-4 py-2 flex items-center gap-2 border-b border-emerald-500/10">
+                  <MapPin className="h-4 w-4 text-emerald-400" />
+                  <span className="text-xs font-bold text-emerald-400 uppercase tracking-widest">BLT Hall 위치 안내</span>
+                </div>
+                <Image
+                  src="/images/blt-hall-map.png"
+                  alt="BLT Hall 안내 지도 - 본관동 1층 BLT Hall까지의 경로"
+                  width={800}
+                  height={480}
+                  className="w-full object-cover"
+                />
+              </div>
+            </div>
+          </div>
 
           <div className="text-center mb-12">
             <h2 className="text-4xl md:text-5xl font-black mb-3 text-white">SHE Flyer</h2>
