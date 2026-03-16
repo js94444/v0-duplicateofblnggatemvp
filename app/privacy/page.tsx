@@ -216,7 +216,7 @@ export default function PrivacyPage() {
         <PublicFooter />
 
 
-
       </div>
-      )
+    </div>
+  )
 }
