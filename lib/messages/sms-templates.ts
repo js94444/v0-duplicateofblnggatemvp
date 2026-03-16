@@ -180,7 +180,7 @@ export function getRejectionSmsText(payload: RejectionSmsPayload, recipientType:
 /** Approve API에서 호출용: pass_receipt와 application 객체로 SMS 메시지 생성 */
 export function getApprovalSMSMessage(pass_receipt: string | null, application: any, recipientType: 'applicant' | 'companion' = 'applicant'): string {
   const qrUrl = pass_receipt
-    ? `${process.env.NEXT_PUBLIC_APP_URL || 'https://blink.com'}/qr/${pass_receipt}`
+    ? `${process.env.NEXT_PUBLIC_APP_URL || 'https://v0-lng-tml.vercel.app'}/qr/${pass_receipt}`
     : null
 
   // 동행인의 경우 pass_receipt를 접수번호로 사용 (PA-20260310-904-1 형식)
