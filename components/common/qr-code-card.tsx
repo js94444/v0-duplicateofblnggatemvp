@@ -192,7 +192,7 @@ export function QRCodeCard({ receipt }: QRCodeCardProps) {
         </Button>
       </div>
 
-      <p className="text-center text-[10px] text-white/20 mt-4 leading-relaxed">
+      <p className="text-center text-[10px] text-white/40 mt-4 leading-relaxed">
         이 QR 코드는 출입 시 보안 담당자에게 제시하세요.<br />
         승인된 일시 및 구역 외 출입은 제한됩니다.
       </p>
