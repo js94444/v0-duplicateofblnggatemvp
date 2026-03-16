@@ -135,7 +135,7 @@ export function QRCodeCard({ receipt }: QRCodeCardProps) {
             />
           </div>
           <div className="text-center">
-            <p className="text-[11px] text-white/30 tracking-widest uppercase mb-1">Receipt No.</p>
+            <p className="text-[11px] text-white/60 tracking-widest uppercase mb-1">Receipt No.</p>
             <p className="text-base font-black tracking-[0.15em] text-white">{data.receipt}</p>
           </div>
         </div>
@@ -158,7 +158,7 @@ export function QRCodeCard({ receipt }: QRCodeCardProps) {
 
         {/* Valid until */}
         <div className="mx-6 mb-6 rounded-xl bg-amber-500/5 border border-amber-500/20 px-4 py-3 flex items-center justify-between">
-          <span className="text-[11px] text-white/40 tracking-wider uppercase">유효기간</span>
+          <span className="text-[11px] text-white/60 tracking-wider uppercase">유효기간</span>
           <span className="text-xs font-bold text-amber-400">{data.validUntil} 까지</span>
         </div>
 
@@ -192,7 +192,7 @@ export function QRCodeCard({ receipt }: QRCodeCardProps) {
         </Button>
       </div>
 
-      <p className="text-center text-[10px] text-white/40 mt-4 leading-relaxed">
+      <p className="text-center text-[10px] text-white/60 mt-4 leading-relaxed">
         이 QR 코드는 출입 시 보안 담당자에게 제시하세요.<br />
         승인된 일시 및 구역 외 출입은 제한됩니다.
       </p>
