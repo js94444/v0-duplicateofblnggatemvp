@@ -649,10 +649,34 @@ export default function AdminQrScanPage() {
 
         {activeTab === "pier" && (
           <>
+            {/* 1부두/2부두 서브탭 */}
+            <div className="flex items-center gap-2 mb-6">
+              <button
+                type="button"
+                onClick={() => setPierTab("1부두")}
+                className={`px-4 py-2 rounded-lg font-bold text-sm transition-all ${pierTab === "1부두"
+                  ? "bg-amber-500 text-black"
+                  : "text-white/60 hover:text-white hover:bg-white/10 border border-white/10"
+                  }`}
+              >
+                1부두
+              </button>
+              <button
+                type="button"
+                onClick={() => setPierTab("2부두")}
+                className={`px-4 py-2 rounded-lg font-bold text-sm transition-all ${pierTab === "2부두"
+                  ? "bg-amber-500 text-black"
+                  : "text-white/60 hover:text-white hover:bg-white/10 border border-white/10"
+                  }`}
+              >
+                2부두
+              </button>
+            </div>
+
             <div className="mb-6">
-              <h2 className="text-2xl font-black text-white">부두 출입 이력 (인원별 {rowsByPerson.length}명)</h2>
+              <h2 className="text-2xl font-black text-white">{pierTab} 출입 이력 ({rowsByPerson.length}명)</h2>
               <p className="text-sm text-white/40 mt-1">
-                부두 구역별로 방문자 출입 이력을 확인합니다.
+                {pierTab} 구역 방문자 출입 이력을 확인합니다.
               </p>
             </div>
 
