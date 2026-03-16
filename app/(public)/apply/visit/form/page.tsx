@@ -424,7 +424,7 @@ export default function VisitFormPage() {
       if (isEditMode) {
         toast({
           title: t("변경이 완료되었습니다", "Changes Saved"),
-          description: t("신청 내용이 수정되어 재심사 대기중입니다.", "Your application has been updated and is pending review."),
+          description: t("신청 내용이 수정��어 재심사 대기중입니다.", "Your application has been updated and is pending review."),
         })
       } else {
         toast({
@@ -655,7 +655,7 @@ export default function VisitFormPage() {
               <div className="relative z-10 flex flex-col items-center text-center space-y-5">
                 <div className="space-y-4">
                   <p className="text-xl md:text-2xl font-black text-white leading-tight tracking-tight">
-                    {t("항만 출입자의 경우 '항만안전교육 필수 이수'", "Port visitors must complete the 'Port Safety Training'")}
+                    {t("항만 출입자의 경우 '항만안전교육 필수 이수'(일반부두전용)", "Port visitors must complete the 'Port Safety Training'(General Cargo Wharves Only)")}
                   </p>
 
                   <div className="flex flex-wrap justify-center items-center gap-x-3 gap-y-2 text-lg md:text-xl">
@@ -726,7 +726,7 @@ export default function VisitFormPage() {
                     error={errors.visitor_birth_date}
                   />
                   <FormInput
-                    label={t("소속 (회사명 또는 기관명)", "Organization (Company or Institution)")}
+                    label={t("소속", "Organization")}
                     required
                     value={formData.visitor_organization}
                     onChange={(e) => updateField("visitor_organization", e.target.value)}
@@ -750,7 +750,7 @@ export default function VisitFormPage() {
                   />
                 </div>
                 <FormInput
-                  label={t("회사주소 (회사 또는 기관의 주소)", "Company Address")}
+                  label={t("회사주소", "Company Address")}
                   required
                   value={formData.visitor_address}
                   onChange={(e) => updateField("visitor_address", e.target.value)}
@@ -848,7 +848,7 @@ export default function VisitFormPage() {
                 </div>
 
                 {/* 전자기기 추가 버튼 */}
-                <div className="flex justify-center pt-4">
+                <div className="flex flex-col items-center gap-2 pt-4">
                   <Button
                     type="button"
                     onClick={addElectronicDevice}
@@ -859,6 +859,7 @@ export default function VisitFormPage() {
                     </div>
                     <span className="text-base font-bold group-hover:text-amber-500 transition-colors">{t("전자기기 추가", "Add Electronic Device")}</span>
                   </Button>
+                  <p className="text-sm text-white/60 text-center">{t("스마트폰 외 전자기기 반입 시 입력해주세요.", "Please enter if bringing electronic devices other than smartphones.")}</p>
                 </div>
 
                 {/* 전자기기 입력 필드 */}
@@ -1123,7 +1124,7 @@ export default function VisitFormPage() {
                       </div>
 
                       {/* 동행인 전자기기 추가 버튼 */}
-                      <div className="flex justify-center pt-4">
+                      <div className="flex flex-col items-center gap-2 pt-4">
                         <Button
                           type="button"
                           onClick={() => addCompanionDevice(companionIndex)}
@@ -1134,6 +1135,7 @@ export default function VisitFormPage() {
                           </div>
                           <span className="text-base font-bold group-hover:text-amber-500 transition-colors">{t("전자기기 추가", "Add Electronic Device")}</span>
                         </Button>
+                        <p className="text-sm text-white/60 text-center">{t("스마트폰 외 전자기기 반입 시 입력해주세요.", "Please enter if bringing electronic devices other than smartphones.")}</p>
                       </div>
 
                       {/* 동행인 전자기기 입력 필드 */}

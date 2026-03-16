@@ -407,50 +407,6 @@ export default function StatusDetailPage() {
               </section>
             )}
 
-            {/* 안전교육 안내 - 승인완료 또는 대기 상태일 때만 표시 */}
-            {(["APPROVED", "approved", "PENDING", "pending"].includes(application.status)) && (
-              <section className="bg-emerald-500/5 backdrop-blur-xl border border-emerald-500/20 rounded-[40px] p-10 shadow-2xl">
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-400">
-                    <AlertCircle className="h-5 w-5" />
-                  </div>
-                  <h3 className="text-xl font-black text-white">현장 출입 전 필수 확인</h3>
-                </div>
-
-                <div className="bg-black/30 rounded-2xl p-6 border border-emerald-500/10 mb-6">
-                  <p className="text-white/80 leading-relaxed mb-4">
-                    안전한 작업을 위해 <span className="text-emerald-400 font-bold">안전교육 이수</span>가 필요합니다.<br />
-                    아직 교육을 받지 않으셨나요?
-                  </p>
-                  <div className="flex flex-col sm:flex-row gap-4 text-sm">
-                    <div className="flex items-center gap-2 text-white/60">
-                      <MapPin className="h-4 w-4 text-emerald-400 shrink-0" />
-                      <span>교육장 위치: <span className="text-white font-semibold">본관동 1층 BLT Hall</span></span>
-                    </div>
-                    <div className="flex items-center gap-2 text-white/60">
-                      <Clock className="h-4 w-4 text-emerald-400 shrink-0" />
-                      <span>문의: <span className="text-white font-semibold">안전환경팀 041-939-9984</span></span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* 지도 이미지 */}
-                <div className="rounded-2xl overflow-hidden border border-emerald-500/20">
-                  <div className="bg-black/40 px-4 py-2 flex items-center gap-2 border-b border-emerald-500/10">
-                    <MapPin className="h-4 w-4 text-emerald-400" />
-                    <span className="text-xs font-bold text-emerald-400 uppercase tracking-widest">BLT Hall 위치 안내</span>
-                  </div>
-                  <Image
-                    src="/images/blt-hall-map.png"
-                    alt="BLT Hall 안내 지도 - 본관동 1층 BLT Hall까지의 경로"
-                    width={800}
-                    height={480}
-                    className="w-full object-cover"
-                  />
-                </div>
-              </section>
-            )}
-
             {application.status?.toUpperCase() === "REJECTED" && application.rejection_reason && (
               <section className="bg-red-500/5 backdrop-blur-xl border border-red-500/20 rounded-[40px] p-10 shadow-2xl">
                 <div className="flex items-center gap-3 mb-6">
