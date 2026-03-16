@@ -212,11 +212,11 @@ export default function PrivacyPage() {
           </section>
         </div>
 
-        {/* 하단 */}
-        <div className="mt-16 pt-8 border-t border-white/10 text-center text-white/20 text-xs tracking-widest uppercase">
-          © BORYEONG LNG Terminal Management System
-        </div>
+        {/* Footer */}
+        <PublicFooter />
+
+
+
       </div>
-    </div>
-  )
+      )
 }
