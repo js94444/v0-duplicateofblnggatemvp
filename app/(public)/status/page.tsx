@@ -14,6 +14,7 @@ import Link from "next/link"
 import Image from "next/image"
 import { ArrowLeft, Search, Clock, FileText, ArrowRight, CheckCircle2, XCircle, Info, Smartphone } from "lucide-react"
 import { PublicHeader } from "@/components/public/public-header"
+import { PublicFooter } from "@/components/public/public-footer"
 import { useLang } from "@/lib/language-context"
 
 interface Application {
@@ -71,7 +72,7 @@ export default function StatusPage() {
 
   const handleSearch = async () => {
     const cleanPhone = phoneNumber.replace(/[^\d]/g, "")
-    
+
     if (!cleanPhone) {
       toast({
         title: "휴대전화번호를 입력해주세요",
@@ -180,12 +181,12 @@ export default function StatusPage() {
 
   return (
     <div className="min-h-screen bg-black text-white font-sans flex flex-col relative overflow-hidden">
-      
+
       {/* Background Layer */}
       <div className="fixed inset-0 z-0">
-        <div 
+        <div
           className="absolute inset-0 bg-cover bg-center"
-          style={{ 
+          style={{
             backgroundImage: "url('/images/lng-terminal-bg.jpg')",
             filter: 'brightness(0.3) blur(5px)'
           }}
@@ -199,7 +200,7 @@ export default function StatusPage() {
       {/* Main Content */}
       <main className="relative z-10 flex-1 overflow-y-auto px-6 md:px-12 pt-32 pb-24">
         <div className="max-w-6xl mx-auto animate-in fade-in slide-in-from-bottom-8 duration-700">
-          
+
           <Link href="/" className="flex items-center gap-2 text-white/50 hover:text-amber-500 transition-colors mb-6 group">
             <ArrowLeft size={20} className="group-hover:-translate-x-1 transition-transform" />
             <span className="text-sm font-bold tracking-widest uppercase">Go Back</span>
@@ -215,17 +216,17 @@ export default function StatusPage() {
                 <div className="absolute top-0 right-0 p-8 text-amber-500/5 group-hover:text-amber-500/10 transition-colors">
                   <Smartphone size={160} strokeWidth={1} />
                 </div>
-                
+
                 <div className="relative z-10">
                   <SectionHeader title={t("휴대전화번호 조회", "Mobile Lookup")} sub="Lookup by Mobile" />
                   <p className="text-white/40 text-sm mb-10 leading-relaxed max-w-md">{t("신청 시 사용한 휴대전화번호를 입력하시면 현재 처리 상태 및 상세 내역을 확인할 수 있습니다.", "Enter the mobile number used during application to check the current status and details.")}</p>
-                  
+
                   <div className="flex flex-col md:flex-row gap-4">
                     <div className="flex-1 space-y-2">
                       <Label htmlFor="phone" className="text-sm font-bold text-white/80">
                         {t("휴대전화번호", "Mobile Number")} <span className="text-red-400">*</span>
                       </Label>
-                      <Input 
+                      <Input
                         id="phone"
                         placeholder="010-1234-5678"
                         value={phoneNumber}
@@ -235,7 +236,7 @@ export default function StatusPage() {
                         className="bg-black/40 border border-white/10 h-14 rounded-xl backdrop-blur-sm text-white transition-all duration-300 focus-visible:ring-0 focus-visible:outline-none focus-visible:!border-amber-500 focus-visible:!bg-black/60 focus-visible:shadow-[0_0_15px_rgba(245,158,11,0.1)] focus-visible:ring-[3px] focus-visible:ring-amber-500/20 placeholder:text-white/60"
                       />
                     </div>
-                    <button 
+                    <button
                       onClick={handleSearch}
                       disabled={isSearching}
                       className="px-10 py-4 bg-amber-500 text-black font-black rounded-xl hover:scale-105 active:scale-95 transition-all shadow-[0_15px_30px_rgba(245,158,11,0.25)] flex items-center justify-center gap-2 disabled:opacity-50 self-end h-14"
@@ -253,11 +254,11 @@ export default function StatusPage() {
                   <div className="flex items-center justify-between px-4">
                     <h3 className="text-xl font-black text-white italic tracking-tight">Application List <span className="text-amber-500 ml-2 font-sans not-italic font-bold">({applications.length})</span></h3>
                   </div>
-                  
+
                   <div className="space-y-4">
                     {applications.map((app) => (
-                      <div 
-                        key={app.id} 
+                      <div
+                        key={app.id}
                         onClick={() => router.push(`/status/${app.receipt}`)}
                         className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-[32px] p-8 flex flex-col md:flex-row justify-between items-center gap-6 hover:border-amber-500/40 transition-all group cursor-pointer shadow-xl"
                       >
@@ -277,7 +278,7 @@ export default function StatusPage() {
                             </div>
                           </div>
                         </div>
-                        
+
                         <button className="flex items-center gap-2 bg-white/5 hover:bg-white/10 px-6 py-3 rounded-xl text-sm font-black transition-all border border-white/5">
                           {t("상세보기", "View Details")} <ArrowRight size={16} />
                         </button>
@@ -292,38 +293,38 @@ export default function StatusPage() {
             <div className="space-y-6">
               <section className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-[40px] p-8 h-full shadow-2xl">
                 <div className="flex items-center gap-3 mb-10">
-                   <div className="w-1.5 h-6 bg-amber-500 rounded-full"></div>
-                   <h3 className="text-xl font-black italic tracking-tight text-white">Status Guide</h3>
+                  <div className="w-1.5 h-6 bg-amber-500 rounded-full"></div>
+                  <h3 className="text-xl font-black italic tracking-tight text-white">Status Guide</h3>
                 </div>
-                
+
                 <div className="space-y-8">
-                  <StatusGuideItem 
-                    icon={<Clock size={18} />} 
-                    color="text-amber-500" 
-                    bg="bg-amber-500/10" 
+                  <StatusGuideItem
+                    icon={<Clock size={18} />}
+                    color="text-amber-500"
+                    bg="bg-amber-500/10"
                     title={t("승인 대기 (Pending)", "Pending Approval")}
-                    desc={t("신청서가 접수되어 담당자가 보안 및 방문 목적을 검토 중입니다.", "Your application has been received and is being reviewed by the person in charge.")} 
+                    desc={t("신청서가 접수되어 담당자가 보안 및 방문 목적을 검토 중입니다.", "Your application has been received and is being reviewed by the person in charge.")}
                   />
-                  <StatusGuideItem 
-                    icon={<CheckCircle2 size={18} />} 
-                    color="text-emerald-500" 
-                    bg="bg-emerald-500/10" 
+                  <StatusGuideItem
+                    icon={<CheckCircle2 size={18} />}
+                    color="text-emerald-500"
+                    bg="bg-emerald-500/10"
                     title={t("승인 완료 (Approved)", "Approved")}
-                    desc={t("방문이 승인되었습니다. 등록된 번호로 출입증 정보가 발송됩니다.", "Your visit has been approved. Access pass information will be sent to your registered number.")} 
+                    desc={t("방문이 승인되었습니다. 등록된 번호로 출입증 정보가 발송됩니다.", "Your visit has been approved. Access pass information will be sent to your registered number.")}
                   />
-                  <StatusGuideItem 
-                    icon={<XCircle size={18} />} 
-                    color="text-red-500" 
-                    bg="bg-red-500/10" 
+                  <StatusGuideItem
+                    icon={<XCircle size={18} />}
+                    color="text-red-500"
+                    bg="bg-red-500/10"
                     title={t("신청 반려 (Rejected)", "Rejected")}
-                    desc={t("입력 정보 미비 또는 보안 규정 사유로 신청이 거절되었습니다.", "Your application was rejected due to incomplete information or security policy reasons.")} 
+                    desc={t("입력 정보 미비 또는 보안 규정 사유로 신청이 거절되었습니다.", "Your application was rejected due to incomplete information or security policy reasons.")}
                   />
-                  <StatusGuideItem 
-                    icon={<XCircle size={18} />} 
-                    color="text-gray-500" 
-                    bg="bg-gray-500/10" 
+                  <StatusGuideItem
+                    icon={<XCircle size={18} />}
+                    color="text-gray-500"
+                    bg="bg-gray-500/10"
                     title={t("신청 취소 (Cancelled)", "Cancelled")}
-                    desc={t("신청자 또는 관리자에 의해 방문 신청이 취소되었습니다.", "The visit application was cancelled by the applicant or administrator.")} 
+                    desc={t("신청자 또는 관리자에 의해 방문 신청이 취소되었습니다.", "The visit application was cancelled by the applicant or administrator.")}
                   />
                 </div>
 
@@ -341,19 +342,10 @@ export default function StatusPage() {
         </div>
       </main>
 
-      {/* Footer */}
-      <footer className="relative z-10 py-6 px-12 flex flex-col md:flex-row justify-between items-center text-[10px] text-white/30 tracking-widest uppercase border-t border-white/5">
-        <div className="mb-4 md:mb-0">
-          © BORYEONG LNG Terminal Management System
-        </div>
-        <div className="flex gap-8 font-bold">
-          <Link href="/privacy" className="hover:text-amber-500 transition-colors">Privacy Policy</Link>
-          <Link href="#" className="hover:text-amber-500 transition-colors">Terms of Use</Link>
-          <Link href="#" className="hover:text-amber-500 transition-colors">Contact Us</Link>
-        </div>
-      </footer>
+      <PublicFooter />
 
 
     </div>
+
   )
 }
