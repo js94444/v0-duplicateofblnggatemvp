@@ -130,7 +130,7 @@ export default function AdminQrScanPage() {
       // 이렇게 하면 현재 state와 상관없이 즉시 해당 API를 호출합니다.
       const defaultDateParam = `date=${format(selectedDate, "yyyy-MM-dd")}`
       const targetUrl = `/api/admin/qr-scans?scan_site=${scanSiteParam}&${defaultDateParam}`
-      
+
       mutate(targetUrl)
     }
   }
@@ -553,7 +553,7 @@ export default function AdminQrScanPage() {
                     <TableRow className="border-white/10 hover:bg-transparent">
                       <TableHead className="text-white/70 min-w-[90px]">방문자</TableHead>
                       <TableHead className="text-white/70 min-w-[100px]">생년월일</TableHead>
-                      <TableHead className="text-white/70 min-w-[130px]">소속</TableHead>
+                      <TableHead className="text-white/70 min-w-[120px]">소속</TableHead>
                       <TableHead className="text-white/70 min-w-[120px]">방문일</TableHead>
                       <TableHead className="text-white/70 min-w-[140px]">담당자</TableHead>
                       <TableHead className="text-white/70 min-w-[100px]">출입구역</TableHead>
@@ -683,7 +683,7 @@ export default function AdminQrScanPage() {
                     <TableRow className="border-white/10 hover:bg-transparent">
                       <TableHead className="text-white/70 min-w-[90px]">방문자</TableHead>
                       <TableHead className="text-white/70 min-w-[100px]">생년월일</TableHead>
-                      <TableHead className="text-white/70 min-w-[130px]">소속</TableHead>
+                      <TableHead className="text-white/70 min-w-[120px]">소속</TableHead>
                       <TableHead className="text-white/70 min-w-[140px]">담당자</TableHead>
                       <TableHead className="text-white/70 min-w-[100px]">출입 구역</TableHead>
                       <TableHead className="text-white/70 min-w-[140px]">입장 시각</TableHead>
