@@ -83,21 +83,7 @@ export default function AdminQrScanPage() {
     return res.json()
   })
 
-  // 슈퍼어드민만 접근 가능
-  useEffect(() => {
-    if (!authLoading && user?.role !== "super_admin") {
-      router.push("/admin/dashboard")
-    }
-  }, [user, authLoading, router])
-
-  if (authLoading) {
-    return <div className="flex items-center justify-center h-screen">로딩 중...</div>
-  }
-
-  if (user?.role !== "super_admin") {
-    return null
-  }
-
+  // SWR 파라미터 계산 (훅 호출 전에 정의해야 함)
   const scanSiteParam =
     activeTab === "main" ? "main" : pierTab === "1부두" ? "pier_1" : "pier_2"
 
@@ -105,18 +91,34 @@ export default function AdminQrScanPage() {
     ? `startDate=${format(rangeStartDate, "yyyy-MM-dd")}&endDate=${format(rangeEndDate, "yyyy-MM-dd")}`
     : `date=${format(selectedDate, "yyyy-MM-dd")}`
 
-  // SWR로 데이터 fetching - 캐시가 자동으로 유지됨
+  // SWR로 데이터 fetching - 훅은 조기 return 전에 호출해야 함
   const { data: swrData, error, isLoading: loading, mutate } = useSWR(
     `/api/admin/qr-scans?scan_site=${scanSiteParam}&${dateParam}`,
     fetcher,
     {
       revalidateOnFocus: false, // 포커스 시 재요청 방지
-      dedupingInterval: 30000,  // 30초 내 중복 요청 방지
+      dedupingInterval: 5000,   // 5초 내 중복 요청 방지 (탭 전환 시 빠른 갱신)
     }
   )
 
   const scans: ScanRow[] = swrData?.data || []
   const stats: ScanStats | null = swrData?.stats || null
+
+  // 슈퍼어드민만 접근 가능
+  useEffect(() => {
+    if (!authLoading && user?.role !== "super_admin") {
+      router.push("/admin/dashboard")
+    }
+  }, [user, authLoading, router])
+
+  // 조기 return은 모든 훅 호출 이후에
+  if (authLoading) {
+    return <div className="flex items-center justify-center h-screen">로딩 중...</div>
+  }
+
+  if (user?.role !== "super_admin") {
+    return null
+  }
 
   // 새로고침 함수 - 날짜 내비게이션의 selectedDate 기준으로 새로고침
   const loadData = async (forceRefresh = false) => {
