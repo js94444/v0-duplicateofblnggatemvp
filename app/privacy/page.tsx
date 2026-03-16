@@ -208,10 +208,11 @@ export default function PrivacyPage() {
             <h2 className="text-lg font-black text-amber-500 mb-4">제10조 개인정보 처리방침의 변경</h2>
             <p className="text-white/60 text-sm leading-relaxed">
               본 개인정보 처리방침은 2026년 3월 10일부터 적용됩니다. 본 개인정보 처리방침은 관계법령 또는 회사 내부 방침의
-              변경에 따라 개정될 수 있으며, 변경 시 출입관리시스템을 통해 ��지합니다.
+              변경에 따라 개정될 수 있으며, 변경 시 출입관리시스템을 통해 공지합니다.
             </p>
           </section>
         </div>
+
 
         {/* Footer */}
         <PublicFooter />
