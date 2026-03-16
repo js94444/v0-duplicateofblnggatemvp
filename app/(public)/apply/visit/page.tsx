@@ -54,7 +54,7 @@ export default function VisitAgreementPage() {
         </h3>
       </div>
       <div className="p-8">
-        <div className="bg-black/40 rounded-2xl p-6 text-white/50 text-sm font-light leading-relaxed border border-white/5">
+        <div className="bg-black/60 rounded-2xl p-6 text-white/50 text-sm font-light leading-relaxed border border-white/5">
           {content}
         </div>
         <label className="mt-6 flex items-center gap-3 cursor-pointer max-w-fit group/label">
@@ -70,12 +70,12 @@ export default function VisitAgreementPage() {
 
   return (
     <div className="min-h-screen bg-black text-white font-sans flex flex-col relative overflow-hidden">
-      
+
       {/* Background Layer */}
       <div className="fixed inset-0 z-0">
-        <div 
+        <div
           className="absolute inset-0 bg-cover bg-center"
-          style={{ 
+          style={{
             backgroundImage: "url('/images/lng-terminal-bg.jpg')",
             filter: 'brightness(0.3) blur(5px)'
           }}
@@ -89,7 +89,7 @@ export default function VisitAgreementPage() {
       {/* Main Content */}
       <main className="relative z-10 flex-1 overflow-y-auto px-8 md:px-16 pt-32 pb-24">
         <div className="max-w-4xl mx-auto animate-in fade-in slide-in-from-bottom-8 duration-700">
-          
+
           {/* Back Button & Title */}
           <Link href="/" className="flex items-center gap-2 text-white/50 hover:text-amber-500 transition-colors mb-6 group">
             <ArrowLeft size={20} className="group-hover:-translate-x-1 transition-transform" />
@@ -131,9 +131,9 @@ export default function VisitAgreementPage() {
 
           {/* Agreement Sections */}
           <div className="space-y-6">
-            <AgreementCard 
+            <AgreementCard
               title={t("개인정보 수집·이용 동의", "Privacy Policy Agreement")}
-              checked={agreements.privacy} 
+              checked={agreements.privacy}
               onToggle={() => toggleAgree('privacy')}
               content={
                 <div className="space-y-4">
@@ -145,9 +145,9 @@ export default function VisitAgreementPage() {
               }
             />
 
-            <AgreementCard 
+            <AgreementCard
               title={t("보안 서약", "Security Pledge")}
-              checked={agreements.security} 
+              checked={agreements.security}
               onToggle={() => toggleAgree('security')}
               content={
                 <div className="space-y-2">
@@ -164,9 +164,9 @@ export default function VisitAgreementPage() {
               }
             />
 
-            <AgreementCard 
+            <AgreementCard
               title={t("안전준수 서약", "Safety Compliance Pledge")}
-              checked={agreements.safety} 
+              checked={agreements.safety}
               onToggle={() => toggleAgree('safety')}
               content={
                 <div className="space-y-2">
@@ -194,7 +194,7 @@ export default function VisitAgreementPage() {
                 <span className="text-lg font-black text-white">{t("위 약관에 전체 동의합니다", "I agree to all of the above terms")}</span>
               </label>
 
-              <button 
+              <button
                 type="button"
                 onClick={handleSubmit}
                 disabled={!agreements.all}
