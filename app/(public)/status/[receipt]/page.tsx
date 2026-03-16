@@ -31,6 +31,7 @@ import {
 import { useToast } from "@/hooks/use-toast"
 import Link from "next/link"
 import Image from "next/image"
+import { PublicFooter } from "@/components/public/public-footer"
 
 const bgStyle = {
   backgroundImage: "url('/images/lng-terminal-bg.jpg')",
@@ -94,7 +95,7 @@ export default function StatusDetailPage() {
     try {
       setLoading(true)
       const response = await fetch(`/api/status/${receipt}`)
-      
+
       if (!response.ok) {
         throw new Error("신청 정보를 불러올 수 없습니다")
       }
@@ -194,7 +195,7 @@ export default function StatusDetailPage() {
 
       <main className="relative z-10 flex-1 overflow-y-auto px-6 md:px-12 pt-32 pb-24">
         <div className="max-w-5xl mx-auto">
-          
+
           <Link href="/status" className="flex items-center gap-2 text-white/50 hover:text-amber-500 transition-colors mb-6 group">
             <ArrowLeft size={20} className="group-hover:-translate-x-1 transition-transform" />
             <span className="text-sm font-bold tracking-widest uppercase">Go Back</span>
@@ -276,7 +277,7 @@ export default function StatusDetailPage() {
                   <p className="text-[10px] font-bold tracking-[0.2em] uppercase text-white/30">Application Details</p>
                 </div>
               </div>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* Entry Start */}
                 <div>
@@ -325,7 +326,7 @@ export default function StatusDetailPage() {
                       const companions = app.companions || []
                       const personnel = app.personnel || []
                       const visitors = app.visitors || []
-                      
+
                       // Priority: personnel > visitors > companions
                       if (personnel.length > 0) {
                         return `${personnel.length}명`
@@ -350,14 +351,14 @@ export default function StatusDetailPage() {
                     <p className="text-[10px] font-bold tracking-[0.2em] uppercase text-white/30">Access QR Codes</p>
                   </div>
                 </div>
-                
+
                 <div className="grid grid-cols-1 gap-8">
                   {/* 신청인 QR 코드 */}
                   <div className="flex flex-col items-center bg-black/30 rounded-3xl p-8 border border-emerald-500/20">
                     <p className="text-sm font-bold text-emerald-500 mb-6 uppercase tracking-widest">신청인 (Applicant)</p>
                     <div className="text-center space-y-4">
                       <p className="text-xs text-white/60">신청 번호</p>
-                      <a 
+                      <a
                         href={`/qr/${application.receipt}`}
                         target="_blank"
                         rel="noopener noreferrer"
@@ -383,7 +384,7 @@ export default function StatusDetailPage() {
                               <div className="text-center space-y-4 w-full">
                                 <p className="text-xs text-white/60">신청 번호</p>
                                 {companion.receipt ? (
-                                  <a 
+                                  <a
                                     href={`/qr/${companion.receipt}`}
                                     target="_blank"
                                     rel="noopener noreferrer"
@@ -451,8 +452,8 @@ export default function StatusDetailPage() {
                     방문취소
                   </Button>
                 )}
-                <Button 
-                  onClick={() => router.push("/")} 
+                <Button
+                  onClick={() => router.push("/")}
                   className="bg-black/40 hover:bg-black/50 border border-white/10 hover:border-white/30 text-white font-bold px-10 py-6 rounded-xl text-lg transition-all"
                 >
                   확인
@@ -463,16 +464,13 @@ export default function StatusDetailPage() {
         </div>
       </main>
 
-      <footer className="relative z-10 py-6 px-12 flex flex-col md:flex-row justify-between items-center text-[10px] text-white/30 tracking-widest uppercase border-t border-white/5">
-        <div className="mb-4 md:mb-0">© BORYEONG LNG Terminal Management System</div>
-        <div className="flex gap-8 font-bold">
-          <Link href="/privacy" className="hover:text-amber-500 transition-colors">Privacy Policy</Link>
-          <Link href="#" className="hover:text-amber-500 transition-colors">Terms of Use</Link>
-          <Link href="#" className="hover:text-amber-500 transition-colors">Contact Us</Link>
-        </div>
-      </footer>
+
+      <PublicFooter />
 
 
     </div>
+
+
+    </div >
   )
 }
