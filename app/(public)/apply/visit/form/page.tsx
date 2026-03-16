@@ -7,7 +7,7 @@ import { SelectTrigger } from "@/components/ui/select"
 import { Select } from "@/components/ui/select"
 import type React from "react"
 import { useState, useEffect } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { FormInput } from "@/components/common/form-input"
@@ -397,7 +397,7 @@ export default function VisitFormPage() {
           body: JSON.stringify(submitData),
         })
       } else {
-        // 신규 신청: POST 요청
+        // 신규 신청: POST 요���
         response = await fetch("/api/apply/visit", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
