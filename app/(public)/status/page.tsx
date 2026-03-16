@@ -333,7 +333,7 @@ export default function StatusPage() {
                     <Info size={12} /> Notice
                   </p>
                   <p className="text-[11px] text-white/30 leading-relaxed font-medium">
-                    {t("승인 완료된 방문 건은 현장에서 본인 확인 후 출입이 가능합니다. 문의사항은 관리부서(041-939-1114)로 연락 바랍니다.", "Approved visits are allowed on-site after identity verification. For inquiries, please contact the management office at 041-939-1114.")}
+                    {t("승인 완료된 방문 건은 현장에서 본인 확인 후 출입이 가능합니다. 문의사항은 관리부서(041-939-9923)로 연락 바랍니다.", "Approved visits are allowed on-site after identity verification. For inquiries, please contact the management office at 041-939-1114.")}
                   </p>
                 </div>
               </section>
