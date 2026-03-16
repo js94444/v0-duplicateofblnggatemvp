@@ -750,7 +750,7 @@ export default function VisitFormPage() {
                   />
                 </div>
                 <FormInput
-                  label={t("회사주소 (회사 또는 기관의 주소)", "Company Address")}
+                  label={t("회사주소", "Company Address")}
                   required
                   value={formData.visitor_address}
                   onChange={(e) => updateField("visitor_address", e.target.value)}
