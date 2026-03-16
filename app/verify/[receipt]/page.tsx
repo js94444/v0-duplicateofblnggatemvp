@@ -1,9 +1,11 @@
 "use client"
 
 import { useEffect, useState, useRef } from "react"
-import { useSearchParams, useParams } from "next/navigation"
+import { useSearchParams, useParams, useRouter } from "next/navigation"
 import Link from "next/link"
-import { CheckCircle, XCircle, ArrowLeft, QrCode, Loader2 } from "lucide-react"
+import { CheckCircle, XCircle, QrCode, Loader2 } from "lucide-react"
+import { PublicHeader } from "@/components/public/public-header"
+import { PublicFooter } from "@/components/public/public-footer"
 
 const GATE_LABELS: Record<string, string> = {
   main: "정문",
@@ -25,6 +27,7 @@ interface VerifyResult {
 export default function VerifyReceiptPage() {
   const params = useParams()
   const searchParams = useSearchParams()
+  const router = useRouter()
   const receipt = params.receipt as string
   const direction = (searchParams.get("direction") === "EXIT" ? "EXIT" : "ENTRY") as "ENTRY" | "EXIT"
   const gate = searchParams.get("gate") ?? "main"
@@ -32,6 +35,7 @@ export default function VerifyReceiptPage() {
   const [loading, setLoading] = useState(true)
   const [result, setResult] = useState<VerifyResult | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [countdown, setCountdown] = useState(3)
   const isCalledRef = useRef(false)
 
   useEffect(() => {
@@ -95,25 +99,38 @@ export default function VerifyReceiptPage() {
     }
   }, [receipt, direction, gate])
 
+  // 3초 후 자동으로 스캐너 페이지로 이동
+  useEffect(() => {
+    if (loading || !result) return
+    
+    const timer = setInterval(() => {
+      setCountdown((prev) => {
+        if (prev <= 1) {
+          clearInterval(timer)
+          router.push(`/scanner/qr?direction=${direction}&gate=${gate}`)
+          return 0
+        }
+        return prev - 1
+      })
+    }, 1000)
+    
+    return () => clearInterval(timer)
+  }, [loading, result, direction, gate, router])
+
   const gateLabel = GATE_LABELS[gate] ?? "정문"
   const isAllow = result?.result === "ALLOW"
 
   return (
-    <div className="min-h-screen bg-neutral-950 text-white flex flex-col">
-      <header className="px-6 py-4 border-b border-white/10 flex items-center justify-between">
-        <Link
-          href={`/scanner/qr?direction=${direction}&gate=${gate}`}
-          className="flex items-center gap-2 text-white/60 hover:text-white"
-        >
-          <ArrowLeft size={18} />
-          <span className="text-sm font-medium">스캐너</span>
-        </Link>
-        <span className="text-xs text-amber-400 font-bold">
-          {gateLabel} · {direction === "ENTRY" ? "입장" : "퇴장"}
-        </span>
-      </header>
+    <div className="min-h-screen bg-black text-white flex flex-col">
+      <PublicHeader initialScrolled />
 
-      <main className="flex-1 flex flex-col items-center justify-center p-6">
+      <main className="flex-1 flex flex-col items-center justify-center p-6 pt-24">
+        {/* 현재 게이트/방향 표시 */}
+        <div className="mb-6 text-center">
+          <span className="px-4 py-2 rounded-full bg-amber-500/20 border border-amber-500/30 text-amber-400 text-sm font-bold">
+            {gateLabel} · {direction === "ENTRY" ? "입장" : "퇴장"}
+          </span>
+        </div>
         {loading ? (
           <div className="flex flex-col items-center gap-4 text-white/50">
             <Loader2 className="w-16 h-16 animate-spin text-amber-500" />
@@ -162,10 +179,15 @@ export default function VerifyReceiptPage() {
 
             <Link
               href={`/scanner/qr?direction=${direction}&gate=${gate}`}
-              className="mt-6 w-full flex items-center justify-center gap-2 px-6 py-4 rounded-2xl border-2 border-amber-500/50 bg-amber-500/20 text-amber-400 font-bold text-base hover:bg-amber-500/30 transition-colors"
+              className="mt-6 w-full flex flex-col items-center gap-2 px-6 py-4 rounded-2xl border-2 border-amber-500/50 bg-amber-500/20 text-amber-400 font-bold text-base hover:bg-amber-500/30 transition-colors"
             >
-              <QrCode size={22} />
-              다음 QR 스캔하기
+              <div className="flex items-center gap-2">
+                <QrCode size={22} />
+                다음 QR 스캔하기
+              </div>
+              <span className="text-xs text-amber-400/70">
+                {countdown}초 후 자동 이동
+              </span>
             </Link>
           </div>
         ) : error ? (
@@ -176,9 +198,7 @@ export default function VerifyReceiptPage() {
         ) : null}
       </main>
 
-      <footer className="px-6 py-4 text-center text-[10px] text-white/20 tracking-widest uppercase border-t border-white/5">
-        © BORYEONG LNG Terminal Management System
-      </footer>
+      <PublicFooter />
     </div>
   )
 }
