@@ -655,7 +655,7 @@ export default function VisitFormPage() {
               <div className="relative z-10 flex flex-col items-center text-center space-y-5">
                 <div className="space-y-4">
                   <p className="text-xl md:text-2xl font-black text-white leading-tight tracking-tight">
-                    {t("항만 출입자의 경우 '항만안전교육 필수 이수'", "Port visitors must complete the 'Port Safety Training'")}
+                    {t("항만 출입자의 경우 '항만안전교육 필수 이수'(일반부두전용)", "Port visitors must complete the 'Port Safety Training'(General Cargo Wharves Only)")}
                   </p>
 
                   <div className="flex flex-wrap justify-center items-center gap-x-3 gap-y-2 text-lg md:text-xl">
