@@ -528,7 +528,7 @@ export default function AdminQrScanPage() {
 
             {error && (
               <div className="mb-4 px-4 py-3 rounded-xl bg-red-500/20 border border-red-500/40 text-red-200 text-sm">
-                {error instanceof Error ? error.message : "���이터 로드 중 오류가 발생했습니다."}
+                {error instanceof Error ? error.message : "데이터 로드 중 오류가 발생했습니다."}
               </div>
             )}
 
