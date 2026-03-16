@@ -2,7 +2,7 @@ import Link from "next/link"
 import { ArrowLeft } from "lucide-react"
 
 export const metadata = {
-  title: "개인정보 처리방침 | B-Link",
+  title: "개인정보 처리방침",
   description: "보령LNG터미널(주) 출입 관리 시스템 개인정보 처리방침",
 }
 
