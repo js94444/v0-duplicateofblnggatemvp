@@ -130,7 +130,7 @@ export default function AdminQrScanPage() {
       // 이렇게 하면 현재 state와 상관없이 즉시 해당 API를 호출합니다.
       const defaultDateParam = `date=${format(selectedDate, "yyyy-MM-dd")}`
       const targetUrl = `/api/admin/qr-scans?scan_site=${scanSiteParam}&${defaultDateParam}`
-      
+
       mutate(targetUrl)
     }
   }
@@ -290,7 +290,7 @@ export default function AdminQrScanPage() {
             </button>
           </div>
           <p className="text-xs uppercase tracking-[0.2em] text-white/40 font-bold">
-            {activeTab === "main" ? "정문 QR 스캔 · Visit Pass Scans" : "부두별 출입 이���"}
+            {activeTab === "main" ? "정문 QR 스캔 · Visit Pass Scans" : "부두별 출입 이력"}
           </p>
         </div>
         <div className="flex items-center gap-3">
@@ -528,7 +528,7 @@ export default function AdminQrScanPage() {
 
             {error && (
               <div className="mb-4 px-4 py-3 rounded-xl bg-red-500/20 border border-red-500/40 text-red-200 text-sm">
-                {error instanceof Error ? error.message : "���이터 로드 중 오류가 발생했습니다."}
+                {error instanceof Error ? error.message : "데이터 로드 중 오류가 발생했습니다."}
               </div>
             )}
 
@@ -553,7 +553,7 @@ export default function AdminQrScanPage() {
                     <TableRow className="border-white/10 hover:bg-transparent">
                       <TableHead className="text-white/70 min-w-[90px]">방문자</TableHead>
                       <TableHead className="text-white/70 min-w-[100px]">생년월일</TableHead>
-                      <TableHead className="text-white/70 min-w-[130px]">소속</TableHead>
+                      <TableHead className="text-white/70 min-w-[120px]">소속</TableHead>
                       <TableHead className="text-white/70 min-w-[120px]">방문일</TableHead>
                       <TableHead className="text-white/70 min-w-[140px]">담당자</TableHead>
                       <TableHead className="text-white/70 min-w-[100px]">출입구역</TableHead>
@@ -649,10 +649,34 @@ export default function AdminQrScanPage() {
 
         {activeTab === "pier" && (
           <>
+            {/* 1부두/2부두 서브탭 */}
+            <div className="flex items-center gap-2 mb-6">
+              <button
+                type="button"
+                onClick={() => setPierTab("1부두")}
+                className={`px-4 py-2 rounded-lg font-bold text-sm transition-all ${pierTab === "1부두"
+                  ? "bg-amber-500 text-black"
+                  : "text-white/60 hover:text-white hover:bg-white/10 border border-white/10"
+                  }`}
+              >
+                1부두
+              </button>
+              <button
+                type="button"
+                onClick={() => setPierTab("2부두")}
+                className={`px-4 py-2 rounded-lg font-bold text-sm transition-all ${pierTab === "2부두"
+                  ? "bg-amber-500 text-black"
+                  : "text-white/60 hover:text-white hover:bg-white/10 border border-white/10"
+                  }`}
+              >
+                2부두
+              </button>
+            </div>
+
             <div className="mb-6">
-              <h2 className="text-2xl font-black text-white">부두 출입 이력 (인원별 {rowsByPerson.length}명)</h2>
+              <h2 className="text-2xl font-black text-white">{pierTab} 출입 이력 ({rowsByPerson.length}명)</h2>
               <p className="text-sm text-white/40 mt-1">
-                부두 구역별로 방문자 출입 이력을 확인합니다.
+                {pierTab} 구역 방문자 출입 이력을 확인합니다.
               </p>
             </div>
 
@@ -683,7 +707,7 @@ export default function AdminQrScanPage() {
                     <TableRow className="border-white/10 hover:bg-transparent">
                       <TableHead className="text-white/70 min-w-[90px]">방문자</TableHead>
                       <TableHead className="text-white/70 min-w-[100px]">생년월일</TableHead>
-                      <TableHead className="text-white/70 min-w-[130px]">소속</TableHead>
+                      <TableHead className="text-white/70 min-w-[120px]">소속</TableHead>
                       <TableHead className="text-white/70 min-w-[140px]">담당자</TableHead>
                       <TableHead className="text-white/70 min-w-[100px]">출입 구역</TableHead>
                       <TableHead className="text-white/70 min-w-[140px]">입장 시각</TableHead>
