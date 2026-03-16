@@ -176,7 +176,7 @@ export class AzureSqlDB {
     }>
   }): Promise<{ id: number; receipt: string }> {
     const dbPool = await getPool()
-    
+
     // 유형 분류 로직
     // 1. 출입지역이 '항만' 또는 '부두'를 포함하면 항만출입 (동행인 여부 ��관)
     // 2. 동행인이 있으면 단체방문신청
@@ -190,7 +190,7 @@ export class AzureSqlDB {
     } else {
       applicationType = Type.VISIT_R3
     }
-    
+
     const applicationNumber = generateReceiptNumber(applicationType)
     const now = getKoreaTime()
     const id = `${now.getTime()}-${Math.random().toString(36).substring(7)}`
@@ -341,21 +341,21 @@ export class AzureSqlDB {
 
     // 4. 첨부파일 정보 저장
     const uploadedFiles = data.uploadedFiles || data.uploaded_files || []
-    console.log('[v0] Uploaded files field check:', { 
-      hasUploadedFiles: !!data.uploadedFiles, 
+    console.log('[v0] Uploaded files field check:', {
+      hasUploadedFiles: !!data.uploadedFiles,
       hasUploaded_files: !!data.uploaded_files,
-      count: uploadedFiles.length 
+      count: uploadedFiles.length
     })
     if (uploadedFiles && uploadedFiles.length > 0) {
       console.log('[v0] Processing', uploadedFiles.length, 'uploaded files')
       for (const file of uploadedFiles) {
         // ����������������������������������������������������일명과 키가 유효한 경우에만 저장
         if (file && file.filename && file.fileKey && file.filename.trim() !== '' && file.fileKey.trim() !== '') {
-          console.log('[v0] Saving file attachment:', { 
-            filename: file.filename, 
+          console.log('[v0] Saving file attachment:', {
+            filename: file.filename,
             fileKey: file.fileKey,
             url: file.url,
-            size: file.size 
+            size: file.size
           })
           await dbPool
             .request()
@@ -585,14 +585,14 @@ export class AzureSqlDB {
   // 휴대전화번호로 조회
   static async getApplicationsByPhone(phone: string): Promise<Application[]> {
     const dbPool = await getPool()
-    
+
     console.log('[v0] Getting applications by phone:', phone)
-    
+
     const result = await dbPool
       .request()
       .input('phone', sql.NVarChar(20), phone)
       .query('SELECT * FROM visit_applications WHERE visitor_phone = @phone ORDER BY created_at DESC')
-    
+
     const applications: Application[] = result.recordset.map((row) => {
       // Determine type from receipt prefix or access_area
       const receiptPrefix = row.application_number.split('-')[0]
@@ -638,7 +638,7 @@ export class AzureSqlDB {
       }
       return application
     })
-    
+
     return applications
   }
 
@@ -654,203 +654,203 @@ export class AzureSqlDB {
       .input('receipt', sql.NVarChar(50), receipt)
       .query('SELECT * FROM visit_applications WHERE application_number = @receipt')
 
-  if (result.recordset.length > 0) {
-    const row = result.recordset[0]
-    
-    // Fetch all related data in parallel
-    const [companionsResult, devicesResult, companionDevicesResult, filesResult, companionAttachmentsResult, companionPassesResult] = await Promise.all([
-      dbPool.request()
-        .input('application_id', sql.BigInt, row.application_id)
-        .query('SELECT * FROM visit_companions WHERE application_id = @application_id'),
-      dbPool.request()
-        .input('application_id', sql.BigInt, row.application_id)
-        .query('SELECT * FROM visit_electronic_devices WHERE application_id = @application_id'),
-      dbPool.request()
-        .input('application_id', sql.BigInt, row.application_id)
-        .query(`
+    if (result.recordset.length > 0) {
+      const row = result.recordset[0]
+
+      // Fetch all related data in parallel
+      const [companionsResult, devicesResult, companionDevicesResult, filesResult, companionAttachmentsResult, companionPassesResult] = await Promise.all([
+        dbPool.request()
+          .input('application_id', sql.BigInt, row.application_id)
+          .query('SELECT * FROM visit_companions WHERE application_id = @application_id'),
+        dbPool.request()
+          .input('application_id', sql.BigInt, row.application_id)
+          .query('SELECT * FROM visit_electronic_devices WHERE application_id = @application_id'),
+        dbPool.request()
+          .input('application_id', sql.BigInt, row.application_id)
+          .query(`
           SELECT vcd.companion_id, vcd.item_name, vcd.model_name, vcd.serial_number, vcd.reason
           FROM visit_companion_devices vcd
           JOIN visit_companions vc ON vcd.companion_id = vc.companion_id
           WHERE vc.application_id = @application_id
         `),
-      dbPool.request()
-        .input('application_id', sql.BigInt, row.application_id)
-        .query('SELECT * FROM visit_attachments WHERE application_id = @application_id'),
-      dbPool.request()
-        .input('application_id', sql.BigInt, row.application_id)
-        .query(`
+        dbPool.request()
+          .input('application_id', sql.BigInt, row.application_id)
+          .query('SELECT * FROM visit_attachments WHERE application_id = @application_id'),
+        dbPool.request()
+          .input('application_id', sql.BigInt, row.application_id)
+          .query(`
           SELECT vca.companion_id, vca.file_name, vca.file_key, vca.blob_url, vca.file_type, vca.file_size, vca.attachment_type
           FROM visit_companion_attachments vca
           JOIN visit_companions vc ON vca.companion_id = vc.companion_id
           WHERE vc.application_id = @application_id
         `).catch(() => ({ recordset: [] })),
-      // Fetch companion passes (pass_receipt) from visit_passes
-      dbPool.request()
-        .input('application_id', sql.BigInt, row.application_id)
-        .query(`
+        // Fetch companion passes (pass_receipt) from visit_passes
+        dbPool.request()
+          .input('application_id', sql.BigInt, row.application_id)
+          .query(`
           SELECT companion_id, pass_receipt
           FROM visit_passes
           WHERE application_id = @application_id AND companion_id IS NOT NULL AND status = 'ACTIVE'
         `).catch(() => ({ recordset: [] })),
-    ])
+      ])
 
-    const companions = companionsResult.recordset.map((c: any) => ({
-      companion_id: c.companion_id,
-      name: c.name,
-      phone: c.phone,
-      birth_date: c.birth_date,
-      organization: c.organization,
-      position: c.position,
-    }))
+      const companions = companionsResult.recordset.map((c: any) => ({
+        companion_id: c.companion_id,
+        name: c.name,
+        phone: c.phone,
+        birth_date: c.birth_date,
+        organization: c.organization,
+        position: c.position,
+      }))
 
-    const electronicDevices = devicesResult.recordset.map((d: any) => ({
-      item_name: d.item_name,
-      model_name: d.model_name,
-      serial_number: d.serial_number,
-      reason: d.reason,
-    }))
+      const electronicDevices = devicesResult.recordset.map((d: any) => ({
+        item_name: d.item_name,
+        model_name: d.model_name,
+        serial_number: d.serial_number,
+        reason: d.reason,
+      }))
 
-    const companionsWithDevices = companions.map((c: any) => {
-      const devices = companionDevicesResult.recordset
-        .filter((d: any) => {
-          const actualDeviceId = Array.isArray(d.companion_id) ? d.companion_id[0] : d.companion_id
-          return String(actualDeviceId) === String(c.companion_id)
-        })
-        .map((d: any) => ({
-          item_name: d.item_name,
-          model_name: d.model_name,
-          serial_number: d.serial_number,
-          reason: d.reason,
-        }))
-      const companionPortCerts = (companionAttachmentsResult.recordset || [])
-        .filter((a: any) => {
-          const actualId = Array.isArray(a.companion_id) ? a.companion_id[0] : a.companion_id
+      const companionsWithDevices = companions.map((c: any) => {
+        const devices = companionDevicesResult.recordset
+          .filter((d: any) => {
+            const actualDeviceId = Array.isArray(d.companion_id) ? d.companion_id[0] : d.companion_id
+            return String(actualDeviceId) === String(c.companion_id)
+          })
+          .map((d: any) => ({
+            item_name: d.item_name,
+            model_name: d.model_name,
+            serial_number: d.serial_number,
+            reason: d.reason,
+          }))
+        const companionPortCerts = (companionAttachmentsResult.recordset || [])
+          .filter((a: any) => {
+            const actualId = Array.isArray(a.companion_id) ? a.companion_id[0] : a.companion_id
+            return String(actualId) === String(c.companion_id)
+          })
+          .map((a: any) => ({
+            filename: a.file_name,
+            key: a.file_key,
+            url: a.blob_url,
+            type: a.file_type,
+            size: a.file_size ? Number(a.file_size) : 0,
+            attachment_type: a.attachment_type,
+          }))
+        // Get companion's pass_receipt from visit_passes
+        const companionPass = (companionPassesResult.recordset || []).find((p: any) => {
+          const actualId = Array.isArray(p.companion_id) ? p.companion_id[0] : p.companion_id
           return String(actualId) === String(c.companion_id)
         })
-        .map((a: any) => ({
-          filename: a.file_name,
-          key: a.file_key,
-          url: a.blob_url,
-          type: a.file_type,
-          size: a.file_size ? Number(a.file_size) : 0,
-          attachment_type: a.attachment_type,
-        }))
-      // Get companion's pass_receipt from visit_passes
-      const companionPass = (companionPassesResult.recordset || []).find((p: any) => {
-        const actualId = Array.isArray(p.companion_id) ? p.companion_id[0] : p.companion_id
-        return String(actualId) === String(c.companion_id)
+        const receipt = companionPass?.pass_receipt || null
+        return { ...c, electronicDevices: devices, portCertFiles: companionPortCerts, receipt }
       })
-      const receipt = companionPass?.pass_receipt || null
-      return { ...c, electronicDevices: devices, portCertFiles: companionPortCerts, receipt }
-    })
-    
-    const allFiles = filesResult.recordset.map((f: any) => ({
-      filename: f.file_name,
-      key: f.file_key,
-      url: f.blob_url,
-      size: f.file_size ? Number(f.file_size) : 0,
-      type: f.file_type,
-      attachment_type: f.attachment_type,
-    }))
-    const files = allFiles.filter((f: any) => f.attachment_type !== 'PORT_CERT')
-    const portCertFiles = allFiles.filter((f: any) => f.attachment_type === 'PORT_CERT')
-    
-    // Determine type based on receipt prefix or access_area
-    const receiptPrefix = row.application_number.split('-')[0]
-    let finalType: Type
-    const isPortArea = row.access_area === '항만' || row.access_area?.includes('부두')
-    if (receiptPrefix === 'PA' || isPortArea) {
-      finalType = Type.PORT_ACCESS
-    } else if (receiptPrefix === 'GV' || companions.length > 0) {
-      finalType = Type.GROUP_VISIT
-    } else {
-      finalType = Type.VISIT_R3
-    }
 
-    console.log('[v0] Application details:', {
-      receipt: row.application_number,
-      prefix: receiptPrefix,
-      access_area: row.access_area,
-      finalType,
-      visit_start_date: row.visit_start_date,
-      visit_end_date: row.visit_end_date,
-      companions_count: companions.length
-    })
+      const allFiles = filesResult.recordset.map((f: any) => ({
+        filename: f.file_name,
+        key: f.file_key,
+        url: f.blob_url,
+        size: f.file_size ? Number(f.file_size) : 0,
+        type: f.file_type,
+        attachment_type: f.attachment_type,
+      }))
+      const files = allFiles.filter((f: any) => f.attachment_type !== 'PORT_CERT')
+      const portCertFiles = allFiles.filter((f: any) => f.attachment_type === 'PORT_CERT')
 
-    const application: any = {
-      id: row.application_id.toString(),
-      receipt: row.application_number,
-      type: finalType,
-      status: normalizeStatus(row.status),
-      visitor_name: row.visitor_name,
-      visitor_phone: row.visitor_phone,
-      visitor_birth_date: row.visitor_birth_date,
-      visitor_organization: row.visitor_organization,
-      visitor_position: row.visitor_position,
-      visitor_address: row.visitor_address,
-      visitor_email: row.visitor_email,
-      contact_email: row.visitor_email,
-      visit_datetime: new Date(row.visit_start_date),
-      visit_purpose: row.visit_purpose,
-      detailed_purpose: row.detailed_purpose,
-      contact_name: row.contact_name,
-      contact_mobile: row.contact_mobile,
-      access_area: row.access_area as AccessArea,
-      vehicle_number: row.vehicle_number,
-      vehicle_model: row.vehicle_model,
-      spark_arrestor: row.spark_arrestor,
-      visit_start_time: "09:00",
-      visit_end_time: "18:00",
-      visit_start_date: new Date(row.visit_start_date),
-      visit_end_date: new Date(row.visit_end_date || row.visit_start_date),
-      access_start_datetime: new Date(row.visit_start_date),
-      access_end_datetime: new Date(row.visit_end_date || row.visit_start_date),
-      access_purpose: row.visit_purpose,
-      electronicDevices,
-      personnel: companions.length > 0 ? [
-        {
+      // Determine type based on receipt prefix or access_area
+      const receiptPrefix = row.application_number.split('-')[0]
+      let finalType: Type
+      const isPortArea = row.access_area === '항만' || row.access_area?.includes('부두')
+      if (receiptPrefix === 'PA' || isPortArea) {
+        finalType = Type.PORT_ACCESS
+      } else if (receiptPrefix === 'GV' || companions.length > 0) {
+        finalType = Type.GROUP_VISIT
+      } else {
+        finalType = Type.VISIT_R3
+      }
+
+      console.log('[v0] Application details:', {
+        receipt: row.application_number,
+        prefix: receiptPrefix,
+        access_area: row.access_area,
+        finalType,
+        visit_start_date: row.visit_start_date,
+        visit_end_date: row.visit_end_date,
+        companions_count: companions.length
+      })
+
+      const application: any = {
+        id: row.application_id.toString(),
+        receipt: row.application_number,
+        type: finalType,
+        status: normalizeStatus(row.status),
+        visitor_name: row.visitor_name,
+        visitor_phone: row.visitor_phone,
+        visitor_birth_date: row.visitor_birth_date,
+        visitor_organization: row.visitor_organization,
+        visitor_position: row.visitor_position,
+        visitor_address: row.visitor_address,
+        visitor_email: row.visitor_email,
+        contact_email: row.visitor_email,
+        visit_datetime: new Date(row.visit_start_date),
+        visit_purpose: row.visit_purpose,
+        detailed_purpose: row.detailed_purpose,
+        contact_name: row.contact_name,
+        contact_mobile: row.contact_mobile,
+        access_area: row.access_area as AccessArea,
+        vehicle_number: row.vehicle_number,
+        vehicle_model: row.vehicle_model,
+        spark_arrestor: row.spark_arrestor,
+        visit_start_time: "09:00",
+        visit_end_time: "18:00",
+        visit_start_date: new Date(row.visit_start_date),
+        visit_end_date: new Date(row.visit_end_date || row.visit_start_date),
+        access_start_datetime: new Date(row.visit_start_date),
+        access_end_datetime: new Date(row.visit_end_date || row.visit_start_date),
+        access_purpose: row.visit_purpose,
+        electronicDevices,
+        personnel: companions.length > 0 ? [
+          {
+            name: row.visitor_name,
+            phone: row.visitor_phone,
+            organization: row.visitor_organization,
+            position: row.visitor_position,
+            birth_date: row.visitor_birth_date || '',
+            address: row.visitor_address || ''
+          },
+          ...companions.map((c: any) => ({
+            name: c.name,
+            phone: c.phone,
+            organization: c.organization || '',
+            position: c.position || '',
+            birth_date: c.birth_date || '',
+            address: ''
+          }))
+        ] : [{
           name: row.visitor_name,
           phone: row.visitor_phone,
           organization: row.visitor_organization,
           position: row.visitor_position,
           birth_date: row.visitor_birth_date || '',
           address: row.visitor_address || ''
-        },
-        ...companions.map((c: any) => ({
-          name: c.name,
-          phone: c.phone,
-          organization: c.organization || '',
-          position: c.position || '',
-          birth_date: c.birth_date || '',
-          address: ''
-        }))
-      ] : [{
-        name: row.visitor_name,
-        phone: row.visitor_phone,
-        organization: row.visitor_organization,
-        position: row.visitor_position,
-        birth_date: row.visitor_birth_date || '',
-        address: row.visitor_address || ''
-      }],
-      companions: companionsWithDevices,
-      visitors: companions.length > 0 ? [
-        {
-          name: row.visitor_name,
-          phone: row.visitor_phone,
-          organization: row.visitor_organization,
-          position: row.visitor_position,
-        },
-        ...companions
-      ] : [],
-      created_at: new Date(row.created_at),
-      updated_at: new Date(row.updated_at),
-      rejection_reason: row.rejection_reason,
-      files,
-      portCertFiles,
-    }
+        }],
+        companions: companionsWithDevices,
+        visitors: companions.length > 0 ? [
+          {
+            name: row.visitor_name,
+            phone: row.visitor_phone,
+            organization: row.visitor_organization,
+            position: row.visitor_position,
+          },
+          ...companions
+        ] : [],
+        created_at: new Date(row.created_at),
+        updated_at: new Date(row.updated_at),
+        rejection_reason: row.rejection_reason,
+        files,
+        portCertFiles,
+      }
 
-    return application
-  }
+      return application
+    }
 
     // Try port_access
     result = await dbPool
@@ -860,7 +860,7 @@ export class AzureSqlDB {
 
     if (result.recordset.length > 0) {
       const row = result.recordset[0]
-      
+
       // Get personnel
       const personnelResult = await dbPool
         .request()
@@ -1052,7 +1052,7 @@ export class AzureSqlDB {
         default:
           applicationType = row.access_area === '항만' ? Type.PORT_ACCESS
             : companions.length > 0 ? Type.GROUP_VISIT
-            : Type.VISIT_R3
+              : Type.VISIT_R3
       }
 
       return {
@@ -1106,7 +1106,7 @@ export class AzureSqlDB {
     // DB에는 소문자로 저장
     const dbStatus = status.toLowerCase()
     const now = getKoreaTime()
-    
+
     // 승인 시 approval_date ��정
     const isApproved = status === Status.APPROVED
 
@@ -1426,13 +1426,13 @@ export class AzureSqlDB {
 
     // Get all applications to determine type based on companions
     const allApps = await this.getAllApplications()
-    
+
     const typeStats: Record<string, number> = {
       GROUP_VISIT: 0,
       VISIT_R3: 0,
       PORT_ACCESS: 0,
     }
-    
+
     allApps.forEach(app => {
       if (app.type && typeStats[app.type] !== undefined) {
         typeStats[app.type] = (typeStats[app.type] || 0) + 1
@@ -1484,7 +1484,7 @@ export class AzureSqlDB {
         VISIT_R3: 0,
         PORT_ACCESS: 0,
       }
-      
+
       monthApps.forEach(app => {
         if (app.type && byType[app.type] !== undefined) {
           byType[app.type] = (byType[app.type] || 0) + 1
@@ -1500,23 +1500,20 @@ export class AzureSqlDB {
     }
 
     // Get organization stats
-    const orgStats: Record<string, number> = {}
-    allApps.forEach(app => {
-      let org = 'Unknown'
-      if (app.type === 'GROUP_VISIT') {
-        org = (app as any).organization || 'Unknown'
-      } else if (app.type === 'VISIT_R3') {
-        org = (app as any).visitor_organization || 'Unknown'
-      } else if (app.type === 'PORT_ACCESS') {
-        org = (app as any).company_name || 'Unknown'
-      }
-      orgStats[org] = (orgStats[org] || 0) + 1
-    })
-
-    const organizationStats = Object.entries(orgStats)
-      .map(([organization, count]) => ({ organization, count }))
-      .sort((a, b) => b.count - a.count)
-
+    // 2. 주요 방문 기관 통계 (DB에서 직접 집계)
+    // NULL이거나 빈 문자열인 경우 '미지정'으로 처리
+    const orgResult = await dbPool.request().query(`
+    SELECT 
+      ISNULL(NULLIF(visitor_organization, ''), '미지정') as organization, 
+      COUNT(*) as count
+    FROM visit_applications
+    GROUP BY visitor_organization
+    ORDER BY count DESC
+  `)
+    const organizationStats = orgResult.recordset.map(row => ({
+      organization: row.organization,
+      count: row.count
+    }))
     return {
       totalApplications,
       statusStats,
@@ -1542,17 +1539,17 @@ export class AzureSqlDB {
     const dbPool = await getPool()
     // token ������ (���� 토큰: UUID 대신 ���� ���������)
     const token = `TOKEN-${Date.now()}-${Math.random().toString(36).substring(2, 10).toUpperCase()}`
-    
+
     // 신청 정보에서 방문 기간 가져오기
     const appResult = await dbPool.request()
       .input('app_id', sql.BigInt, applicationId)
       .query(`SELECT visit_start_date, visit_end_date FROM visit_applications WHERE application_id = @app_id`)
-    
+
     const validFrom = appResult.recordset[0]?.visit_start_date || new Date()
     // visit_end_date는 DATE 타입이므로 23:59:59로 설정하여 종료일 끝까지 유효하게 함
     const validToDate = new Date(appResult.recordset[0]?.visit_end_date || new Date())
     validToDate.setHours(23, 59, 59, 999)
-    
+
     await dbPool.request()
       .input('application_id', sql.BigInt, applicationId)
       .input('pass_receipt', sql.NVarChar(50), pass_receipt)
@@ -1589,7 +1586,7 @@ export class AzureSqlDB {
     scan_site: string = "MAIN"
   ): Promise<{ result: string; message: string; denyReason?: string }> {
     const dbPool = await getPool()
-    
+
     // pass_receipt로 신청 조회 (동행인 QR인 경우 동행인 이름 사용)
     const appResult = await dbPool.request()
       .input('pass_receipt', sql.NVarChar(50), receipt)
@@ -1602,7 +1599,7 @@ export class AzureSqlDB {
         LEFT JOIN visit_companions c ON p.companion_id = c.companion_id
         WHERE p.pass_receipt = @pass_receipt
       `)
-    
+
     if (!appResult.recordset[0]) {
       return { result: "DENY", message: "승인된 출입권이 없습니다", denyReason: "NOT_FOUND" }
     }
@@ -1615,12 +1612,12 @@ export class AzureSqlDB {
     }
 
     const now = getKoreaTime()
-    
+
     // 방문 기간 확인
     if (app.visit_start_date && now < new Date(app.visit_start_date)) {
       return { result: "DENY", message: "방문 예정 시간이 아닙니다", denyReason: "NOT_YET" }
     }
-    
+
     // visit_end_date는 DATE 타입이므로 23:59:59까지 유효
     const visitEnd = new Date(app.visit_end_date)
     visitEnd.setHours(23, 59, 59, 999)
@@ -1639,21 +1636,21 @@ export class AzureSqlDB {
           WHERE pass_id = @pass_id AND scan_site = @scan_site
           ORDER BY scanned_at DESC
         `)
-      
+
       // 최근 스캔이 없거나 EXIT면 입장 기록이 없는 것
       if (lastScanResult.recordset.length === 0 || lastScanResult.recordset[0].direction === 'EXIT') {
-        return { 
-          result: "DENY", 
-          message: "입장 기록이 없습니다", 
+        return {
+          result: "DENY",
+          message: "입장 기록이 없습니다",
           denyReason: "NO_ENTRY_RECORD",
           is_companion: !!app.companion_id
         }
       }
     }
-    
+
     try {
       const now = getKoreaTime()
-      
+
       // 백엔드 중복 방지 - 정확히 같은 시각(1초 내) 동일 pass_id, direction, scan_site, device_id 스캔만 중복 처리
       const recentScanResult = await dbPool.request()
         .input('pass_id', sql.UniqueIdentifier, app.pass_id)
@@ -1666,7 +1663,7 @@ export class AzureSqlDB {
           WHERE pass_id = @pass_id AND direction = @direction AND scan_site = @scan_site
             AND device_id = @device_id AND scanned_at > @now_100ms_ago
         `)
-      
+
       // 100ms 이내 정확히 동일한 스캔이 없을 때만 INSERT
       if (recentScanResult.recordset.length === 0) {
         await dbPool.request()
@@ -1692,8 +1689,8 @@ export class AzureSqlDB {
       console.error('[v0] Failed to record scan:', e)
     }
 
-    return { 
-      result: "ALLOW", 
+    return {
+      result: "ALLOW",
       message: `${direction === 'ENTRY' ? '입장' : '퇴장'} 처리되었습니다`,
       visitor_name: displayName,
       visitor_org: app.visitor_org,
@@ -1743,16 +1740,16 @@ export class AzureSqlDB {
   /** QR 스캔 로그 조회 (입장/퇴장 사이클별) */
   static async getQrScanLogs(scanSite: string, limit: number = 100, filterParams?: { date?: string } | { startDate?: string; endDate?: string }): Promise<any[]> {
     const dbPool = await getPool()
-    
+
     // 범위 검색 여부 판단
     const isRangeSearch = filterParams && 'startDate' in filterParams && 'endDate' in filterParams
-    
+
     let scanWhereClause = ""
     let passWhereClause = ""
     const request = dbPool.request()
       .input('scan_site', sql.NVarChar(50), scanSite)
       .input('limit', sql.Int, limit)
-    
+
     if (isRangeSearch && filterParams) {
       const { startDate, endDate } = filterParams
       request
@@ -1767,7 +1764,7 @@ export class AzureSqlDB {
       scanWhereClause = `AND CAST(scanned_at AS DATE) = @filter_date`
       passWhereClause = `AND CAST(a.visit_start_date AS DATE) <= @filter_date AND CAST(a.visit_end_date AS DATE) >= @filter_date`
     }
-    
+
     const result = await request.query(`
         ;WITH 
         -- 1. 승인된 모든 출입증 (신청인 + 동행인)
@@ -1952,15 +1949,15 @@ export class AzureSqlDB {
   /** QR 스캔 통계 조회 */
   static async getQrScanStats(scanSite: string, filterParams?: { date?: string } | { startDate?: string; endDate?: string }): Promise<any> {
     const dbPool = await getPool()
-    
+
     // 범위 검색 여부 판단
     const isRangeSearch = filterParams && 'startDate' in filterParams && 'endDate' in filterParams
-    
+
     let scanWhereClause = ""
     let passWhereClause = ""
     const request = dbPool.request()
       .input('scan_site', sql.NVarChar(50), scanSite)
-    
+
     if (isRangeSearch && filterParams) {
       const { startDate, endDate } = filterParams
       request
@@ -1976,7 +1973,7 @@ export class AzureSqlDB {
       // 검색 날짜가 방문 기간 안에 포함되는 경우
       passWhereClause = `AND p.pass_id IN (SELECT vp.pass_id FROM visit_passes vp LEFT JOIN visit_applications va ON vp.application_id = va.application_id WHERE vp.status = 'active' AND CAST(va.visit_start_date AS DATE) <= @filter_date AND CAST(va.visit_end_date AS DATE) >= @filter_date)`
     }
-    
+
     const result = await request.query(`
         -- 1. visit_passes에서 날짜 기준 승인된 인원 (신청인 + 동행인, 방문 기간 포함)
         DECLARE @approvedCount INT = (
@@ -2037,17 +2034,17 @@ export class AzureSqlDB {
           @reentryCount as reentryCount,
           (@approvedCount - @entryScannedCount) as pendingCount
       `)
-    
-    const stats = result.recordset[0] || { 
-      approvedCount: 0, 
-      entryScannedCount: 0, 
+
+    const stats = result.recordset[0] || {
+      approvedCount: 0,
+      entryScannedCount: 0,
       exitScannedCount: 0,
-      currentlyInsideCount: 0, 
-      checkedOutCount: 0, 
+      currentlyInsideCount: 0,
+      checkedOutCount: 0,
       reentryCount: 0,
-      pendingCount: 0 
+      pendingCount: 0
     }
-    
+
     return {
       // 방문신청 카드: 승인 인원 - 입장 스캔 인원 = 아직 입장 안 한 인원
       pendingCount: Math.max(0, stats.pendingCount),
@@ -2102,17 +2099,17 @@ export class AzureSqlDB {
   static async createPassForCompanion(applicationId: string, companionId: number, pass_receipt: string): Promise<void> {
     const dbPool = await getPool()
     const token = `TOKEN-${Date.now()}-${Math.random().toString(36).substring(2, 10).toUpperCase()}`
-    
+
     // 신청 정보에서 방문 기간 가져오기
     const appResult = await dbPool.request()
       .input('app_id', sql.BigInt, applicationId)
       .query(`SELECT visit_start_date, visit_end_date FROM visit_applications WHERE application_id = @app_id`)
-    
+
     const validFrom = appResult.recordset[0]?.visit_start_date || new Date()
     // visit_end_date는 DATE 타입이므로 23:59:59로 설정하여 종료일 끝까지 유효하게 함
     const validToDate = new Date(appResult.recordset[0]?.visit_end_date || new Date())
     validToDate.setHours(23, 59, 59, 999)
-    
+
     await dbPool.request()
       .input('application_id', sql.BigInt, applicationId)
       .input('companion_id', sql.BigInt, companionId)
@@ -2130,13 +2127,13 @@ export class AzureSqlDB {
   static async getPortCertFilesByApplicationIds(applicationIds: number[]): Promise<Array<{ application_id: number; file_url: string; file_name: string }>> {
     if (applicationIds.length === 0) return []
     const dbPool = await getPool()
-    
+
     const placeholders = applicationIds.map((_, i) => `@id${i}`).join(',')
     const request = dbPool.request()
     applicationIds.forEach((id, i) => {
       request.input(`id${i}`, sql.Int, id)
     })
-    
+
     // 신청자 본인의 항만이수증만 조회 (동행인 제외)
     const result = await request.query(`
       SELECT application_id, blob_url AS file_url, file_name
