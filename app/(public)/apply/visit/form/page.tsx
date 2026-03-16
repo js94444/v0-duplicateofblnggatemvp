@@ -726,7 +726,7 @@ export default function VisitFormPage() {
                     error={errors.visitor_birth_date}
                   />
                   <FormInput
-                    label={t("소속 (회사명 또는 기관명)", "Organization (Company or Institution)")}
+                    label={t("소속", "Organization")}
                     required
                     value={formData.visitor_organization}
                     onChange={(e) => updateField("visitor_organization", e.target.value)}
