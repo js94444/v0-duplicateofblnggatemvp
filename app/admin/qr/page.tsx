@@ -290,7 +290,7 @@ export default function AdminQrScanPage() {
             </button>
           </div>
           <p className="text-xs uppercase tracking-[0.2em] text-white/40 font-bold">
-            {activeTab === "main" ? "정문 QR 스캔 · Visit Pass Scans" : "부두별 출입 이���"}
+            {activeTab === "main" ? "정문 QR 스캔 · Visit Pass Scans" : "부두별 출입 이력"}
           </p>
         </div>
         <div className="flex items-center gap-3">
