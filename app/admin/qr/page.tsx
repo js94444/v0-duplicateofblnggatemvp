@@ -6,6 +6,7 @@ import useSWR from "swr"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
+import { Checkbox } from "@/components/ui/checkbox"
 import { RefreshCw, ChevronLeft, ChevronRight, Calendar } from "lucide-react"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Calendar as CalendarComponent } from "@/components/ui/calendar"
@@ -16,6 +17,7 @@ import { ApplicationDetailModal } from "@/components/admin/application-detail-mo
 import { Application } from "@/lib/types"
 
 interface ScanRow {
+  scan_id?: number | null
   pass_id: string
   application_id: number
   companion_id: number | null
@@ -76,6 +78,82 @@ export default function AdminQrScanPage() {
   const [calendarOpen, setCalendarOpen] = useState(false)
   const [rangeStartCalendarOpen, setRangeStartCalendarOpen] = useState(false)
   const [rangeEndCalendarOpen, setRangeEndCalendarOpen] = useState(false)
+  // 수동 체크인/아웃/재입장용 선택된 row 키 (pass_id-cycleNum 형태)
+  const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set())
+  const [manualActionLoading, setManualActionLoading] = useState(false)
+
+  const toggleRowSelection = (key: string) => {
+    setSelectedRows(prev => {
+      const next = new Set(prev)
+      if (next.has(key)) next.delete(key)
+      else next.add(key)
+      return next
+    })
+  }
+
+  const toggleAllRows = (rows: any[]) => {
+    const allKeys = rows.map(r => `${r.pass_id}-${r.cycleNum ?? 0}`)
+    const allSelected = allKeys.every(k => selectedRows.has(k))
+    if (allSelected) {
+      setSelectedRows(new Set())
+    } else {
+      setSelectedRows(new Set(allKeys))
+    }
+  }
+
+  const handleManualAction = async (action: 'checkin' | 'checkout' | 'reentry', rows: any[]) => {
+    const targetRows = rows.filter(r => selectedRows.has(`${r.pass_id}-${r.cycleNum ?? 0}`))
+    if (targetRows.length === 0) {
+      alert("처리할 방문자를 선택해주세요.")
+      return
+    }
+
+    setManualActionLoading(true)
+    try {
+      // 기존 스캔 이력이 있는 row: scan_id로 UPDATE
+      // 스캔 이력이 없거나 재입장: pass 정보로 INSERT
+      const withScanId = targetRows.filter(r => r.scan_id && action !== 'reentry')
+      const withoutScanId = targetRows.filter(r => !r.scan_id || action === 'reentry')
+
+      const body: any = {
+        action,
+        scan_site: scanSiteParam,
+        scanIds: withScanId.map(r => r.scan_id).filter(Boolean),
+        passRows: withoutScanId.map(r => ({
+          pass_id: r.pass_id,
+          application_id: r.application_id,
+          companion_id: r.companion_id ?? null,
+          visitor_name: r.visitor_name || "",
+          visitor_org: r.visitor_organization || "",
+          contact_name: r.contact_name || "",
+          access_area: r.access_area || "",
+        })),
+      }
+
+      const res = await fetch("/api/admin/qr-scans/manual", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      })
+
+      if (!res.ok) {
+        const err = await res.json()
+        alert(`처리 실패: ${err.error}`)
+        return
+      }
+
+      const result = await res.json()
+      alert(`${action === 'checkin' ? '체크인' : action === 'checkout' ? '체크아웃' : '재입장'} 처리 완료 (${result.affected}명)`)
+      setSelectedRows(new Set())
+      // 데이터 갱신
+      mutate()
+    } catch (e) {
+      console.error("[v0] Manual action error:", e)
+      alert("처리 중 오류가 발생했습니다.")
+    } finally {
+      setManualActionLoading(false)
+    }
+  }
 
   // SWR fetcher
   const fetcher = (url: string) => fetch(url, { cache: "no-store" }).then(res => {
@@ -512,14 +590,45 @@ export default function AdminQrScanPage() {
       <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-[40px] p-8 shadow-2xl">
         {activeTab === "main" && (
           <>
-            <div className="mb-6">
-              <h2 className="text-2xl font-black text-white">정문 출입 이력 ({filteredRows.length}명)</h2>
-              <p className="text-sm text-white/40 mt-1">
-                {cardFilter === "all" && "승인된 전체 방문자 목록"}
-                {cardFilter === "pending" && "아직 입장하지 않은 방문자 목록"}
-                {cardFilter === "checkIn" && "현재 내부 체류 중인 방문자 목록"}
-                {cardFilter === "checkOut" && "퇴장 완료된 방문자 목록"}
-              </p>
+            <div className="mb-6 flex items-start justify-between gap-4">
+              <div>
+                <h2 className="text-2xl font-black text-white">정문 출입 이력 ({filteredRows.length}명)</h2>
+                <p className="text-sm text-white/40 mt-1">
+                  {cardFilter === "all" && "승인된 전체 방문자 목록"}
+                  {cardFilter === "pending" && "아직 입장하지 않은 방문자 목록"}
+                  {cardFilter === "checkIn" && "현재 내부 체류 중인 방문자 목록"}
+                  {cardFilter === "checkOut" && "퇴장 완료된 방문자 목록"}
+                </p>
+              </div>
+              <div className="flex items-center gap-2 shrink-0">
+                {selectedRows.size > 0 && (
+                  <span className="text-xs text-white/50">{selectedRows.size}명 선택</span>
+                )}
+                <Button
+                  size="sm"
+                  disabled={manualActionLoading || selectedRows.size === 0}
+                  onClick={() => handleManualAction('checkin', filteredRows)}
+                  className="bg-emerald-500/20 hover:bg-emerald-500/40 border border-emerald-500/50 text-emerald-300 font-bold rounded-xl text-xs px-3 py-2"
+                >
+                  체크인
+                </Button>
+                <Button
+                  size="sm"
+                  disabled={manualActionLoading || selectedRows.size === 0}
+                  onClick={() => handleManualAction('checkout', filteredRows)}
+                  className="bg-blue-500/20 hover:bg-blue-500/40 border border-blue-500/50 text-blue-300 font-bold rounded-xl text-xs px-3 py-2"
+                >
+                  체크아웃
+                </Button>
+                <Button
+                  size="sm"
+                  disabled={manualActionLoading || selectedRows.size === 0}
+                  onClick={() => handleManualAction('reentry', filteredRows)}
+                  className="bg-purple-500/20 hover:bg-purple-500/40 border border-purple-500/50 text-purple-300 font-bold rounded-xl text-xs px-3 py-2"
+                >
+                  재입장
+                </Button>
+              </div>
             </div>
 
             {error && (
@@ -547,6 +656,13 @@ export default function AdminQrScanPage() {
                 <Table>
                   <TableHeader className="bg-white/5">
                     <TableRow className="border-white/10 hover:bg-transparent">
+                      <TableHead className="text-white/70 w-10">
+                        <Checkbox
+                          checked={filteredRows.length > 0 && filteredRows.every(r => selectedRows.has(`${r.pass_id}-${r.cycleNum ?? 0}`))}
+                          onCheckedChange={() => toggleAllRows(filteredRows)}
+                          className="border-white/30"
+                        />
+                      </TableHead>
                       <TableHead className="text-white/70 min-w-[90px]">방문자</TableHead>
                       <TableHead className="text-white/70 min-w-[100px]">생년월일</TableHead>
                       <TableHead className="text-white/70 min-w-[120px]">소속</TableHead>
@@ -564,11 +680,19 @@ export default function AdminQrScanPage() {
                   <TableBody>
                     {filteredRows.map((row) => {
                       const recentClass = getRecentHighlight(row)
+                      const rowKey = `${row.pass_id}-${row.cycleNum ?? 0}`
                       return (
                         <TableRow
                           key={`${row.pass_id}-${row.cycleNum || 0}`}
-                          className={`border-white/5 hover:bg-white/5 transition-colors ${recentClass}`}
+                          className={`border-white/5 hover:bg-white/5 transition-colors ${recentClass} ${selectedRows.has(rowKey) ? "bg-amber-500/5" : ""}`}
                         >
+                          <TableCell className="w-10">
+                            <Checkbox
+                              checked={selectedRows.has(rowKey)}
+                              onCheckedChange={() => toggleRowSelection(rowKey)}
+                              className="border-white/30"
+                            />
+                          </TableCell>
                           <TableCell
                             className={`text-sm ${row.portCertFiles?.length ? 'text-blue-400 cursor-pointer hover:underline' : 'text-white/80'}`}
                             onClick={() => {
@@ -659,7 +783,7 @@ export default function AdminQrScanPage() {
               </button>
               <button
                 type="button"
-                onClick={() => setPierTab("2부두")}
+                onClick={() => setPierTab("2��두")}
                 className={`px-4 py-2 rounded-lg font-bold text-sm transition-all ${pierTab === "2부두"
                   ? "bg-amber-500 text-black"
                   : "text-white/60 hover:text-white hover:bg-white/10 border border-white/10"
@@ -669,11 +793,42 @@ export default function AdminQrScanPage() {
               </button>
             </div>
 
-            <div className="mb-6">
-              <h2 className="text-2xl font-black text-white">{pierTab} 출입 이력 ({rowsByPerson.length}명)</h2>
-              <p className="text-sm text-white/40 mt-1">
-                {pierTab} 구역 방문자 출입 이력을 확인합니다.
-              </p>
+            <div className="mb-6 flex items-start justify-between gap-4">
+              <div>
+                <h2 className="text-2xl font-black text-white">{pierTab} 출입 이력 ({rowsByPerson.length}명)</h2>
+                <p className="text-sm text-white/40 mt-1">
+                  {pierTab} 구역 방문자 출입 이력을 확인합니다.
+                </p>
+              </div>
+              <div className="flex items-center gap-2 shrink-0">
+                {selectedRows.size > 0 && (
+                  <span className="text-xs text-white/50">{selectedRows.size}명 선택</span>
+                )}
+                <Button
+                  size="sm"
+                  disabled={manualActionLoading || selectedRows.size === 0}
+                  onClick={() => handleManualAction('checkin', rowsByPerson)}
+                  className="bg-emerald-500/20 hover:bg-emerald-500/40 border border-emerald-500/50 text-emerald-300 font-bold rounded-xl text-xs px-3 py-2"
+                >
+                  체크인
+                </Button>
+                <Button
+                  size="sm"
+                  disabled={manualActionLoading || selectedRows.size === 0}
+                  onClick={() => handleManualAction('checkout', rowsByPerson)}
+                  className="bg-blue-500/20 hover:bg-blue-500/40 border border-blue-500/50 text-blue-300 font-bold rounded-xl text-xs px-3 py-2"
+                >
+                  체크아웃
+                </Button>
+                <Button
+                  size="sm"
+                  disabled={manualActionLoading || selectedRows.size === 0}
+                  onClick={() => handleManualAction('reentry', rowsByPerson)}
+                  className="bg-purple-500/20 hover:bg-purple-500/40 border border-purple-500/50 text-purple-300 font-bold rounded-xl text-xs px-3 py-2"
+                >
+                  재입장
+                </Button>
+              </div>
             </div>
 
             {error && (
@@ -701,6 +856,13 @@ export default function AdminQrScanPage() {
                 <Table>
                   <TableHeader className="bg-white/5">
                     <TableRow className="border-white/10 hover:bg-transparent">
+                      <TableHead className="text-white/70 w-10">
+                        <Checkbox
+                          checked={rowsByPerson.length > 0 && rowsByPerson.every(r => selectedRows.has(`${r.pass_id}-${r.cycleNum ?? 0}`))}
+                          onCheckedChange={() => toggleAllRows(rowsByPerson)}
+                          className="border-white/30"
+                        />
+                      </TableHead>
                       <TableHead className="text-white/70 min-w-[90px]">방문자</TableHead>
                       <TableHead className="text-white/70 min-w-[100px]">생년월일</TableHead>
                       <TableHead className="text-white/70 min-w-[120px]">소속</TableHead>
@@ -717,11 +879,19 @@ export default function AdminQrScanPage() {
                   <TableBody>
                     {rowsByPerson.map((row) => {
                       const recentClass = getRecentHighlight(row)
+                      const rowKey = `${row.pass_id}-${row.cycleNum ?? 0}`
                       return (
                         <TableRow
                           key={row.pass_id}
-                          className={`border-white/5 hover:bg-white/5 transition-colors ${recentClass}`}
+                          className={`border-white/5 hover:bg-white/5 transition-colors ${recentClass} ${selectedRows.has(rowKey) ? "bg-amber-500/5" : ""}`}
                         >
+                          <TableCell className="w-10">
+                            <Checkbox
+                              checked={selectedRows.has(rowKey)}
+                              onCheckedChange={() => toggleRowSelection(rowKey)}
+                              className="border-white/30"
+                            />
+                          </TableCell>
                           <TableCell
                             className={`text-sm ${row.portCertFiles?.length ? 'text-blue-400 cursor-pointer hover:underline' : 'text-white/80'}`}
                             onClick={() => {

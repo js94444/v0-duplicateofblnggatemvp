@@ -349,7 +349,7 @@ export class AzureSqlDB {
     if (uploadedFiles && uploadedFiles.length > 0) {
       console.log('[v0] Processing', uploadedFiles.length, 'uploaded files')
       for (const file of uploadedFiles) {
-        // 일명과 키가 유효한 경우에만 저장
+        // 일명과 키가 유효한 경우에만 ���장
         if (file && file.filename && file.fileKey && file.filename.trim() !== '' && file.fileKey.trim() !== '') {
           console.log('[v0] Saving file attachment:', {
             filename: file.filename,
@@ -1103,7 +1103,7 @@ export class AzureSqlDB {
 
     console.log('[v0] Updating application status:', { id, status, rejectionReason })
 
-    // DB에는 소문자로 저장
+    // DB에는 소문자로 저��
     const dbStatus = status.toLowerCase()
     const now = getKoreaTime()
 
@@ -2204,5 +2204,97 @@ export class AzureSqlDB {
         WHERE pass_receipt = @pass_receipt
       `)
     return result.recordset[0] || null
+  }
+
+  /**
+   * 수동 체크인/체크아웃 처리
+   * - action: 'checkin' | 'checkout' | 'reentry'
+   * - scanIds: 기존 scan_id 배열 (reentry 제외)
+   * - passRows: pass 정보 배열 (reentry 시 새 행 INSERT에 필요)
+   * - scan_site: 현재 탭 기준 (main | pier_1 | pier_2)
+   * - adminName: 처리한 관리자명
+   */
+  static async manualScanAction(params: {
+    action: 'checkin' | 'checkout' | 'reentry'
+    scanIds?: number[]
+    passRows?: Array<{
+      pass_id: string
+      application_id: number
+      companion_id?: number | null
+      visitor_name: string
+      visitor_org?: string
+      contact_name?: string
+      access_area?: string
+    }>
+    scan_site: string
+    adminName: string
+    manualTime: Date
+  }): Promise<{ affected: number }> {
+    const dbPool = await getPool()
+    const { action, scanIds, passRows, scan_site, adminName, manualTime } = params
+    let affected = 0
+
+    if (action === 'checkin' && scanIds && scanIds.length > 0) {
+      // 기존 스캔 행이 있으면 입장시각 업데이트, 없으면 아래 INSERT 경로로
+      for (const scanId of scanIds) {
+        const req = dbPool.request()
+          .input('scan_id', sql.BigInt, scanId)
+          .input('scanned_at', sql.DateTime2, manualTime)
+          .input('admin_name', sql.NVarChar(100), adminName)
+        await req.query(`
+          UPDATE visit_pass_scans
+          SET scanned_at = @scanned_at,
+              user_agent = CONCAT('MANUAL_CHECKIN by ', @admin_name)
+          WHERE scan_id = @scan_id AND direction = 'ENTRY'
+        `)
+        affected++
+      }
+    }
+
+    if (action === 'checkout' && scanIds && scanIds.length > 0) {
+      for (const scanId of scanIds) {
+        const req = dbPool.request()
+          .input('scan_id', sql.BigInt, scanId)
+          .input('scanned_at', sql.DateTime2, manualTime)
+          .input('admin_name', sql.NVarChar(100), adminName)
+        await req.query(`
+          UPDATE visit_pass_scans
+          SET scanned_at = @scanned_at,
+              user_agent = CONCAT('MANUAL_CHECKOUT by ', @admin_name)
+          WHERE scan_id = @scan_id AND direction = 'EXIT'
+        `)
+        affected++
+      }
+    }
+
+    if ((action === 'checkin' || action === 'checkout' || action === 'reentry') && passRows && passRows.length > 0) {
+      // 스캔 이력이 없거나 재입장인 경우 새 행 INSERT
+      const direction = action === 'checkout' ? 'EXIT' : 'ENTRY'
+      const deviceId = `MANUAL-${adminName}-${Date.now()}` // 수동 입력용 고유 device_id
+      for (const row of passRows) {
+        await dbPool.request()
+          .input('pass_id', sql.UniqueIdentifier, row.pass_id)
+          .input('application_id', sql.BigInt, row.application_id)
+          .input('direction', sql.NVarChar(10), direction)
+          .input('result', sql.NVarChar(20), 'ALLOW')
+          .input('visitor_name', sql.NVarChar(100), row.visitor_name)
+          .input('visitor_org', sql.NVarChar(200), row.visitor_org || null)
+          .input('contact_name', sql.NVarChar(100), row.contact_name || null)
+          .input('access_area', sql.NVarChar(100), row.access_area || null)
+          .input('scan_site', sql.NVarChar(50), scan_site)
+          .input('scanned_at', sql.DateTime2, manualTime)
+          .input('admin_name', sql.NVarChar(100), adminName)
+          .input('device_id', sql.NVarChar(100), deviceId)
+          .query(`
+            INSERT INTO visit_pass_scans
+              (pass_id, application_id, direction, result, visitor_name, visitor_org, contact_name, access_area, scan_site, scanned_at, user_agent, device_id)
+            VALUES
+              (@pass_id, @application_id, @direction, @result, @visitor_name, @visitor_org, @contact_name, @access_area, @scan_site, @scanned_at, CONCAT('MANUAL_', @direction, ' by ', @admin_name), @device_id)
+          `)
+        affected++
+      }
+    }
+
+    return { affected }
   }
 }
