@@ -6,9 +6,9 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
-  // Force rebuild - timestamp: 2026-03-18T13:00:00
+  // Force rebuild - timestamp: 2026-03-18T14:00:00
   generateBuildId: async () => {
-    return `build-v2-${Date.now()}`
+    return `build-v3-${Date.now()}`
   },
 }
 

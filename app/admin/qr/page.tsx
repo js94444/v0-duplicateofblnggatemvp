@@ -120,13 +120,8 @@ export default function AdminQrScanPage() {
         return null // reentry는 항상 INSERT
       }
 
-      console.log("[v0] targetRows scan_ids:", targetRows.map(r => ({ name: r.visitor_name, entry_scan_id: r.entry_scan_id, exit_scan_id: r.exit_scan_id, cycleNum: r.cycleNum })))
-
       const withScanId = targetRows.filter(r => getScanId(r) && action !== 'reentry')
       const withoutScanId = targetRows.filter(r => !getScanId(r) || action === 'reentry')
-
-      console.log("[v0] withScanId:", withScanId.length, "withoutScanId:", withoutScanId.length)
-      console.log("[v0] scanIds to UPDATE:", withScanId.map(r => getScanId(r)))
 
       const body: any = {
         action,
