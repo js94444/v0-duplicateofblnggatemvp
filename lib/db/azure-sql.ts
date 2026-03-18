@@ -178,7 +178,7 @@ export class AzureSqlDB {
     const dbPool = await getPool()
 
     // 유형 분류 로직
-    // 1. 출입지역이 '항만' 또는 '부두'를 포함하면 항만출입 (동행인 여부 ��관)
+    // 1. 출입지역이 '항만' 또는 '부두'를 포함하면 항만출입
     // 2. 동행인이 있으면 단체방문신청
     // 3. 기본정보만 있으면 개인방문신청
     let applicationType: Type
@@ -349,7 +349,7 @@ export class AzureSqlDB {
     if (uploadedFiles && uploadedFiles.length > 0) {
       console.log('[v0] Processing', uploadedFiles.length, 'uploaded files')
       for (const file of uploadedFiles) {
-        // ������������������������������������������������������일명과 키가 유효한 경우에만 저장
+        // 일명과 키가 유효한 경우에만 저장
         if (file && file.filename && file.fileKey && file.filename.trim() !== '' && file.fileKey.trim() !== '') {
           console.log('[v0] Saving file attachment:', {
             filename: file.filename,
@@ -951,7 +951,7 @@ export class AzureSqlDB {
   static async getAllApplications(): Promise<Application[]> {
     const dbPool = await getPool()
 
-    // 6�� 쿼리 병렬 실행으로 N+1 문제 완전 해결
+    // 쿼리 병렬 실행으로 N+1 문제 완전 해결
     const [appResult, attachResult, companionResult, companionDeviceResult, deviceResult, companionAttachResult] = await Promise.all([
       dbPool.request().query(`
         SELECT application_id, application_number, status, visitor_name, visitor_phone,
@@ -1107,7 +1107,7 @@ export class AzureSqlDB {
     const dbStatus = status.toLowerCase()
     const now = getKoreaTime()
 
-    // 승인 시 approval_date ��정
+    // 승인 시 approval_date 수정
     const isApproved = status === Status.APPROVED
 
     await dbPool
@@ -1292,7 +1292,7 @@ export class AzureSqlDB {
       .query(`UPDATE admin_accounts SET last_login_at = @last_login_at WHERE account_id = @account_id`)
   }
 
-  // ─── 신청서 확인 체�� ────────���────���─���─────���──────────────
+  // ─── 신청서 확인 체크──────────────
 
   /** 확인 체크 조회 */
   static async getApplicationCheck(applicationId: number, accountId: number): Promise<{ checked: boolean; checked_at: Date | null; note: string | null } | null> {
@@ -1344,7 +1344,7 @@ export class AzureSqlDB {
       `)
   }
 
-  // ─── 역할별 페이�� 권한 ────────────────────────────────────
+  // ─── 역할별 페이지 권한 ────────────────────────────────────
 
   /** 특정 역할의 권한 목록 조회 */
   static async getRolePermissions(role: string): Promise<any[]> {
@@ -1390,7 +1390,7 @@ export class AzureSqlDB {
       `)
   }
 
-  /** 특정 역할이 특정 페이지에 접근 가���한��� 확인 */
+  /** 특정 역할이 특정 페이지 */
   static async canRoleAccessPage(role: string, pagePath: string): Promise<boolean> {
     if (role === 'super_admin') return true
     const dbPool = await getPool()
@@ -1523,11 +1523,11 @@ export class AzureSqlDB {
     }
   }
 
-  // ─── QR 출입권 관리 ���───────────────────────────────────
+  // ─── QR 출입권 관리───────────────────────────────────
 
-  /** �����유����� pass_receipt (QR 코드) ���성 */
+  /** pass_receipt (QR 코드) */
   static generatePassReceipt(): string {
-    // 형식: QR-YYYYMMDD-XXXXXX (6������ 랜덤)
+    // 형식: QR-YYYYMMDD-XXXXXX (6랜덤)
     const date = new Date()
     const dateStr = date.toISOString().split('T')[0].replace(/-/g, '')
     const random = Math.random().toString(36).substring(2, 8).toUpperCase()
@@ -1537,7 +1537,7 @@ export class AzureSqlDB {
   /** 신청 승인 시 pass_receipt 저장 */
   static async createPassForApplication(applicationId: string, pass_receipt: string): Promise<void> {
     const dbPool = await getPool()
-    // token ������ (���� 토큰: UUID 대신 ���� ���������)
+    // token  ( 토큰: UUID 대신)
     const token = `TOKEN-${Date.now()}-${Math.random().toString(36).substring(2, 10).toUpperCase()}`
 
     // 신청 정보에서 방문 기간 가져오기
@@ -1562,7 +1562,7 @@ export class AzureSqlDB {
       `)
   }
 
-  /** pass_receipt로 신청 ��회 */
+  /** pass_receipt로 신청 조회 */
   static async getApplicationByPassReceipt(pass_receipt: string): Promise<any> {
     const dbPool = await getPool()
     const result = await dbPool.request()
@@ -1755,7 +1755,7 @@ export class AzureSqlDB {
       request
         .input('start_date', sql.Date, startDate || new Date().toISOString().split('T')[0])
         .input('end_date', sql.Date, endDate || new Date().toISOString().split('T')[0])
-      // 별칭 없이 컬럼명만 사용 (CTE 내부에서 s. 별칭은 각 쿼���에서 직접 지정)
+      // 별칭 없이 컬럼명만 사용 (CTE 내부에서 s. 별칭은 각 쿼리에서 직접 지정)
       scanWhereClause = `AND CAST(scanned_at AS DATE) >= @start_date AND CAST(scanned_at AS DATE) <= @end_date`
       passWhereClause = `AND CAST(a.visit_start_date AS DATE) <= @end_date AND CAST(a.visit_end_date AS DATE) >= @start_date`
     } else {
@@ -2070,7 +2070,7 @@ export class AzureSqlDB {
     return result.recordset.map((r: any) => r.phone)
   }
 
-  /** 신청 ID로 동행인 전화번����� 목록 조회 */
+  /** 신청 ID로 동행인 전화번호 목록 조회 */
   static async getCompanionPhonesByApplicationId(applicationId: string): Promise<string[]> {
     const dbPool = await getPool()
     const result = await dbPool.request()
@@ -2127,13 +2127,13 @@ export class AzureSqlDB {
   static async getPortCertFilesByApplicationIds(applicationIds: number[]): Promise<Array<{ application_id: number; file_url: string; file_name: string }>> {
     if (applicationIds.length === 0) return []
     const dbPool = await getPool()
-    
+
     const placeholders = applicationIds.map((_, i) => `@id${i}`).join(',')
     const request = dbPool.request()
     applicationIds.forEach((id, i) => {
       request.input(`id${i}`, sql.Int, id)
     })
-    
+
     // 신청자 본인의 항만이수증만 조회 (동행인 제외)
     const result = await request.query(`
       SELECT application_id, blob_url AS file_url, file_name
@@ -2147,13 +2147,13 @@ export class AzureSqlDB {
   static async getPortCertFilesByCompanionIds(companionIds: number[]): Promise<Array<{ companion_id: number; file_url: string; file_name: string }>> {
     if (companionIds.length === 0) return []
     const dbPool = await getPool()
-    
+
     const placeholders = companionIds.map((_, i) => `@id${i}`).join(',')
     const request = dbPool.request()
     companionIds.forEach((id, i) => {
       request.input(`id${i}`, sql.Int, id)
     })
-    
+
     // 동행인의 항만이수증 조회
     const result = await request.query(`
       SELECT companion_id, blob_url AS file_url, file_name

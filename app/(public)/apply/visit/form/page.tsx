@@ -397,7 +397,7 @@ export default function VisitFormPage() {
           body: JSON.stringify(submitData),
         })
       } else {
-        // 신규 신청: POST 요���
+        // 신규 신청: POST 요청
         response = await fetch("/api/apply/visit", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -421,7 +421,7 @@ export default function VisitFormPage() {
       if (isEditMode) {
         toast({
           title: t("변경이 완료되었습니다", "Changes Saved"),
-          description: t("신청 내용이 수정��어 재심사 대기중입니다.", "Your application has been updated and is pending review."),
+          description: t("신청 내용이 수정되어 재심사 대기중입니다.", "Your application has been updated and is pending review."),
         })
       } else {
         toast({

@@ -18,15 +18,15 @@ import { useRef } from "react"
 // 전체 페이지 목록
 const ALL_PAGES = [
   { path: "/admin/dashboard", name: "대시보드" },
-  { path: "/admin/requests",  name: "신청 관리" },
-  { path: "/admin/calendar",  name: "방문 캘린더" },
-  { path: "/admin/qr",        name: "출입현황" },
-  { path: "/admin/accounts",  name: "계정 관리" },
+  { path: "/admin/requests", name: "신청 관리" },
+  { path: "/admin/calendar", name: "방문 캘린더" },
+  { path: "/admin/qr", name: "출입현황" },
+  { path: "/admin/accounts", name: "계정 관리" },
 ]
 
 const EDITABLE_ROLES = [
   { role: "security", label: "특수경비대" },
-  { role: "manager",  label: "담당자" },
+  { role: "manager", label: "담당자" },
 ]
 
 const ROLE_LABELS: Record<string, string> = {
@@ -101,13 +101,13 @@ export default function AdminAccountsPage() {
       return
     }
     setSecurityContactSaving(accountId)
-    
+
     // 즉시 로컬 상태 업데이트 (체크 표시 즉각 반영)
     mutate(
       accounts.map((a) => a.account_id === accountId ? { ...a, is_security_contact: isContact } : a),
       false
     )
-    
+
     try {
       const res = await fetch("/api/admin/security-contacts", {
         method: "POST",
@@ -146,8 +146,8 @@ export default function AdminAccountsPage() {
     const lines = text.split("\n").map((l) => l.split(","))
     const header = lines[0].map((h) => h.trim().toLowerCase())
     const usernameIdx = header.indexOf("username")
-    const nameIdx     = header.indexOf("name")
-    const roleIdx     = header.indexOf("role")
+    const nameIdx = header.indexOf("name")
+    const roleIdx = header.indexOf("role")
     const passwordIdx = header.indexOf("password")
 
     if ([usernameIdx, nameIdx, roleIdx, passwordIdx].includes(-1)) {
@@ -160,8 +160,8 @@ export default function AdminAccountsPage() {
       .filter((row) => row[usernameIdx]?.trim() && row[nameIdx]?.trim())
       .map((row) => ({
         username: row[usernameIdx]?.trim(),
-        name:     row[nameIdx]?.trim(),
-        role:     row[roleIdx]?.trim(),
+        name: row[nameIdx]?.trim(),
+        role: row[roleIdx]?.trim(),
         password: row[passwordIdx]?.trim(),
       }))
 
@@ -193,7 +193,7 @@ export default function AdminAccountsPage() {
       })
       if (!res.ok) throw new Error("권한 저장 실패")
       mutatePerm()
-      toast({ title: "권��이 저장되었습니다" })
+      toast({ title: "권한이 저장되었습니다" })
     } catch (e: any) {
       toast({ title: "저장 실패", description: e.message, variant: "destructive" })
     } finally {
@@ -492,7 +492,7 @@ export default function AdminAccountsPage() {
                                   headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
                                   body: JSON.stringify({ account_id: admin.account_id, phone: e.target.value }),
                                 })
-                              } catch {}
+                              } catch { }
                             }
                           }}
                         />
@@ -551,7 +551,7 @@ export default function AdminAccountsPage() {
                       <TableCell className="text-white/60 text-sm">
                         {account.created_at ? (() => {
                           const d = new Date(account.created_at)
-                          return `${d.getUTCFullYear()}-${(d.getUTCMonth()+1).toString().padStart(2,'0')}-${d.getUTCDate().toString().padStart(2,'0')}`
+                          return `${d.getUTCFullYear()}-${(d.getUTCMonth() + 1).toString().padStart(2, '0')}-${d.getUTCDate().toString().padStart(2, '0')}`
                         })() : "-"}
                       </TableCell>
                       <TableCell className="text-white/60 text-sm">
@@ -560,7 +560,7 @@ export default function AdminAccountsPage() {
                           const hour = d.getUTCHours()
                           const ampm = hour < 12 ? '오전' : '오후'
                           const hour12 = hour % 12 || 12
-                          return `${d.getUTCFullYear()}-${(d.getUTCMonth()+1).toString().padStart(2,'0')}-${d.getUTCDate().toString().padStart(2,'0')} ${ampm} ${hour12}:${d.getUTCMinutes().toString().padStart(2,'0')}`
+                          return `${d.getUTCFullYear()}-${(d.getUTCMonth() + 1).toString().padStart(2, '0')}-${d.getUTCDate().toString().padStart(2, '0')} ${ampm} ${hour12}:${d.getUTCMinutes().toString().padStart(2, '0')}`
                         })() : "미접속"}
                       </TableCell>
                       <TableCell>
