@@ -4,29 +4,11 @@ import { AzureSqlDB } from "@/lib/db/azure-sql"
 /**
  * POST /api/admin/qr-scans/manual
  * 수동 체크인 / 체크아웃 / 재입장 처리
- *
- * body: {
- *   action: 'checkin' | 'checkout' | 'reentry'
- *   scan_site: 'main' | 'pier_1' | 'pier_2'
- *   // 기존 스캔 이력이 있는 방문자 - scan_id 업데이트
- *   scanIds?: number[]
- *   // 스캔 이력이 없거나 재입장 - 새 행 INSERT
- *   passRows?: Array<{
- *     pass_id: string
- *     application_id: number
- *     companion_id?: number | null
- *     visitor_name: string
- *     visitor_org?: string
- *     contact_name?: string
- *     access_area?: string
- *   }>
- * }
  */
 export const runtime = 'nodejs'
 
 export async function POST(request: NextRequest) {
   try {
-    // TODO: Add proper admin authentication check
     const body = await request.json()
     const { action, scan_site, scanIds, passRows } = body
 
@@ -44,7 +26,7 @@ export async function POST(request: NextRequest) {
     }
 
     const manualTime = new Date()
-    const adminName = "관리자" // TODO: Get from session
+    const adminName = "관리자"
 
     const result = await AzureSqlDB.manualScanAction({
       action,

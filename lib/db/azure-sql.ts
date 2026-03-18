@@ -349,7 +349,7 @@ export class AzureSqlDB {
     if (uploadedFiles && uploadedFiles.length > 0) {
       console.log('[v0] Processing', uploadedFiles.length, 'uploaded files')
       for (const file of uploadedFiles) {
-        // 일명과 키가 유효한 경우에만 ��장
+        // 일명과 키가 유효한 경우에만 ���장
         if (file && file.filename && file.fileKey && file.filename.trim() !== '' && file.fileKey.trim() !== '') {
           console.log('[v0] Saving file attachment:', {
             filename: file.filename,
@@ -2270,6 +2270,7 @@ export class AzureSqlDB {
     if ((action === 'checkin' || action === 'checkout' || action === 'reentry') && passRows && passRows.length > 0) {
       // 스캔 이력이 없거나 재입장인 경우 새 행 INSERT
       const direction = action === 'checkout' ? 'EXIT' : 'ENTRY'
+      const deviceId = `MANUAL-${adminName}-${Date.now()}` // 수동 입력용 고유 device_id
       for (const row of passRows) {
         await dbPool.request()
           .input('pass_id', sql.UniqueIdentifier, row.pass_id)
@@ -2283,11 +2284,12 @@ export class AzureSqlDB {
           .input('scan_site', sql.NVarChar(50), scan_site)
           .input('scanned_at', sql.DateTime2, manualTime)
           .input('admin_name', sql.NVarChar(100), adminName)
+          .input('device_id', sql.NVarChar(100), deviceId)
           .query(`
             INSERT INTO visit_pass_scans
-              (pass_id, application_id, direction, result, visitor_name, visitor_org, contact_name, access_area, scan_site, scanned_at, user_agent)
+              (pass_id, application_id, direction, result, visitor_name, visitor_org, contact_name, access_area, scan_site, scanned_at, user_agent, device_id)
             VALUES
-              (@pass_id, @application_id, @direction, @result, @visitor_name, @visitor_org, @contact_name, @access_area, @scan_site, @scanned_at, CONCAT('MANUAL_', @direction, ' by ', @admin_name))
+              (@pass_id, @application_id, @direction, @result, @visitor_name, @visitor_org, @contact_name, @access_area, @scan_site, @scanned_at, CONCAT('MANUAL_', @direction, ' by ', @admin_name), @device_id)
           `)
         affected++
       }
