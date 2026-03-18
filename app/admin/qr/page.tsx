@@ -18,6 +18,8 @@ import { Application } from "@/lib/types"
 
 interface ScanRow {
   scan_id?: number | null
+  entry_scan_id?: number | null
+  exit_scan_id?: number | null
   pass_id: string
   application_id: number
   companion_id: number | null
@@ -110,15 +112,21 @@ export default function AdminQrScanPage() {
 
     setManualActionLoading(true)
     try {
-      // 기존 스캔 이력이 있는 row: scan_id로 UPDATE
-      // 스캔 이력이 없거나 재입장: pass 정보로 INSERT
-      const withScanId = targetRows.filter(r => r.scan_id && action !== 'reentry')
-      const withoutScanId = targetRows.filter(r => !r.scan_id || action === 'reentry')
+      // 체크인: entry_scan_id로 UPDATE, 체크아웃: exit_scan_id로 UPDATE
+      // 재입장: 새 행 INSERT
+      const getScanId = (r: any) => {
+        if (action === 'checkin') return r.entry_scan_id
+        if (action === 'checkout') return r.exit_scan_id
+        return null // reentry는 항상 INSERT
+      }
+
+      const withScanId = targetRows.filter(r => getScanId(r) && action !== 'reentry')
+      const withoutScanId = targetRows.filter(r => !getScanId(r) || action === 'reentry')
 
       const body: any = {
         action,
         scan_site: scanSiteParam,
-        scanIds: withScanId.map(r => r.scan_id).filter(Boolean),
+        scanIds: withScanId.map(r => getScanId(r)).filter(Boolean),
         passRows: withoutScanId.map(r => ({
           pass_id: r.pass_id,
           application_id: r.application_id,
