@@ -18,6 +18,15 @@ export default function ScannerPhonePage() {
   const searchParams = useSearchParams()
   const direction = (searchParams.get("direction") === "EXIT" ? "EXIT" : "ENTRY") as "ENTRY" | "EXIT"
   const gate = searchParams.get("gate") ?? "main"
+  
+  const GATE_LABELS: Record<string, string> = {
+    main: "정문",
+    pier_1: "제1부두",
+    pier_2: "제2부두",
+  }
+  const gateLabel = GATE_LABELS[gate] ?? "정문"
+  const oppositeDirection = direction === "ENTRY" ? "EXIT" : "ENTRY"
+  const oppositeLabel = direction === "ENTRY" ? "퇴장" : "입장"
   const [phone, setPhone] = useState("")
   const [list, setList] = useState<ApprovedItem[]>([])
   const [loading, setLoading] = useState(false)
@@ -64,24 +73,39 @@ export default function ScannerPhonePage() {
 
   return (
     <div className="min-h-screen bg-neutral-950 text-white flex flex-col">
-      <header className="px-6 py-6 border-b border-white/10 grid grid-cols-3 items-center">
-        <div className="flex justify-start">
+      <header className="px-4 py-4 border-b border-white/10">
+        <div className="flex items-center justify-between gap-2">
+          {/* 좌측: 출입 인증 링크 */}
           <Link
             href="/scanner"
-            className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 text-white/70 hover:text-white hover:bg-white/10 hover:border-white/20 transition-all active:scale-95"
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white/5 border border-white/10 text-white/70 hover:text-white hover:bg-white/10 hover:border-white/20 transition-all active:scale-95 shrink-0"
           >
-            <ArrowLeft size={20} />
-            <span className="text-base font-bold">출입 인증</span>
+            <ArrowLeft size={18} />
+            <span className="text-sm font-bold hidden sm:inline">출입 인증</span>
+          </Link>
+
+          {/* 가운데: 게이트 + 입장/퇴장 명확하게 표시 */}
+          <div className="flex flex-col items-center text-center min-w-0">
+            <span className="text-white/50 text-xs font-medium">{gateLabel}</span>
+            <div className={`text-2xl sm:text-3xl font-black tracking-tight ${
+              direction === "ENTRY" ? "text-emerald-400" : "text-blue-400"
+            }`}>
+              {direction === "ENTRY" ? "입장" : "퇴장"} 휴대폰 인증
+            </div>
+          </div>
+
+          {/* 우측: 입장↔퇴장 전환 링크 */}
+          <Link
+            href={`/scanner/phone?direction=${oppositeDirection}&gate=${gate}`}
+            className={`flex items-center gap-1.5 px-3 py-2 rounded-xl border transition-all active:scale-95 shrink-0 ${
+              direction === "ENTRY" 
+                ? "bg-blue-500/10 border-blue-500/30 text-blue-400 hover:bg-blue-500/20" 
+                : "bg-emerald-500/10 border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/20"
+            }`}
+          >
+            <span className="text-sm font-bold">{oppositeLabel} 인증</span>
           </Link>
         </div>
-
-        <div className="flex justify-center whitespace-nowrap">
-          <span className="text-xl font-black text-amber-400 tracking-tight">
-            {direction === "ENTRY" ? "입장" : "퇴장"} · 휴대폰 번호 조회
-          </span>
-        </div>
-
-        <div className="flex justify-end" />
       </header>
 
       <main className="flex-1 p-6 max-w-md mx-auto w-full">
