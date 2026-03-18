@@ -20,32 +20,64 @@ export async function GET(request: NextRequest) {
     const data = await AzureSqlDB.getQrScanLogs(scanSite, 100, dateParam)
     const stats = await AzureSqlDB.getQrScanStats(scanSite, dateParam)
 
-    // 고유 application_id 목록 추출
-    const applicationIds = [...new Set(data.map((d: any) => d.application_id).filter(Boolean))]
+    // 신청자(companion_id가 null 또는 0)와 동행인(companion_id가 있음) 분리
+    const applicantRows = data.filter((d: any) => !d.companion_id || d.companion_id === 0)
+    const companionRows = data.filter((d: any) => d.companion_id && d.companion_id !== 0)
     
-    // 각 application_id별 항만이수증 파일 조회
-    const portCertMap = new Map<number, Array<{ file_url: string; file_name: string }>>()
+    // 고유 application_id 목록 추출 (신청자용)
+    const applicationIds = [...new Set(applicantRows.map((d: any) => d.application_id).filter(Boolean))]
+    // 고유 companion_id 목록 추출 (동행인용)
+    const companionIds = [...new Set(companionRows.map((d: any) => d.companion_id).filter(Boolean))]
+    
+    // 신청자 항만이수증 파일 조회
+    const portCertByAppId = new Map<number, Array<{ file_url: string; file_name: string }>>()
     if (applicationIds.length > 0) {
       try {
         const portCertFiles = await AzureSqlDB.getPortCertFilesByApplicationIds(applicationIds as number[])
         for (const file of portCertFiles) {
           const appId = file.application_id
-          if (!portCertMap.has(appId)) {
-            portCertMap.set(appId, [])
+          if (!portCertByAppId.has(appId)) {
+            portCertByAppId.set(appId, [])
           }
-          portCertMap.get(appId)!.push({ file_url: file.file_url, file_name: file.file_name })
+          portCertByAppId.get(appId)!.push({ file_url: file.file_url, file_name: file.file_name })
         }
       } catch (certError) {
-        console.error("[v0] Failed to get port certificates:", certError)
-        // 항만이수증 조회 실패해도 스캔 데이터는 반환하도록 계속 진행
+        console.error("[v0] Failed to get applicant port certificates:", certError)
       }
     }
 
-    // 각 스캔 데이터에 portCertFiles 추가
-    const dataWithCerts = data.map((d: any) => ({
-      ...d,
-      portCertFiles: d.application_id ? (portCertMap.get(d.application_id) || []) : []
-    }))
+    // 동행인 항만이수증 파일 조회
+    const portCertByCompanionId = new Map<number, Array<{ file_url: string; file_name: string }>>()
+    if (companionIds.length > 0) {
+      try {
+        const companionCertFiles = await AzureSqlDB.getPortCertFilesByCompanionIds(companionIds as number[])
+        for (const file of companionCertFiles) {
+          const compId = file.companion_id
+          if (!portCertByCompanionId.has(compId)) {
+            portCertByCompanionId.set(compId, [])
+          }
+          portCertByCompanionId.get(compId)!.push({ file_url: file.file_url, file_name: file.file_name })
+        }
+      } catch (certError) {
+        console.error("[v0] Failed to get companion port certificates:", certError)
+      }
+    }
+
+    // 각 스캔 데이터에 portCertFiles 추가 (신청자/동행인 구분)
+    const dataWithCerts = data.map((d: any) => {
+      // 동행인인 경우 companion_id로 조회
+      if (d.companion_id && d.companion_id !== 0) {
+        return {
+          ...d,
+          portCertFiles: portCertByCompanionId.get(d.companion_id) || []
+        }
+      }
+      // 신청자인 경우 application_id로 조회
+      return {
+        ...d,
+        portCertFiles: d.application_id ? (portCertByAppId.get(d.application_id) || []) : []
+      }
+    })
 
     return NextResponse.json({ data: dataWithCerts, stats })
   } catch (error) {

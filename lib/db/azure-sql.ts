@@ -349,7 +349,7 @@ export class AzureSqlDB {
     if (uploadedFiles && uploadedFiles.length > 0) {
       console.log('[v0] Processing', uploadedFiles.length, 'uploaded files')
       for (const file of uploadedFiles) {
-        // ����������������������������������������������������일명과 키가 유효한 경우에만 저장
+        // ������������������������������������������������������일명과 키가 유효한 경우에만 저장
         if (file && file.filename && file.fileKey && file.filename.trim() !== '' && file.fileKey.trim() !== '') {
           console.log('[v0] Saving file attachment:', {
             filename: file.filename,
@@ -1523,7 +1523,7 @@ export class AzureSqlDB {
     }
   }
 
-  // ─── QR 출입권 관리 ────────────────────────────────────
+  // ─── QR 출입권 관리 ���───────────────────────────────────
 
   /** �����유����� pass_receipt (QR 코드) ���성 */
   static generatePassReceipt(): string {
@@ -2127,18 +2127,38 @@ export class AzureSqlDB {
   static async getPortCertFilesByApplicationIds(applicationIds: number[]): Promise<Array<{ application_id: number; file_url: string; file_name: string }>> {
     if (applicationIds.length === 0) return []
     const dbPool = await getPool()
-
+    
     const placeholders = applicationIds.map((_, i) => `@id${i}`).join(',')
     const request = dbPool.request()
     applicationIds.forEach((id, i) => {
       request.input(`id${i}`, sql.Int, id)
     })
-
+    
     // 신청자 본인의 항만이수증만 조회 (동행인 제외)
     const result = await request.query(`
       SELECT application_id, blob_url AS file_url, file_name
       FROM visit_attachments
       WHERE application_id IN (${placeholders}) AND attachment_type = 'PORT_CERT'
+    `)
+    return result.recordset
+  }
+
+  /** 여러 companion_id에 대한 항만이수증 파일 조회 (동행인 항만이수증) */
+  static async getPortCertFilesByCompanionIds(companionIds: number[]): Promise<Array<{ companion_id: number; file_url: string; file_name: string }>> {
+    if (companionIds.length === 0) return []
+    const dbPool = await getPool()
+    
+    const placeholders = companionIds.map((_, i) => `@id${i}`).join(',')
+    const request = dbPool.request()
+    companionIds.forEach((id, i) => {
+      request.input(`id${i}`, sql.Int, id)
+    })
+    
+    // 동행인의 항만이수증 조회
+    const result = await request.query(`
+      SELECT companion_id, blob_url AS file_url, file_name
+      FROM visit_companion_attachments
+      WHERE companion_id IN (${placeholders}) AND attachment_type = 'PORT_CERT'
     `)
     return result.recordset
   }
