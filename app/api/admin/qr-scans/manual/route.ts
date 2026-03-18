@@ -1,11 +1,8 @@
 import { NextRequest, NextResponse } from "next/server"
 import { AzureSqlDB } from "@/lib/db/azure-sql"
 
-/**
- * POST /api/admin/qr-scans/manual
- * 수동 체크인 / 체크아웃 / 재입장 처리
- */
 export const runtime = 'nodejs'
+export const dynamic = 'force-dynamic'
 
 export async function POST(request: NextRequest) {
   try {
