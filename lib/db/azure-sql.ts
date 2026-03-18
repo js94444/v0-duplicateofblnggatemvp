@@ -951,7 +951,7 @@ export class AzureSqlDB {
   static async getAllApplications(): Promise<Application[]> {
     const dbPool = await getPool()
 
-    // 6�� 쿼리 병렬 실행으로 N+1 문제 완전 해결
+    // 쿼리 병렬 실행으로 N+1 문제 완전 해결
     const [appResult, attachResult, companionResult, companionDeviceResult, deviceResult, companionAttachResult] = await Promise.all([
       dbPool.request().query(`
         SELECT application_id, application_number, status, visitor_name, visitor_phone,
@@ -1107,7 +1107,7 @@ export class AzureSqlDB {
     const dbStatus = status.toLowerCase()
     const now = getKoreaTime()
 
-    // 승인 시 approval_date ��정
+    // 승인 시 approval_date 수정
     const isApproved = status === Status.APPROVED
 
     await dbPool
@@ -1292,7 +1292,7 @@ export class AzureSqlDB {
       .query(`UPDATE admin_accounts SET last_login_at = @last_login_at WHERE account_id = @account_id`)
   }
 
-  // ─── 신청서 확인 체�� ────────���────���─���─────���──────────────
+  // ─── 신청서 확인 체크──────────────
 
   /** 확인 체크 조회 */
   static async getApplicationCheck(applicationId: number, accountId: number): Promise<{ checked: boolean; checked_at: Date | null; note: string | null } | null> {
@@ -1344,7 +1344,7 @@ export class AzureSqlDB {
       `)
   }
 
-  // ─── 역할별 페이�� 권한 ────────────────────────────────────
+  // ─── 역할별 페이지 권한 ────────────────────────────────────
 
   /** 특정 역할의 권한 목록 조회 */
   static async getRolePermissions(role: string): Promise<any[]> {
@@ -1390,7 +1390,7 @@ export class AzureSqlDB {
       `)
   }
 
-  /** 특정 역할이 특정 페이지에 접근 가���한��� 확인 */
+  /** 특정 역할이 특정 페이지 */
   static async canRoleAccessPage(role: string, pagePath: string): Promise<boolean> {
     if (role === 'super_admin') return true
     const dbPool = await getPool()
@@ -1523,11 +1523,11 @@ export class AzureSqlDB {
     }
   }
 
-  // ─── QR 출입권 관리 ���───────────────────────────────────
+  // ─── QR 출입권 관리───────────────────────────────────
 
-  /** �����유����� pass_receipt (QR 코드) ���성 */
+  /** pass_receipt (QR 코드) */
   static generatePassReceipt(): string {
-    // 형식: QR-YYYYMMDD-XXXXXX (6������ 랜덤)
+    // 형식: QR-YYYYMMDD-XXXXXX (6랜덤)
     const date = new Date()
     const dateStr = date.toISOString().split('T')[0].replace(/-/g, '')
     const random = Math.random().toString(36).substring(2, 8).toUpperCase()
@@ -1537,7 +1537,7 @@ export class AzureSqlDB {
   /** 신청 승인 시 pass_receipt 저장 */
   static async createPassForApplication(applicationId: string, pass_receipt: string): Promise<void> {
     const dbPool = await getPool()
-    // token ������ (���� 토큰: UUID 대신 ���� ���������)
+    // token  ( 토큰: UUID 대신)
     const token = `TOKEN-${Date.now()}-${Math.random().toString(36).substring(2, 10).toUpperCase()}`
 
     // 신청 정보에서 방문 기간 가져오기
@@ -1562,7 +1562,7 @@ export class AzureSqlDB {
       `)
   }
 
-  /** pass_receipt로 신청 ��회 */
+  /** pass_receipt로 신청 조회 */
   static async getApplicationByPassReceipt(pass_receipt: string): Promise<any> {
     const dbPool = await getPool()
     const result = await dbPool.request()
