@@ -1755,7 +1755,7 @@ export class AzureSqlDB {
       request
         .input('start_date', sql.Date, startDate || new Date().toISOString().split('T')[0])
         .input('end_date', sql.Date, endDate || new Date().toISOString().split('T')[0])
-      // 별칭 없이 컬럼명만 사용 (CTE 내부에서 s. 별칭은 각 쿼���에서 직접 지정)
+      // 별칭 없이 컬럼명만 사용 (CTE 내부에서 s. 별칭은 각 쿼리에서 직접 지정)
       scanWhereClause = `AND CAST(scanned_at AS DATE) >= @start_date AND CAST(scanned_at AS DATE) <= @end_date`
       passWhereClause = `AND CAST(a.visit_start_date AS DATE) <= @end_date AND CAST(a.visit_end_date AS DATE) >= @start_date`
     } else {
