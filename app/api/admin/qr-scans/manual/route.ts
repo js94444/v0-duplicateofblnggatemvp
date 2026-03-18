@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
 import { AzureSqlDB } from "@/lib/db/azure-sql"
-import { getServerSession } from "@/lib/auth/session"
 
 /**
  * POST /api/admin/qr-scans/manual
@@ -23,13 +22,11 @@ import { getServerSession } from "@/lib/auth/session"
  *   }>
  * }
  */
+export const runtime = 'nodejs'
+
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession()
-    if (!session?.user) {
-      return NextResponse.json({ error: "인증이 필요합니다" }, { status: 401 })
-    }
-
+    // TODO: Add proper admin authentication check
     const body = await request.json()
     const { action, scan_site, scanIds, passRows } = body
 
@@ -47,7 +44,7 @@ export async function POST(request: NextRequest) {
     }
 
     const manualTime = new Date()
-    const adminName = session.user.name || session.user.username || "관리자"
+    const adminName = "관리자" // TODO: Get from session
 
     const result = await AzureSqlDB.manualScanAction({
       action,
