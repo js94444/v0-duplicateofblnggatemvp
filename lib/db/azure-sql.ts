@@ -178,7 +178,7 @@ export class AzureSqlDB {
     const dbPool = await getPool()
 
     // 유형 분류 로직
-    // 1. 출입지역이 '항만' 또는 '부두'를 포함하면 항만출입 (동행인 여부 ��관)
+    // 1. 출입지역이 '항만' 또는 '부두'를 포함하면 항만출입
     // 2. 동행인이 있으면 단체방문신청
     // 3. 기본정보만 있으면 개인방문신청
     let applicationType: Type
@@ -349,7 +349,7 @@ export class AzureSqlDB {
     if (uploadedFiles && uploadedFiles.length > 0) {
       console.log('[v0] Processing', uploadedFiles.length, 'uploaded files')
       for (const file of uploadedFiles) {
-        // ������������������������������������������������������일명과 키가 유효한 경우에만 저장
+        // 일명과 키가 유효한 경우에만 저장
         if (file && file.filename && file.fileKey && file.filename.trim() !== '' && file.fileKey.trim() !== '') {
           console.log('[v0] Saving file attachment:', {
             filename: file.filename,
