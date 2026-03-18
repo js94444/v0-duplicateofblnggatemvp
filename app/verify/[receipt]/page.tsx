@@ -187,6 +187,17 @@ export default function VerifyReceiptPage() {
                   )}
                 </div>
               )}
+
+              {/* MISMATCH: 반대 방향 스캔 제안 */}
+              {isMismatch && (
+                <Link
+                  href={`/scanner/qr?direction=${direction === "ENTRY" ? "EXIT" : "ENTRY"}&gate=${gate}`}
+                  className="mt-4 w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-yellow-500/50 bg-yellow-500/10 text-yellow-400 font-bold text-sm hover:bg-yellow-500/20 transition-colors"
+                >
+                  <QrCode size={18} />
+                  {direction === "ENTRY" ? "퇴장 스캔으로 전환" : "입장 스캔으로 전환"}
+                </Link>
+              )}
             </div>
 
             <Link
