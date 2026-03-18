@@ -194,7 +194,7 @@ export default function AdminQrScanPage() {
     if (cardFilter === "pending") return rowsByPerson.filter(r => !r.lastEntryAt)
     // 체크인: 현재 내부 체류 중 (마지막 스캔이 ENTRY인 사람)
     if (cardFilter === "checkIn") return rowsByPerson.filter(r => r.lastScanDirection === 'ENTRY')
-    // 체크아웃: 퇴장 완료 (마지막 스캔이 EXIT인 ��람)
+    // 체크아웃: 퇴장 완료 (마지막 스캔이 EXIT인 사람)
     if (cardFilter === "checkOut") return rowsByPerson.filter(r => r.lastScanDirection === 'EXIT')
     return rowsByPerson
   }, [rowsByPerson, cardFilter])
