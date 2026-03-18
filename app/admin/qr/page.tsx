@@ -104,19 +104,13 @@ export default function AdminQrScanPage() {
   const scans: ScanRow[] = swrData?.data || []
   const stats: ScanStats | null = swrData?.stats || null
 
-  // 슈퍼어드민만 접근 가능
-  useEffect(() => {
-    if (!authLoading && user?.role !== "super_admin") {
-      router.push("/admin/dashboard")
-    }
-  }, [user, authLoading, router])
-
-  // 조기 return은 모든 훅 호출 이후에
+  // 로딩 중일 때 로딩 화면 표시
   if (authLoading) {
     return <div className="flex items-center justify-center h-screen">로딩 중...</div>
   }
 
-  if (user?.role !== "super_admin") {
+  // 권한 체크는 layout.tsx의 allowedPaths 시스템에서 처리됨
+  if (!user) {
     return null
   }
 
