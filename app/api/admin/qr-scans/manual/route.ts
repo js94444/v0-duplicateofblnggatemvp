@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server"
 import { AzureSqlDB } from "@/lib/db/azure-sql"
 
-export const runtime = 'nodejs'
-export const dynamic = 'force-dynamic'
+export const runtime = "nodejs"
+export const dynamic = "force-dynamic"
 
 export async function POST(request: NextRequest) {
   try {
@@ -22,24 +22,16 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "처리할 방문자가 없습니다" }, { status: 400 })
     }
 
-    const manualTime = new Date()
-    const adminName = "관리자"
-
     const result = await AzureSqlDB.manualScanAction({
       action,
       scanIds: scanIds || [],
       passRows: passRows || [],
       scan_site,
-      adminName,
-      manualTime,
+      adminName: "관리자",
+      manualTime: new Date(),
     })
 
-    return NextResponse.json({
-      success: true,
-      affected: result.affected,
-      action,
-      manualTime: manualTime.toISOString(),
-    })
+    return NextResponse.json({ success: true, affected: result.affected, action })
   } catch (error) {
     console.error("[v0] Manual scan action error:", error)
     return NextResponse.json({ error: "처리 중 오류가 발생했습니다" }, { status: 500 })
