@@ -349,7 +349,7 @@ export class AzureSqlDB {
     if (uploadedFiles && uploadedFiles.length > 0) {
       console.log('[v0] Processing', uploadedFiles.length, 'uploaded files')
       for (const file of uploadedFiles) {
-        // 일명과 키가 유효한 경우에만 ��장
+        // 일명과 키가 유효한 경우에만 ���장
         if (file && file.filename && file.fileKey && file.filename.trim() !== '' && file.fileKey.trim() !== '') {
           console.log('[v0] Saving file attachment:', {
             filename: file.filename,
@@ -1103,7 +1103,7 @@ export class AzureSqlDB {
 
     console.log('[v0] Updating application status:', { id, status, rejectionReason })
 
-    // DB에는 소문자로 저��
+    // DB에는 소문자로 ����
     const dbStatus = status.toLowerCase()
     const now = getKoreaTime()
 
@@ -1806,6 +1806,7 @@ export class AzureSqlDB {
         -- 2. 검색 날짜에 해당하는 스캔 기록 (날짜 필터 적용)
         FilteredScans AS (
           SELECT 
+            s.scan_id,
             s.pass_id,
             s.scanned_at,
             s.direction,
@@ -1820,6 +1821,7 @@ export class AzureSqlDB {
         -- 3. 입장 기록에 순번 부여
         EntryScans AS (
           SELECT 
+            scan_id as entry_scan_id,
             pass_id,
             scanned_at as entry_at,
             device_id as entry_device_id,
@@ -1832,6 +1834,7 @@ export class AzureSqlDB {
         -- 4. 퇴장 기록에 순번 부여
         ExitScans AS (
           SELECT 
+            scan_id as exit_scan_id,
             pass_id,
             scanned_at as exit_at,
             device_id as exit_device_id,
@@ -1845,11 +1848,13 @@ export class AzureSqlDB {
           -- 입장 기록이 있는 경우 (입장 기준으로 퇴장 매칭)
           SELECT 
             e.pass_id,
+            e.entry_scan_id,
             e.entry_at,
             e.entry_device_id,
             e.entry_scanned_ip,
             e.scan_site,
             e.entry_rn as cycle_num,
+            x.exit_scan_id,
             x.exit_at,
             x.exit_device_id,
             x.exit_scanned_ip,
@@ -1862,11 +1867,13 @@ export class AzureSqlDB {
           -- 퇴장만 있고 입장이 없는 경우 (다른 날 입장 후 오늘 퇴장)
           SELECT 
             x.pass_id,
+            NULL as entry_scan_id,
             NULL as entry_at,
             NULL as entry_device_id,
             NULL as entry_scanned_ip,
             @scan_site as scan_site,
             x.exit_rn as cycle_num,
+            x.exit_scan_id,
             x.exit_at,
             x.exit_device_id,
             x.exit_scanned_ip,
@@ -1901,10 +1908,12 @@ export class AzureSqlDB {
           ap.visit_start_date,
           ap.visit_end_date,
           ap.access_area,
+          ec.entry_scan_id,
           ec.entry_at,
           ec.entry_device_id,
           ec.entry_scanned_ip,
           ec.scan_site,
+          ec.exit_scan_id,
           ec.exit_at,
           ec.exit_device_id,
           ec.exit_scanned_ip,
@@ -1935,10 +1944,12 @@ export class AzureSqlDB {
           ap.visit_start_date,
           ap.visit_end_date,
           ap.access_area,
+          NULL as entry_scan_id,
           NULL as entry_at,
           NULL as entry_device_id,
           NULL as entry_scanned_ip,
           NULL as scan_site,
+          NULL as exit_scan_id,
           NULL as exit_at,
           NULL as exit_device_id,
           NULL as exit_scanned_ip,
