@@ -349,7 +349,7 @@ export class AzureSqlDB {
     if (uploadedFiles && uploadedFiles.length > 0) {
       console.log('[v0] Processing', uploadedFiles.length, 'uploaded files')
       for (const file of uploadedFiles) {
-        // 일명과 키가 유효한 경우에만 ���장
+        // 일명과 키가 유효한 경우에만 저장
         if (file && file.filename && file.fileKey && file.filename.trim() !== '' && file.fileKey.trim() !== '') {
           console.log('[v0] Saving file attachment:', {
             filename: file.filename,
@@ -1103,7 +1103,7 @@ export class AzureSqlDB {
 
     console.log('[v0] Updating application status:', { id, status, rejectionReason })
 
-    // DB에는 소문자로 저��
+    // DB에는 소문자로 저장
     const dbStatus = status.toLowerCase()
     const now = getKoreaTime()
 

@@ -783,7 +783,7 @@ export default function AdminQrScanPage() {
               </button>
               <button
                 type="button"
-                onClick={() => setPierTab("2��두")}
+                onClick={() => setPierTab("2부두")}
                 className={`px-4 py-2 rounded-lg font-bold text-sm transition-all ${pierTab === "2부두"
                   ? "bg-amber-500 text-black"
                   : "text-white/60 hover:text-white hover:bg-white/10 border border-white/10"
