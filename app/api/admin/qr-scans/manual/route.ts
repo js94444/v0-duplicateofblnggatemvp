@@ -22,13 +22,17 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "처리할 방문자가 없습니다" }, { status: 400 })
     }
 
+    // 한국 시간(KST, UTC+9)으로 변환
+    const now = new Date()
+    const koreaTime = new Date(now.getTime() + 9 * 60 * 60 * 1000)
+
     const result = await AzureSqlDB.manualScanAction({
       action,
       scanIds: scanIds || [],
       passRows: passRows || [],
       scan_site,
       adminName: "관리자",
-      manualTime: new Date(),
+      manualTime: koreaTime,
     })
 
     return NextResponse.json({ success: true, affected: result.affected, action })
