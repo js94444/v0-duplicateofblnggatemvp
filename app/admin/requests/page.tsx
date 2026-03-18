@@ -308,7 +308,7 @@ export default function AdminRequestsPage() {
       case "PORT_ACCESS":
         return <span className="text-sm">🚢</span>
       case "GOODS_INOUT":
-        return <span className="text-sm">���</span>
+        return <span className="text-sm"></span>
       case "VISIT_R3":
         return <span className="text-sm">👤</span>
       default:
@@ -641,11 +641,10 @@ export default function AdminRequestsPage() {
                                   })()}
                                 </span>
                               </TableCell>
-                              <TableCell className={`${
-                                user?.name && contactInfo.name && user.name === contactInfo.name 
-                                  ? "bg-amber-500/10 backdrop-blur-sm" 
+                              <TableCell className={`${user?.name && contactInfo.name && user.name === contactInfo.name
+                                  ? "bg-amber-500/10 backdrop-blur-sm"
                                   : ""
-                              }`}>
+                                }`}>
                                 <div className="flex items-center justify-center">
                                   <Checkbox
                                     checked={!!checkStates[String(application.id)]}

@@ -2070,7 +2070,7 @@ export class AzureSqlDB {
     return result.recordset.map((r: any) => r.phone)
   }
 
-  /** 신청 ID로 동행인 전화번����� 목록 조회 */
+  /** 신청 ID로 동행인 전화번호 목록 조회 */
   static async getCompanionPhonesByApplicationId(applicationId: string): Promise<string[]> {
     const dbPool = await getPool()
     const result = await dbPool.request()
@@ -2127,13 +2127,13 @@ export class AzureSqlDB {
   static async getPortCertFilesByApplicationIds(applicationIds: number[]): Promise<Array<{ application_id: number; file_url: string; file_name: string }>> {
     if (applicationIds.length === 0) return []
     const dbPool = await getPool()
-    
+
     const placeholders = applicationIds.map((_, i) => `@id${i}`).join(',')
     const request = dbPool.request()
     applicationIds.forEach((id, i) => {
       request.input(`id${i}`, sql.Int, id)
     })
-    
+
     // 신청자 본인의 항만이수증만 조회 (동행인 제외)
     const result = await request.query(`
       SELECT application_id, blob_url AS file_url, file_name
@@ -2147,13 +2147,13 @@ export class AzureSqlDB {
   static async getPortCertFilesByCompanionIds(companionIds: number[]): Promise<Array<{ companion_id: number; file_url: string; file_name: string }>> {
     if (companionIds.length === 0) return []
     const dbPool = await getPool()
-    
+
     const placeholders = companionIds.map((_, i) => `@id${i}`).join(',')
     const request = dbPool.request()
     companionIds.forEach((id, i) => {
       request.input(`id${i}`, sql.Int, id)
     })
-    
+
     // 동행인의 항만이수증 조회
     const result = await request.query(`
       SELECT companion_id, blob_url AS file_url, file_name
