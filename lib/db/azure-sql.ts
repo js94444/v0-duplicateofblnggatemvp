@@ -349,7 +349,7 @@ export class AzureSqlDB {
     if (uploadedFiles && uploadedFiles.length > 0) {
       console.log('[v0] Processing', uploadedFiles.length, 'uploaded files')
       for (const file of uploadedFiles) {
-        // 일명과 키가 유효한 경우에만 저장
+        // 일명과 키가 유효한 경우에만 ��장
         if (file && file.filename && file.fileKey && file.filename.trim() !== '' && file.fileKey.trim() !== '') {
           console.log('[v0] Saving file attachment:', {
             filename: file.filename,
@@ -1103,7 +1103,7 @@ export class AzureSqlDB {
 
     console.log('[v0] Updating application status:', { id, status, rejectionReason })
 
-    // DB에는 소문자로 저장
+    // DB에는 소문자로 저��
     const dbStatus = status.toLowerCase()
     const now = getKoreaTime()
 
@@ -1625,26 +1625,37 @@ export class AzureSqlDB {
       return { result: "DENY", message: "방문 기간이 만료되었습니다", denyReason: "EXPIRED" }
     }
 
-    // 스캔 기록 저장
-    // 퇴장(EXIT) 시 입장 이력 확인 - 같은 사이트에서의 최근 스캔이 ENTRY인지 확인
-    if (direction === 'EXIT') {
-      const lastScanResult = await dbPool.request()
-        .input('pass_id', sql.UniqueIdentifier, app.pass_id)
-        .input('scan_site', sql.NVarChar(50), scan_site)
-        .query(`
-          SELECT TOP 1 direction FROM visit_pass_scans
-          WHERE pass_id = @pass_id AND scan_site = @scan_site
-          ORDER BY scanned_at DESC
-        `)
+    // 스캔 기록 저장 전 마지막 방향 확인 - 중복 스캔 방지
+    const lastScanResult = await dbPool.request()
+      .input('pass_id', sql.UniqueIdentifier, app.pass_id)
+      .input('scan_site', sql.NVarChar(50), scan_site)
+      .query(`
+        SELECT TOP 1 direction FROM visit_pass_scans
+        WHERE pass_id = @pass_id AND scan_site = @scan_site
+        ORDER BY scanned_at DESC
+      `)
 
-      // 최근 스캔이 없거나 EXIT면 입장 기록이 없는 것
-      if (lastScanResult.recordset.length === 0 || lastScanResult.recordset[0].direction === 'EXIT') {
-        return {
-          result: "DENY",
-          message: "입장 기록이 없습니다",
-          denyReason: "NO_ENTRY_RECORD",
-          is_companion: !!app.companion_id
-        }
+    const lastDirection = lastScanResult.recordset[0]?.direction || null
+
+    // 입장(ENTRY) 시 - 이미 입장 중이면 MISMATCH
+    if (direction === 'ENTRY' && lastDirection === 'ENTRY') {
+      return {
+        result: "MISMATCH",
+        message: "이미 입장 처리된 상태입니다. (중복 스캔)",
+        visitor_name: displayName,
+        visitor_org: app.visitor_org,
+        is_companion: !!app.companion_id
+      }
+    }
+
+    // 퇴장(EXIT) 시 - 입장 기록이 없거나 이미 퇴장 완료면 MISMATCH
+    if (direction === 'EXIT' && (lastDirection === null || lastDirection === 'EXIT')) {
+      return {
+        result: "MISMATCH",
+        message: "입장 기록이 없습니다. 먼저 입장해 주세요.",
+        visitor_name: displayName,
+        visitor_org: app.visitor_org,
+        is_companion: !!app.companion_id
       }
     }
 

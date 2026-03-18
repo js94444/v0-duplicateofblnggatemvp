@@ -3,7 +3,7 @@
 import { useEffect, useState, useRef } from "react"
 import { useSearchParams, useParams, useRouter } from "next/navigation"
 import Link from "next/link"
-import { CheckCircle, XCircle, QrCode, Loader2 } from "lucide-react"
+import { CheckCircle, XCircle, AlertTriangle, QrCode, Loader2 } from "lucide-react"
 import { PublicHeader } from "@/components/public/public-header"
 import { PublicFooter } from "@/components/public/public-footer"
 
@@ -14,7 +14,7 @@ const GATE_LABELS: Record<string, string> = {
 }
 
 interface VerifyResult {
-  result: "ALLOW" | "DENY"
+  result: "ALLOW" | "DENY" | "MISMATCH"
   message: string
   visitor_name?: string
   visitor_org?: string
@@ -119,6 +119,8 @@ export default function VerifyReceiptPage() {
 
   const gateLabel = GATE_LABELS[gate] ?? "정문"
   const isAllow = result?.result === "ALLOW"
+  const isMismatch = result?.result === "MISMATCH"
+  const isDeny = result?.result === "DENY"
 
   return (
     <div className="min-h-screen bg-black text-white flex flex-col">
@@ -141,21 +143,31 @@ export default function VerifyReceiptPage() {
             <div className={`rounded-2xl p-8 text-center ${
               isAllow 
                 ? "bg-emerald-500/20 border-2 border-emerald-500/50" 
-                : "bg-red-500/20 border-2 border-red-500/50"
+                : isMismatch
+                  ? "bg-yellow-500/20 border-2 border-yellow-500/50"
+                  : "bg-red-500/20 border-2 border-red-500/50"
             }`}>
               {isAllow ? (
                 <CheckCircle className="w-20 h-20 text-emerald-400 mx-auto mb-4" />
+              ) : isMismatch ? (
+                <AlertTriangle className="w-20 h-20 text-yellow-400 mx-auto mb-4" />
               ) : (
                 <XCircle className="w-20 h-20 text-red-400 mx-auto mb-4" />
               )}
               
-              <h1 className={`text-2xl font-black mb-2 ${isAllow ? "text-emerald-400" : "text-red-400"}`}>
-                {isAllow ? (direction === "ENTRY" ? "입장 허용" : "퇴장 허용") : "출입 거부"}
+              <h1 className={`text-2xl font-black mb-2 ${
+                isAllow ? "text-emerald-400" : isMismatch ? "text-yellow-400" : "text-red-400"
+              }`}>
+                {isAllow 
+                  ? (direction === "ENTRY" ? "입장 허용" : "퇴장 허용") 
+                  : isMismatch 
+                    ? "중복 스캔" 
+                    : "출입 거부"}
               </h1>
               
               <p className="text-white/70 mb-6">{result.message}</p>
               
-              {isAllow && result.visitor_name && (
+              {(isAllow || isMismatch) && result.visitor_name && (
                 <div className="bg-black/30 rounded-xl p-4 text-left space-y-2">
                   <div className="flex justify-between">
                     <span className="text-white/50 text-sm">방문자</span>
