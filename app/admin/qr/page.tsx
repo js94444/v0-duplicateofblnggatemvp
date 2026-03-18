@@ -120,13 +120,8 @@ export default function AdminQrScanPage() {
         return null // reentry는 항상 INSERT
       }
 
-      console.log("[v0] targetRows scan_ids:", targetRows.map(r => ({ name: r.visitor_name, entry_scan_id: r.entry_scan_id, exit_scan_id: r.exit_scan_id, cycleNum: r.cycleNum })))
-
       const withScanId = targetRows.filter(r => getScanId(r) && action !== 'reentry')
       const withoutScanId = targetRows.filter(r => !getScanId(r) || action === 'reentry')
-
-      console.log("[v0] withScanId:", withScanId.length, "withoutScanId:", withoutScanId.length)
-      console.log("[v0] scanIds to UPDATE:", withScanId.map(r => getScanId(r)))
 
       const body: any = {
         action,
@@ -250,6 +245,7 @@ export default function AdminQrScanPage() {
     return scans.map((row: ScanRow) => ({
       pass_id: row.pass_id,
       application_id: row.application_id,
+      companion_id: row.companion_id,
       visitor_name: row.visitor_name,
       visitor_organization: row.visitor_organization,
       contact_name: row.contact_name,
@@ -269,6 +265,9 @@ export default function AdminQrScanPage() {
       lastEventAt: new Date(row.last_event_at).getTime(),
       visit_start_date: row.visit_start_date,
       visit_end_date: row.visit_end_date,
+      // 수동 체크인/아웃용 scan_id
+      entry_scan_id: row.entry_scan_id ? Number(row.entry_scan_id) : null,
+      exit_scan_id: row.exit_scan_id ? Number(row.exit_scan_id) : null,
     }))
   }, [scans])
 
