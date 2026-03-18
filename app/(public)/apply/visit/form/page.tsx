@@ -20,9 +20,6 @@ import { ApplicationCache } from "@/lib/utils/cache"
 import Link from "next/link"
 import Image from "next/image"
 import { cn } from "@/lib/utils"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import { ContactSelector } from "@/components/contact-selector"
 import { ArrowLeft, Plus, Trash2 } from "lucide-react"
 import { PublicHeader } from "@/components/public/public-header"
@@ -400,7 +397,7 @@ export default function VisitFormPage() {
           body: JSON.stringify(submitData),
         })
       } else {
-        // 신규 신청: POST 요청
+        // 신규 신청: POST 요���
         response = await fetch("/api/apply/visit", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
