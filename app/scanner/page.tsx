@@ -54,9 +54,6 @@ export default function ScannerMainPage() {
           </div>
         ) : (
           <div className="w-full space-y-4">
-            <p className="text-sm text-white/60 text-center">
-              {authMethod === "qr" ? "QR 코드" : "휴대폰 번호"}로 인증 · 출입 방향 선택
-            </p>
             <div className="grid grid-cols-2 gap-6">
               <button
                 type="button"
@@ -101,7 +98,7 @@ export default function ScannerMainPage() {
             <button
               type="button"
               onClick={() => setAuthMethod(null)}
-              className="w-full py-3 text-sm text-white/40 hover:text-white transition-colors"
+              className="w-full py-3 text-xl text-white hover:text-white/70 transition-colors"
             >
               ← 인증 방식 다시 선택
             </button>
