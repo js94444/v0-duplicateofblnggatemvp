@@ -349,7 +349,7 @@ export class AzureSqlDB {
     if (uploadedFiles && uploadedFiles.length > 0) {
       console.log('[v0] Processing', uploadedFiles.length, 'uploaded files')
       for (const file of uploadedFiles) {
-        // 일명과 키가 유효한 경우에만 ���장
+        // 일명과 키가 유효한 경우에만 ����장
         if (file && file.filename && file.fileKey && file.filename.trim() !== '' && file.fileKey.trim() !== '') {
           console.log('[v0] Saving file attachment:', {
             filename: file.filename,
@@ -1716,7 +1716,7 @@ export class AzureSqlDB {
   static async getApprovedApplicationsByPhone(phone: string): Promise<any[]> {
     const dbPool = await getPool()
 
-    // 신청자 본인 번호로 조회 (companion_id 없는 pass)
+    // 신청자 본인 번호로 조회 (companion_id 없는 pass) - 오늘 날짜 기준 유효한 건만
     const applicantResult = await dbPool.request()
       .input('phone', sql.NVarChar(20), phone)
       .query(`
@@ -1727,10 +1727,12 @@ export class AzureSqlDB {
         WHERE a.visitor_phone = @phone 
           AND a.status = 'approved'
           AND (p.companion_id IS NULL OR p.companion_id = 0)
+          AND CAST(a.visit_start_date AS DATE) <= CAST(GETDATE() AS DATE)
+          AND CAST(a.visit_end_date AS DATE) >= CAST(GETDATE() AS DATE)
         ORDER BY a.created_at DESC
       `)
 
-    // 동행인 번호로 조회 (companion_id 있는 pass)
+    // 동행인 번호로 조회 (companion_id 있는 pass) - 오늘 날짜 기준 유효한 건만
     const companionResult = await dbPool.request()
       .input('phone', sql.NVarChar(20), phone)
       .query(`
@@ -1741,6 +1743,8 @@ export class AzureSqlDB {
         INNER JOIN visit_passes p ON p.companion_id = c.companion_id
         WHERE c.phone = @phone 
           AND a.status = 'approved'
+          AND CAST(a.visit_start_date AS DATE) <= CAST(GETDATE() AS DATE)
+          AND CAST(a.visit_end_date AS DATE) >= CAST(GETDATE() AS DATE)
         ORDER BY a.created_at DESC
       `)
 
