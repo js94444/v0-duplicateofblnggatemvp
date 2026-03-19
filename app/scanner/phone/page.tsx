@@ -161,8 +161,8 @@ export default function ScannerPhonePage() {
                 <div className="min-w-0 flex-1">
                   <p className="text-xl font-black text-white truncate mb-0.5">{item.visitor_name}</p>
                   <p className="text-sm text-amber-400 font-mono font-bold">{item.receipt}</p>
-                  <p className="text-xl font-black text-white mt-1">
-                    {item.visit_start_date} ~ {item.visit_end_date}
+                  <p className="text-sm text-amber-400 font-mono font-bold mt-0.5">
+                    기간: {item.visit_start_date} ~ {item.visit_end_date}
                   </p>
                 </div>
               </button>
