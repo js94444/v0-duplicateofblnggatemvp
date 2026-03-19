@@ -132,10 +132,10 @@ export default function ScannerQrPage() {
           {/* 좌측: 출입 인증 링크 */}
           <Link
             href="/scanner"
-            className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white/5 border border-white/10 text-white/70 hover:text-white hover:bg-white/10 hover:border-white/20 transition-all active:scale-95 shrink-0"
+            className="flex items-center gap-2 px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white/70 hover:text-white hover:bg-white/10 hover:border-white/20 transition-all active:scale-95 shrink-0"
           >
-            <ArrowLeft size={18} />
-            <span className="text-sm font-bold hidden sm:inline">출입 인증</span>
+            <ArrowLeft size={22} />
+            <span className="text-2xl sm:text-3xl font-black">출입 인증</span>
           </Link>
 
           {/* 가운데: 게이트 + 입장/퇴장 명확하게 표시 */}
@@ -151,13 +151,13 @@ export default function ScannerQrPage() {
           {/* 우측: 입장↔퇴장 전환 링크 */}
           <Link
             href={`/scanner/qr?direction=${oppositeDirection}&gate=${gate}`}
-            className={`flex items-center gap-1.5 px-3 py-2 rounded-xl border transition-all active:scale-95 shrink-0 ${
+            className={`flex items-center gap-2 px-4 py-3 rounded-xl border transition-all active:scale-95 shrink-0 ${
               direction === "ENTRY" 
                 ? "bg-blue-500/10 border-blue-500/30 text-blue-400 hover:bg-blue-500/20" 
                 : "bg-emerald-500/10 border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/20"
             }`}
           >
-            <span className="text-sm font-bold">{oppositeLabel} 스캔</span>
+            <span className="text-2xl sm:text-3xl font-black">{oppositeLabel} 스캔</span>
           </Link>
         </div>
       </header>
