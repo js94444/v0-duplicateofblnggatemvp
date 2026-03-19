@@ -35,32 +35,32 @@ export default function VerifyReceiptPage() {
   const [loading, setLoading] = useState(true)
   const [result, setResult] = useState<VerifyResult | null>(null)
   const [error, setError] = useState<string | null>(null)
-  const [countdown, setCountdown] = useState(3)
+  const [countdown, setCountdown] = useState(5)
   const isCalledRef = useRef(false)
 
   useEffect(() => {
     let isCancelled = false
-    
+
     // React StrictMode 중복 호출 방지 - 즉시 플래그 설정
     if (isCalledRef.current) return
     isCalledRef.current = true
-    
+
     async function verifyAndRecord() {
       try {
         setLoading(true)
         setError(null)
-        
+
         // API 호출 - 스캔 기록 저장 및 검증
         const res = await fetch(`/api/qr/verify/${receipt}?direction=${direction}&gate=${gate}`, {
           method: "GET",
           headers: { "Cache-Control": "no-cache" },
         })
-        
+
         // StrictMode로 인해 컴포넌트가 언마운트된 상태면 결과 반영 안 함
         if (isCancelled) return
 
         const json = await res.json()
-        
+
         if (!res.ok) {
           setResult({
             result: "DENY",
@@ -93,7 +93,7 @@ export default function VerifyReceiptPage() {
     if (receipt) {
       verifyAndRecord()
     }
-    
+
     return () => {
       isCancelled = true
     }
@@ -102,7 +102,7 @@ export default function VerifyReceiptPage() {
   // 3초 후 자동으로 스캐너 페이지로 이동
   useEffect(() => {
     if (loading || !result) return
-    
+
     const timer = setInterval(() => {
       setCountdown((prev) => {
         if (prev <= 1) {
@@ -113,7 +113,7 @@ export default function VerifyReceiptPage() {
         return prev - 1
       })
     }, 1000)
-    
+
     return () => clearInterval(timer)
   }, [loading, result, direction, gate, router])
 
@@ -140,13 +140,12 @@ export default function VerifyReceiptPage() {
           </div>
         ) : result ? (
           <div className="w-full max-w-md">
-            <div className={`rounded-2xl p-8 text-center ${
-              isAllow 
-                ? "bg-emerald-500/20 border-2 border-emerald-500/50" 
+            <div className={`rounded-2xl p-8 text-center ${isAllow
+                ? "bg-emerald-500/20 border-2 border-emerald-500/50"
                 : isMismatch
                   ? "bg-yellow-500/20 border-2 border-yellow-500/50"
                   : "bg-red-500/20 border-2 border-red-500/50"
-            }`}>
+              }`}>
               {isAllow ? (
                 <CheckCircle className="w-20 h-20 text-emerald-400 mx-auto mb-4" />
               ) : isMismatch ? (
@@ -154,19 +153,18 @@ export default function VerifyReceiptPage() {
               ) : (
                 <XCircle className="w-20 h-20 text-red-400 mx-auto mb-4" />
               )}
-              
-              <h1 className={`text-2xl font-black mb-2 ${
-                isAllow ? "text-emerald-400" : isMismatch ? "text-yellow-400" : "text-red-400"
-              }`}>
-                {isAllow 
-                  ? (direction === "ENTRY" ? "입장 허용" : "퇴장 허용") 
-                  : isMismatch 
-                    ? "중복 스캔" 
+
+              <h1 className={`text-2xl font-black mb-2 ${isAllow ? "text-emerald-400" : isMismatch ? "text-yellow-400" : "text-red-400"
+                }`}>
+                {isAllow
+                  ? (direction === "ENTRY" ? "입장 허용" : "퇴장 허용")
+                  : isMismatch
+                    ? "중복 스캔"
                     : "출입 거부"}
               </h1>
-              
+
               <p className="text-white/70 mb-6">{result.message}</p>
-              
+
               {(isAllow || isMismatch) && result.visitor_name && (
                 <div className="bg-black/30 rounded-xl p-4 text-left space-y-2">
                   <div className="flex justify-between">
