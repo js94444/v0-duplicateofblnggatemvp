@@ -143,7 +143,7 @@ export default function VerifyReceiptPage() {
             <div className={`rounded-2xl p-8 text-center ${isAllow
                 ? "bg-emerald-500/20 border-2 border-emerald-500/50"
                 : isMismatch
-                  ? "bg-yellow-500/20 border-2 border-yellow-500/50"
+                  ? "bg-transparent border-2 border-yellow-500/50"
                   : "bg-red-500/20 border-2 border-red-500/50"
               }`}>
               {isAllow ? (
