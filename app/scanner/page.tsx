@@ -30,7 +30,7 @@ export default function ScannerMainPage() {
       <PublicHeader initialScrolled />
 
       <main className="flex-1 flex flex-col items-center justify-center p-6 max-w-2xl mx-auto w-full pt-6">
-        <h1 className="text-4xl font-black text-black mb-8">출입 권한 인증 방식 선택</h1>
+        <h1 className={`text-4xl font-black mb-8 ${authMethod === null ? "text-white" : "text-black"}`}>출입 권한 인증 방식 선택</h1>
 
         {authMethod === null ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full">
