@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
-import { QrCode, Smartphone, LogIn, LogOut, DoorOpen } from "lucide-react"
+import { QrCode, Smartphone, LogIn, LogOut } from "lucide-react"
 import { PublicHeader } from "@/components/public/public-header"
 import { PublicFooter } from "@/components/public/public-footer"
 
@@ -54,48 +54,54 @@ export default function ScannerMainPage() {
           </div>
         ) : (
           <div className="w-full space-y-4">
-            <p className="text-sm text-white/60 text-center">출입구 선택</p>
-            <div className="grid grid-cols-3 gap-2 mb-4">
-              {(["main", "pier_1", "pier_2"] as Gate[]).map((g) => (
-                <button
-                  key={g}
-                  type="button"
-                  onClick={() => setGate(g)}
-                  className={`flex flex-col items-center gap-1 py-3 px-2 rounded-xl border-2 text-sm font-bold transition-colors ${gate === g
-                    ? "border-amber-500 bg-amber-500/20 text-amber-400"
-                    : "border-white/20 bg-white/5 text-white/70 hover:border-white/30"
-                    }`}
-                >
-                  <DoorOpen size={18} />
-                  {GATE_LABELS[g]}
-                </button>
-              ))}
-            </div>
             <p className="text-sm text-white/60 text-center">
               {authMethod === "qr" ? "QR 코드" : "휴대폰 번호"}로 인증 · 출입 방향 선택
             </p>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-6">
               <button
                 type="button"
                 onClick={() => handleDirection("ENTRY")}
-                className="flex flex-col items-center gap-3 py-8 rounded-2xl border-2 border-emerald-500/50 bg-emerald-500/10 hover:bg-emerald-500/20 transition-colors"
+                className="flex flex-col items-center gap-4 py-16 rounded-2xl border-2 border-emerald-500/50 bg-emerald-500/10 hover:bg-emerald-500/20 active:scale-95 transition-all"
               >
-                <LogIn className="w-12 h-12 text-emerald-400" />
-                <span className="text-lg font-bold text-white">입장</span>
+                <LogIn className="w-16 h-16 text-emerald-400" />
+                <span className="text-3xl font-black text-emerald-400">입장</span>
               </button>
               <button
                 type="button"
                 onClick={() => handleDirection("EXIT")}
-                className="flex flex-col items-center gap-3 py-8 rounded-2xl border-2 border-amber-500/40 bg-amber-500/10 hover:bg-amber-500/20 transition-colors"
+                className="flex flex-col items-center gap-4 py-16 rounded-2xl border-2 border-blue-500/50 bg-blue-500/10 hover:bg-blue-500/20 active:scale-95 transition-all"
               >
-                <LogOut className="w-12 h-12 text-amber-400" />
-                <span className="text-lg font-bold text-white">퇴장</span>
+                <LogOut className="w-16 h-16 text-blue-400" />
+                <span className="text-3xl font-black text-blue-400">퇴장</span>
               </button>
             </div>
+
+            {/* 출입구 선택 - 접힘 처리 */}
+            <details className="w-full">
+              <summary className="text-xs text-white/30 text-center cursor-pointer hover:text-white/50 transition-colors select-none py-1">
+                출입구 변경 (현재: {GATE_LABELS[gate]})
+              </summary>
+              <div className="grid grid-cols-3 gap-2 mt-3">
+                {(["main", "pier_1", "pier_2"] as Gate[]).map((g) => (
+                  <button
+                    key={g}
+                    type="button"
+                    onClick={() => setGate(g)}
+                    className={`py-2 px-2 rounded-xl border text-sm font-bold transition-colors ${gate === g
+                      ? "border-amber-500 bg-amber-500/20 text-amber-400"
+                      : "border-white/20 bg-white/5 text-white/50 hover:border-white/30"
+                      }`}
+                  >
+                    {GATE_LABELS[g]}
+                  </button>
+                ))}
+              </div>
+            </details>
+
             <button
               type="button"
               onClick={() => setAuthMethod(null)}
-              className="w-full py-3 text-sm text-white/50 hover:text-white"
+              className="w-full py-3 text-sm text-white/40 hover:text-white transition-colors"
             >
               ← 인증 방식 다시 선택
             </button>
