@@ -29,7 +29,7 @@ export default function ScannerMainPage() {
     <div className="min-h-screen bg-black text-white flex flex-col">
       <PublicHeader initialScrolled />
 
-      <main className="flex-1 flex flex-col items-center justify-center p-6 max-w-md mx-auto w-full pt-24">
+      <main className="flex-1 flex flex-col items-center justify-center p-30 max-w-md mx-auto w-full pt-24">
         <h1 className="text-6xl font-black text-white mb-2">출입 권한 인증</h1>
         <p className="text-sm text-white/50 mb-8">인증 방식과 출입 방향을 선택하세요</p>
 
