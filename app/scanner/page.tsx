@@ -29,8 +29,8 @@ export default function ScannerMainPage() {
     <div className="min-h-screen bg-black text-white flex flex-col">
       <PublicHeader initialScrolled />
 
-      <main className="flex-1 flex flex-col items-center justify-center p-6 max-w-md mx-auto w-full pt-24">
-        <h1 className="text-xl font-black text-white mb-2">출입 권한 인증</h1>
+      <main className="flex-1 flex flex-col items-center justify-center p-6 max-w-md mx-auto w-full pt-6">
+        <h1 className="text-4xl font-black text-white mb-2">출입 권한 인증 방식 선택 </h1>
         <p className="text-sm text-white/50 mb-8">인증 방식과 출입 방향을 선택하세요</p>
 
         {authMethod === null ? (
@@ -41,7 +41,7 @@ export default function ScannerMainPage() {
               className="flex flex-col items-center gap-4 p-8 rounded-2xl border-2 border-amber-500/40 bg-amber-500/10 hover:bg-amber-500/20 hover:border-amber-500/60 transition-colors"
             >
               <QrCode className="w-14 h-14 text-amber-400" />
-              <span className="text-base font-bold text-white">QR 코드로 인증</span>
+              <span className="text-2xl font-bold text-white">QR 코드 <br />인증</span>
             </button>
             <button
               type="button"
@@ -49,7 +49,7 @@ export default function ScannerMainPage() {
               className="flex flex-col items-center gap-4 p-8 rounded-2xl border-2 border-white/20 bg-white/5 hover:bg-white/10 hover:border-white/30 transition-colors"
             >
               <Smartphone className="w-14 h-14 text-white/70" />
-              <span className="text-base font-bold text-white">휴대폰 번호로 인증</span>
+              <span className="text-2xl font-bold text-white">휴대폰번호 <br />인증</span>
             </button>
           </div>
         ) : (
@@ -61,11 +61,10 @@ export default function ScannerMainPage() {
                   key={g}
                   type="button"
                   onClick={() => setGate(g)}
-                  className={`flex flex-col items-center gap-1 py-3 px-2 rounded-xl border-2 text-sm font-bold transition-colors ${
-                    gate === g
-                      ? "border-amber-500 bg-amber-500/20 text-amber-400"
-                      : "border-white/20 bg-white/5 text-white/70 hover:border-white/30"
-                  }`}
+                  className={`flex flex-col items-center gap-1 py-3 px-2 rounded-xl border-2 text-sm font-bold transition-colors ${gate === g
+                    ? "border-amber-500 bg-amber-500/20 text-amber-400"
+                    : "border-white/20 bg-white/5 text-white/70 hover:border-white/30"
+                    }`}
                 >
                   <DoorOpen size={18} />
                   {GATE_LABELS[g]}
