@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import Link from "next/link"
-import { ArrowLeft, User, Delete } from "lucide-react"
+import { ArrowLeft, User } from "lucide-react"
 import { PublicFooter } from "@/components/public/public-footer"
 
 interface ApprovedItem {
@@ -78,10 +78,10 @@ export default function ScannerPhonePage() {
           {/* 좌측: 출입 인증 링크 */}
           <Link
             href="/scanner"
-            className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white/5 border border-white/10 text-white/70 hover:text-white hover:bg-white/10 hover:border-white/20 transition-all active:scale-95 shrink-0"
+            className="flex items-center gap-2 px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white/70 hover:text-white hover:bg-white/10 hover:border-white/20 transition-all active:scale-95 shrink-0"
           >
-            <ArrowLeft size={18} />
-            <span className="text-sm font-bold hidden sm:inline">출입 인증</span>
+            <ArrowLeft size={22} />
+            <span className="text-2xl sm:text-3xl font-black">출입 인증</span>
           </Link>
 
           {/* 가운데: 게이트 + 입장/퇴장 명확하게 표시 */}
@@ -97,13 +97,13 @@ export default function ScannerPhonePage() {
           {/* 우측: 입장↔퇴장 전환 링크 */}
           <Link
             href={`/scanner/phone?direction=${oppositeDirection}&gate=${gate}`}
-            className={`flex items-center gap-1.5 px-3 py-2 rounded-xl border transition-all active:scale-95 shrink-0 ${
+            className={`flex items-center gap-2 px-4 py-3 rounded-xl border transition-all active:scale-95 shrink-0 ${
               direction === "ENTRY" 
                 ? "bg-blue-500/10 border-blue-500/30 text-blue-400 hover:bg-blue-500/20" 
                 : "bg-emerald-500/10 border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/20"
             }`}
           >
-            <span className="text-sm font-bold">{oppositeLabel} 인증</span>
+            <span className="text-2xl sm:text-3xl font-black">{oppositeLabel} 인증</span>
           </Link>
         </div>
       </header>
@@ -133,41 +133,6 @@ export default function ScannerPhonePage() {
           </button>
         </div>
 
-        {/* 커스텀 숫자 키패드 */}
-        <div className="grid grid-cols-3 gap-3 mb-6">
-          {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((num) => (
-            <button
-              key={num}
-              type="button"
-              onClick={() => setPhone((prev) => prev + num)}
-              className="py-5 rounded-xl bg-white/10 text-2xl font-bold text-white hover:bg-white/20 active:bg-amber-500/30 transition-colors"
-            >
-              {num}
-            </button>
-          ))}
-          <button
-            type="button"
-            onClick={() => setPhone("")}
-            className="py-5 rounded-xl bg-red-500/20 text-base font-bold text-red-400 hover:bg-red-500/30 active:bg-red-500/40 transition-colors"
-          >
-            전체삭제
-          </button>
-          <button
-            type="button"
-            onClick={() => setPhone((prev) => prev + "0")}
-            className="py-5 rounded-xl bg-white/10 text-2xl font-bold text-white hover:bg-white/20 active:bg-amber-500/30 transition-colors"
-          >
-            0
-          </button>
-          <button
-            type="button"
-            onClick={() => setPhone((prev) => prev.slice(0, -1))}
-            className="py-5 rounded-xl bg-white/10 text-white hover:bg-white/20 active:bg-amber-500/30 transition-colors flex items-center justify-center"
-          >
-            <Delete size={28} />
-          </button>
-        </div>
-
         {error && (
           <div className="mb-6 px-4 py-3 rounded-xl bg-red-500/10 border border-red-500/30">
             <p className="text-base text-red-400 text-center">{error}</p>
@@ -177,14 +142,20 @@ export default function ScannerPhonePage() {
         {list.length > 0 && (
           <div className="space-y-3">
             <p className="text-base text-white/50 mb-3 font-medium">조회 결과에서 이름을 선택하세요</p>
-            {list.map((item) => (
+            {list.map((item, index) => (
               <button
                 key={item.receipt}
                 type="button"
                 onClick={() => selectReceipt(item.receipt)}
-                className="w-full flex items-center gap-5 p-5 rounded-2xl border border-white/10 bg-white/5 hover:bg-white/10 hover:border-amber-500/30 transition-all text-left group"
+                className={`w-full flex items-center gap-5 p-5 rounded-2xl border transition-all text-left group ${
+                  index === 0
+                    ? "border-amber-500/60 bg-amber-500/15 ring-2 ring-amber-500/30"
+                    : "border-white/10 bg-white/5 hover:bg-white/10 hover:border-amber-500/30"
+                }`}
               >
-                <div className="w-12 h-12 rounded-full bg-amber-500/10 flex items-center justify-center group-hover:bg-amber-500/20 transition-colors">
+                <div className={`w-12 h-12 rounded-full flex items-center justify-center transition-colors ${
+                  index === 0 ? "bg-amber-500/30" : "bg-amber-500/10 group-hover:bg-amber-500/20"
+                }`}>
                   <User className="w-6 h-6 text-amber-500" />
                 </div>
                 <div className="min-w-0 flex-1">
