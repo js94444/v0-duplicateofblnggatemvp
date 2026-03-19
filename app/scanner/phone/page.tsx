@@ -18,7 +18,7 @@ export default function ScannerPhonePage() {
   const searchParams = useSearchParams()
   const direction = (searchParams.get("direction") === "EXIT" ? "EXIT" : "ENTRY") as "ENTRY" | "EXIT"
   const gate = searchParams.get("gate") ?? "main"
-  
+
   const GATE_LABELS: Record<string, string> = {
     main: "정문",
     pier_1: "제1부두",
@@ -87,9 +87,8 @@ export default function ScannerPhonePage() {
           {/* 가운데: 게이트 + 입장/퇴장 명확하게 표시 */}
           <div className="flex flex-col items-center text-center min-w-0">
             <span className="text-white/50 text-xs font-medium">{gateLabel}</span>
-            <div className={`text-2xl sm:text-3xl font-black tracking-tight ${
-              direction === "ENTRY" ? "text-emerald-400" : "text-blue-400"
-            }`}>
+            <div className={`text-2xl sm:text-3xl font-black tracking-tight ${direction === "ENTRY" ? "text-emerald-400" : "text-blue-400"
+              }`}>
               {direction === "ENTRY" ? "입장" : "퇴장"} 휴대폰 인증
             </div>
           </div>
@@ -97,11 +96,10 @@ export default function ScannerPhonePage() {
           {/* 우측: 입장↔퇴장 전환 링크 */}
           <Link
             href={`/scanner/phone?direction=${oppositeDirection}&gate=${gate}`}
-            className={`flex items-center gap-2 px-4 py-3 rounded-xl border transition-all active:scale-95 shrink-0 ${
-              direction === "ENTRY" 
-                ? "bg-blue-500/10 border-blue-500/30 text-blue-400 hover:bg-blue-500/20" 
+            className={`flex items-center gap-2 px-4 py-3 rounded-xl border transition-all active:scale-95 shrink-0 ${direction === "ENTRY"
+                ? "bg-blue-500/10 border-blue-500/30 text-blue-400 hover:bg-blue-500/20"
                 : "bg-emerald-500/10 border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/20"
-            }`}
+              }`}
           >
             <span className="text-2xl sm:text-3xl font-black">{oppositeLabel} 인증</span>
           </Link>
@@ -147,21 +145,19 @@ export default function ScannerPhonePage() {
                 key={item.receipt}
                 type="button"
                 onClick={() => selectReceipt(item.receipt)}
-                className={`w-full flex items-center gap-5 p-5 rounded-2xl border transition-all text-left group ${
-                  index === 0
+                className={`w-full flex items-center gap-5 p-5 rounded-2xl border transition-all text-left group ${index === 0
                     ? "border-amber-500/60 bg-amber-500/15 ring-2 ring-amber-500/30"
                     : "border-white/10 bg-white/5 hover:bg-white/10 hover:border-amber-500/30"
-                }`}
+                  }`}
               >
-                <div className={`w-12 h-12 rounded-full flex items-center justify-center transition-colors ${
-                  index === 0 ? "bg-amber-500/30" : "bg-amber-500/10 group-hover:bg-amber-500/20"
-                }`}>
+                <div className={`w-12 h-12 rounded-full flex items-center justify-center transition-colors ${index === 0 ? "bg-amber-500/30" : "bg-amber-500/10 group-hover:bg-amber-500/20"
+                  }`}>
                   <User className="w-6 h-6 text-amber-500" />
                 </div>
                 <div className="min-w-0 flex-1">
                   <p className="text-xl font-black text-white truncate mb-0.5">{item.visitor_name}</p>
                   <p className="text-sm text-amber-400 font-mono font-bold">{item.receipt}</p>
-                  <p className="text-sm text-amber-400 font-mono font-bold mt-0.5">
+                  <p className="text-sm text-amber-400 font-black text-white mt-1.0">
                     기간: {item.visit_start_date} ~ {item.visit_end_date}
                   </p>
                 </div>
