@@ -186,21 +186,11 @@ export default function VerifyReceiptPage() {
                 </div>
               )}
 
-              {/* MISMATCH: 반대 방향 스캔 제안 */}
-              {isMismatch && (
-                <Link
-                  href={`/scanner?gate=${gate}`}
-                  className="mt-4 w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-yellow-500/50 bg-yellow-500/10 text-yellow-400 font-bold text-sm hover:bg-yellow-500/20 transition-colors"
-                >
-                  <QrCode size={18} />
-                  {direction === "ENTRY" ? "퇴장 인증으로 전환" : "입장 인증으로 전환"}
-                </Link>
-              )}
             </div>
 
             <Link
               href={`/scanner?gate=${gate}`}
-              className="mt-6 w-full flex flex-col items-center gap-2 px-6 py-4 rounded-2xl border-2 border-amber-500/50 bg-amber-500/20 text-amber-400 font-bold text-base hover:bg-amber-500/30 transition-colors"
+              className="mt-6 w-full flex flex-col items-center gap-2 px-6 py-4 rounded-2xl border-2 border-amber-500/50 bg-transparent text-amber-400 font-bold text-base hover:bg-amber-500/10 transition-colors"
             >
               <div className="flex items-center gap-2">
                 <QrCode size={22} />
