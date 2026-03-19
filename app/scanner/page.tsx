@@ -30,8 +30,7 @@ export default function ScannerMainPage() {
       <PublicHeader initialScrolled />
 
       <main className="flex-1 flex flex-col items-center justify-center p-6 max-w-2xl mx-auto w-full pt-6">
-        <h1 className="text-4xl font-black text-white mb-2">출입 권한 인증 방식 선택 </h1>
-        <p className="text-sm text-white/50 mb-8">인증 방식과 출입 방향을 선택하세요</p>
+        <h1 className="text-4xl font-black text-white mb-8">출입 권한 인증 방식 선택</h1>
 
         {authMethod === null ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full">
@@ -98,7 +97,7 @@ export default function ScannerMainPage() {
             <button
               type="button"
               onClick={() => setAuthMethod(null)}
-              className="w-full py-3 text-xl text-white hover:text-white/70 transition-colors"
+              className="w-full py-4 text-xl font-black text-black bg-amber-400 hover:bg-amber-300 active:scale-95 transition-all rounded-2xl"
             >
               ← 인증 방식 다시 선택
             </button>
