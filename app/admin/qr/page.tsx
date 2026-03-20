@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
-import { RefreshCw, ChevronLeft, ChevronRight, Calendar } from "lucide-react"
+import { RefreshCw, ChevronLeft, ChevronRight, Calendar, ChevronUp, ChevronDown, ChevronsUpDown } from "lucide-react"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Calendar as CalendarComponent } from "@/components/ui/calendar"
 import { format, addDays, subDays } from "date-fns"
@@ -83,6 +83,24 @@ export default function AdminQrScanPage() {
   // 수동 체크인/아웃/재입장용 선택된 row 키 (pass_id-cycleNum 형태)
   const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set())
   const [manualActionLoading, setManualActionLoading] = useState(false)
+  const [sortKey, setSortKey] = useState<string | null>(null)
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("asc")
+
+  const handleSort = (key: string) => {
+    if (sortKey === key) {
+      setSortDir(prev => prev === "asc" ? "desc" : "asc")
+    } else {
+      setSortKey(key)
+      setSortDir("asc")
+    }
+  }
+
+  const SortIcon = ({ col }: { col: string }) => {
+    if (sortKey !== col) return <ChevronsUpDown size={13} className="inline ml-1 text-white/30" />
+    return sortDir === "asc"
+      ? <ChevronUp size={13} className="inline ml-1 text-amber-400" />
+      : <ChevronDown size={13} className="inline ml-1 text-amber-400" />
+  }
 
   const toggleRowSelection = (key: string) => {
     setSelectedRows(prev => {
@@ -273,15 +291,30 @@ export default function AdminQrScanPage() {
 
   // 카드 필터링된 리스트
   const filteredRows = useMemo(() => {
-    if (cardFilter === "all") return rowsByPerson
-    // 방문신청: 아직 입장 안 한 인원 (입장 스캔 기록 없음)
-    if (cardFilter === "pending") return rowsByPerson.filter(r => !r.lastEntryAt)
-    // 체크인: 현재 내부 체류 중 (마지막 스캔이 ENTRY인 사람)
-    if (cardFilter === "checkIn") return rowsByPerson.filter(r => r.lastScanDirection === 'ENTRY')
-    // 체크아웃: 퇴장 완료 (마지막 스캔이 EXIT인 사람)
-    if (cardFilter === "checkOut") return rowsByPerson.filter(r => r.lastScanDirection === 'EXIT')
-    return rowsByPerson
-  }, [rowsByPerson, cardFilter])
+    let rows = rowsByPerson
+    if (cardFilter === "pending") rows = rowsByPerson.filter(r => !r.lastEntryAt)
+    else if (cardFilter === "checkIn") rows = rowsByPerson.filter(r => r.lastScanDirection === 'ENTRY')
+    else if (cardFilter === "checkOut") rows = rowsByPerson.filter(r => r.lastScanDirection === 'EXIT')
+
+    if (!sortKey) return rows
+
+    return [...rows].sort((a, b) => {
+      let aVal: any
+      let bVal: any
+      if (sortKey === "visitor_name") { aVal = a.visitor_name || ""; bVal = b.visitor_name || "" }
+      else if (sortKey === "visitor_organization") { aVal = a.visitor_organization || ""; bVal = b.visitor_organization || "" }
+      else if (sortKey === "contact_name") { aVal = a.contact_name || ""; bVal = b.contact_name || "" }
+      else if (sortKey === "access_area") { aVal = a.access_area || ""; bVal = b.access_area || "" }
+      else if (sortKey === "lastEntryAt") { aVal = a.lastEntryAt ? new Date(a.lastEntryAt).getTime() : 0; bVal = b.lastEntryAt ? new Date(b.lastEntryAt).getTime() : 0 }
+      else if (sortKey === "lastExitAt") { aVal = a.lastExitAt ? new Date(a.lastExitAt).getTime() : 0; bVal = b.lastExitAt ? new Date(b.lastExitAt).getTime() : 0 }
+      else if (sortKey === "visitor_birth_date") { aVal = a.visitor_birth_date || ""; bVal = b.visitor_birth_date || "" }
+      else return 0
+
+      if (aVal < bVal) return sortDir === "asc" ? -1 : 1
+      if (aVal > bVal) return sortDir === "asc" ? 1 : -1
+      return 0
+    })
+  }, [rowsByPerson, cardFilter, sortKey, sortDir])
 
   // 최근 10분 이내 스캔 여부
   const TEN_MINUTES_MS = 10 * 60 * 1000
@@ -675,14 +708,14 @@ export default function AdminQrScanPage() {
                           className="border-white/30"
                         />
                       </TableHead>
-                      <TableHead className="text-white/70 min-w-[90px]">방문자</TableHead>
-                      <TableHead className="text-white/70 min-w-[100px]">생년월일</TableHead>
-                      <TableHead className="text-white/70 min-w-[120px]">소속</TableHead>
+                      <TableHead className="text-white/70 min-w-[90px] cursor-pointer select-none" onClick={() => handleSort("visitor_name")}>방문자<SortIcon col="visitor_name" /></TableHead>
+                      <TableHead className="text-white/70 min-w-[100px] cursor-pointer select-none" onClick={() => handleSort("visitor_birth_date")}>생년월일<SortIcon col="visitor_birth_date" /></TableHead>
+                      <TableHead className="text-white/70 min-w-[120px] cursor-pointer select-none" onClick={() => handleSort("visitor_organization")}>소속<SortIcon col="visitor_organization" /></TableHead>
                       <TableHead className="text-white/70 min-w-[120px]">방문일</TableHead>
-                      <TableHead className="text-white/70 min-w-[140px]">담당자</TableHead>
-                      <TableHead className="text-white/70 min-w-[100px]">출입구역</TableHead>
-                      <TableHead className="text-white/70 min-w-[140px]">입장시각</TableHead>
-                      <TableHead className="text-white/70 min-w-[140px]">퇴장시각</TableHead>
+                      <TableHead className="text-white/70 min-w-[140px] cursor-pointer select-none" onClick={() => handleSort("contact_name")}>담당자<SortIcon col="contact_name" /></TableHead>
+                      <TableHead className="text-white/70 min-w-[100px] cursor-pointer select-none" onClick={() => handleSort("access_area")}>출입구역<SortIcon col="access_area" /></TableHead>
+                      <TableHead className="text-white/70 min-w-[140px] cursor-pointer select-none" onClick={() => handleSort("lastEntryAt")}>입장시각<SortIcon col="lastEntryAt" /></TableHead>
+                      <TableHead className="text-white/70 min-w-[140px] cursor-pointer select-none" onClick={() => handleSort("lastExitAt")}>퇴장시각<SortIcon col="lastExitAt" /></TableHead>
                       <TableHead className="text-white/70 min-w-[90px]">차량번호</TableHead>
                       <TableHead className="text-white/70 min-w-[70px]">차량유종</TableHead>
                       <TableHead className="text-white/70 min-w-[70px]">불꽃방지망</TableHead>
@@ -875,13 +908,13 @@ export default function AdminQrScanPage() {
                           className="border-white/30"
                         />
                       </TableHead>
-                      <TableHead className="text-white/70 min-w-[90px]">방문자</TableHead>
-                      <TableHead className="text-white/70 min-w-[100px]">생년월일</TableHead>
-                      <TableHead className="text-white/70 min-w-[120px]">소속</TableHead>
-                      <TableHead className="text-white/70 min-w-[140px]">담당자</TableHead>
-                      <TableHead className="text-white/70 min-w-[100px]">출입 구역</TableHead>
-                      <TableHead className="text-white/70 min-w-[140px]">입장 시각</TableHead>
-                      <TableHead className="text-white/70 min-w-[140px]">퇴장 시각</TableHead>
+                      <TableHead className="text-white/70 min-w-[90px] cursor-pointer select-none" onClick={() => handleSort("visitor_name")}>방문자<SortIcon col="visitor_name" /></TableHead>
+                      <TableHead className="text-white/70 min-w-[100px] cursor-pointer select-none" onClick={() => handleSort("visitor_birth_date")}>생년월일<SortIcon col="visitor_birth_date" /></TableHead>
+                      <TableHead className="text-white/70 min-w-[120px] cursor-pointer select-none" onClick={() => handleSort("visitor_organization")}>소속<SortIcon col="visitor_organization" /></TableHead>
+                      <TableHead className="text-white/70 min-w-[140px] cursor-pointer select-none" onClick={() => handleSort("contact_name")}>담당자<SortIcon col="contact_name" /></TableHead>
+                      <TableHead className="text-white/70 min-w-[100px] cursor-pointer select-none" onClick={() => handleSort("access_area")}>출입 구역<SortIcon col="access_area" /></TableHead>
+                      <TableHead className="text-white/70 min-w-[140px] cursor-pointer select-none" onClick={() => handleSort("lastEntryAt")}>입장 시각<SortIcon col="lastEntryAt" /></TableHead>
+                      <TableHead className="text-white/70 min-w-[140px] cursor-pointer select-none" onClick={() => handleSort("lastExitAt")}>퇴장 시각<SortIcon col="lastExitAt" /></TableHead>
                       <TableHead className="text-white/70 min-w-[70px]">상세</TableHead>
                     </TableRow>
                   </TableHeader>
