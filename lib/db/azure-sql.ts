@@ -349,7 +349,7 @@ export class AzureSqlDB {
     if (uploadedFiles && uploadedFiles.length > 0) {
       console.log('[v0] Processing', uploadedFiles.length, 'uploaded files')
       for (const file of uploadedFiles) {
-        // 일명과 키가 유효한 경우에만 ����장
+        // 일명과 키가 유효한 경우에만 �����장
         if (file && file.filename && file.fileKey && file.filename.trim() !== '' && file.fileKey.trim() !== '') {
           console.log('[v0] Saving file attachment:', {
             filename: file.filename,
@@ -1702,7 +1702,7 @@ export class AzureSqlDB {
 
     return {
       result: "ALLOW",
-      message: `${direction === 'ENTRY' ? '입장' : '퇴장'} 처리되었습니다`,
+      message: `${direction === 'ENTRY' ? '입장' : '퇴장'} 처리��었습니다`,
       visitor_name: displayName,
       visitor_org: app.visitor_org,
       access_area: app.access_area,
@@ -1780,6 +1780,14 @@ export class AzureSqlDB {
       passWhereClause = `AND CAST(a.visit_start_date AS DATE) <= @filter_date AND CAST(a.visit_end_date AS DATE) >= @filter_date`
     }
 
+    // scan_site → access_area 매핑 (부두 탭일 경우에만 필터 적용)
+    let accessAreaClause = ""
+    if (scanSite === 'pier_1') {
+      accessAreaClause = `AND (a.access_area LIKE '%1부두%')`
+    } else if (scanSite === 'pier_2') {
+      accessAreaClause = `AND (a.access_area LIKE '%2부두%')`
+    }
+
     const result = await request.query(`
         ;WITH 
         -- 1. 승인된 모든 출입증 (신청인 + 동행인)
@@ -1805,7 +1813,7 @@ export class AzureSqlDB {
           FROM visit_passes p
           LEFT JOIN visit_applications a ON p.application_id = a.application_id
           LEFT JOIN visit_companions c ON p.companion_id = c.companion_id
-          WHERE p.status = 'active' ${passWhereClause}
+          WHERE p.status = 'active' ${passWhereClause} ${accessAreaClause}
         ),
         -- 2. 검색 날짜에 해당하는 스캔 기록 (날짜 필터 적용)
         FilteredScans AS (
