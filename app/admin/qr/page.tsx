@@ -882,9 +882,6 @@ export default function AdminQrScanPage() {
                       <TableHead className="text-white/70 min-w-[100px]">출입 구역</TableHead>
                       <TableHead className="text-white/70 min-w-[140px]">입장 시각</TableHead>
                       <TableHead className="text-white/70 min-w-[140px]">퇴장 시각</TableHead>
-                      <TableHead className="text-white/70 min-w-[90px]">차량번호</TableHead>
-                      <TableHead className="text-white/70 min-w-[70px]">차량유종</TableHead>
-                      <TableHead className="text-white/70 min-w-[70px]">불꽃방지망</TableHead>
                       <TableHead className="text-white/70 min-w-[70px]">상세</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -939,15 +936,6 @@ export default function AdminQrScanPage() {
                           </TableCell>
                           <TableCell className="text-sm text-white/80">
                             {formatDateTime(row.lastExitAt)}
-                          </TableCell>
-                          <TableCell className="text-sm text-white/80">
-                            {row.vehicle_number || "-"}
-                          </TableCell>
-                          <TableCell className="text-sm text-white/80">
-                            {row.vehicle_model || "-"}
-                          </TableCell>
-                          <TableCell className="text-sm text-center text-white/80">
-                            {row.spark_arrestor || "-"}
                           </TableCell>
                           <TableCell>
                             <Button
