@@ -349,7 +349,7 @@ export class AzureSqlDB {
     if (uploadedFiles && uploadedFiles.length > 0) {
       console.log('[v0] Processing', uploadedFiles.length, 'uploaded files')
       for (const file of uploadedFiles) {
-        // 일명과 키가 유효한 경우에만 ������장
+        // 일명과 키가 유효한 경우에만 �������장
         if (file && file.filename && file.fileKey && file.filename.trim() !== '' && file.fileKey.trim() !== '') {
           console.log('[v0] Saving file attachment:', {
             filename: file.filename,
@@ -1103,7 +1103,7 @@ export class AzureSqlDB {
 
     console.log('[v0] Updating application status:', { id, status, rejectionReason })
 
-    // DB에는 소문자로 ����
+    // DB에는 소문자�� ����
     const dbStatus = status.toLowerCase()
     const now = getKoreaTime()
 
@@ -2331,5 +2331,25 @@ export class AzureSqlDB {
     }
 
     return { affected }
+  }
+
+  // pass_id 기준 전체 스캔 이력 조회 (회차별 입장/퇴장 시각)
+  static async getScanHistoryByPassId(passId: string) {
+    const dbPool = await getPool()
+    const result = await dbPool.request()
+      .input('pass_id', sql.NVarChar(100), passId)
+      .query(`
+        SELECT 
+          scan_id,
+          direction,
+          scanned_at,
+          result,
+          scan_site,
+          user_agent
+        FROM visit_pass_scans
+        WHERE pass_id = @pass_id AND result = 'ALLOW'
+        ORDER BY scanned_at ASC
+      `)
+    return result.recordset
   }
 }

@@ -75,6 +75,8 @@ export default function AdminQrScanPage() {
   const [cardFilter, setCardFilter] = useState<"all" | "pending" | "checkIn" | "checkOut">("all")
   const [selectedApplicationId, setSelectedApplicationId] = useState<number | null>(null)
   const [selectedApplication, setSelectedApplication] = useState<Application | null>(null)
+  const [selectedPassId, setSelectedPassId] = useState<string | null>(null)
+  const [scanHistory, setScanHistory] = useState<any[]>([])
   const [modalLoading, setModalLoading] = useState(false)
   const [portCertModal, setPortCertModal] = useState<{ open: boolean; files: Array<{ file_url: string; file_name: string }>; visitorName: string; birthDate: string }>({ open: false, files: [], visitorName: "", birthDate: "" })
   const [calendarOpen, setCalendarOpen] = useState(false)
@@ -235,16 +237,25 @@ export default function AdminQrScanPage() {
     }
   }
 
-  // 상세보기 모달용 application 조회
+  // 상세보기 모달용 application + 스캔이력 조회
   useEffect(() => {
     if (!selectedApplicationId) return
     const fetchApplication = async () => {
       setModalLoading(true)
       try {
-        const res = await fetch(`/api/admin/applications/${selectedApplicationId}`)
-        if (res.ok) {
-          const data = await res.json()
+        const [appRes, histRes] = await Promise.all([
+          fetch(`/api/admin/applications/${selectedApplicationId}`),
+          selectedPassId ? fetch(`/api/admin/scan-history/${encodeURIComponent(selectedPassId)}`) : Promise.resolve(null),
+        ])
+        if (appRes.ok) {
+          const data = await appRes.json()
           setSelectedApplication(data)
+        }
+        if (histRes && histRes.ok) {
+          const histData = await histRes.json()
+          setScanHistory(histData.history || [])
+        } else {
+          setScanHistory([])
         }
       } catch (e) {
         console.error("Failed to fetch application:", e)
@@ -253,7 +264,7 @@ export default function AdminQrScanPage() {
       }
     }
     fetchApplication()
-  }, [selectedApplicationId])
+  }, [selectedApplicationId, selectedPassId])
 
   // DB에서 이미 매칭된 입장/퇴장 쌍을 그대로 사용 (간소화)
   const rowsByPerson = useMemo(() => {
@@ -796,7 +807,7 @@ export default function AdminQrScanPage() {
                           <TableCell>
                             <Button
                               size="sm"
-                              onClick={() => setSelectedApplicationId(row.application_id)}
+                              onClick={() => { setSelectedApplicationId(row.application_id); setSelectedPassId(row.pass_id) }}
                               className="bg-white/10 hover:bg-white/20 border border-white/20 text-white rounded-lg text-xs px-2 py-1"
                             >
                               보기
@@ -973,7 +984,7 @@ export default function AdminQrScanPage() {
                           <TableCell>
                             <Button
                               size="sm"
-                              onClick={() => setSelectedApplicationId(row.application_id)}
+                              onClick={() => { setSelectedApplicationId(row.application_id); setSelectedPassId(row.pass_id) }}
                               className="bg-white/10 hover:bg-white/20 border border-white/20 text-white rounded-lg text-xs px-2 py-1"
                             >
                               보기
@@ -996,9 +1007,12 @@ export default function AdminQrScanPage() {
           application={selectedApplication}
           open={!!selectedApplication}
           loading={modalLoading}
+          scanHistory={scanHistory}
           onClose={() => {
             setSelectedApplicationId(null)
             setSelectedApplication(null)
+            setSelectedPassId(null)
+            setScanHistory([])
           }}
         />
       )}
