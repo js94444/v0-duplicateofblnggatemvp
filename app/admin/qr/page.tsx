@@ -853,9 +853,10 @@ export default function AdminQrScanPage() {
 
             {/* 이름 검색 */}
             <div className="mb-4 flex items-center gap-2">
+              <span className="text-sm text-white/60 shrink-0">이름 검색</span>
               <input
                 type="text"
-                placeholder="이름 검색"
+                placeholder="이름을 입력하세요"
                 value={pierNameSearch}
                 onChange={e => setPierNameSearch(e.target.value)}
                 className="h-9 px-3 rounded-xl bg-white/5 border border-white/10 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-amber-500/50 w-40"
