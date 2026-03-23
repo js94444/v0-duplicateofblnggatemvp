@@ -280,7 +280,7 @@ export function ApplicationDetailModal({ application, open, loading = false, sca
                   기본정보
                 </h3>
 
-                {/* 2단 구성: 좌측 텍스트 필드 2열 / 우측 항만이수증 썸네일 */}
+                {/* 2�� 구성: 좌측 텍스트 필드 2열 / 우측 항만이수증 썸네일 */}
                 <div className={`flex gap-8 items-start`}>
                   {/* 좌측: 텍스트 필드 2열 */}
                   <div className="flex-1 min-w-0">
@@ -415,58 +415,43 @@ export function ApplicationDetailModal({ application, open, loading = false, sca
                     <table className="w-full text-sm">
                       <thead>
                         <tr className="border-b border-white/10">
-                          <th className="text-left text-xs font-black text-white/40 uppercase tracking-wider pb-3 pr-6">회차</th>
                           <th className="text-left text-xs font-black text-white/40 uppercase tracking-wider pb-3 pr-6">구분</th>
-                          <th className="text-left text-xs font-black text-white/40 uppercase tracking-wider pb-3 pr-6">시각</th>
+                          <th className="text-left text-xs font-black text-white/40 uppercase tracking-wider pb-3 pr-6">시각 (KST)</th>
                           <th className="text-left text-xs font-black text-white/40 uppercase tracking-wider pb-3">출입구</th>
                         </tr>
                       </thead>
                       <tbody>
                         {(() => {
-                          // 입장/퇴장을 회차별로 그룹핑
-                          const cycles: { cycle: number; entry?: ScanHistoryItem; exit?: ScanHistoryItem }[] = []
-                          let cycleNum = 0
-                          scanHistory.forEach((item) => {
-                            if (item.direction === "ENTRY") {
-                              cycleNum++
-                              cycles.push({ cycle: cycleNum, entry: item })
-                            } else if (item.direction === "EXIT") {
-                              const last = cycles[cycles.length - 1]
-                              if (last && !last.exit) {
-                                last.exit = item
-                              } else {
-                                cycleNum++
-                                cycles.push({ cycle: cycleNum, exit: item })
-                              }
-                            }
-                          })
                           const GATE_LABELS: Record<string, string> = { main: "정문", pier_1: "제1부두", pier_2: "제2부두" }
                           const formatDT = (dt: string) => {
-                            try { return new Date(dt).toLocaleString("ko-KR") } catch { return dt }
+                            try {
+                              const d = new Date(dt)
+                              const kst = new Date(d.getTime() + 9 * 60 * 60 * 1000)
+                              const yy = kst.getUTCFullYear().toString().slice(-2)
+                              const mm = (kst.getUTCMonth() + 1).toString().padStart(2, '0')
+                              const dd = kst.getUTCDate().toString().padStart(2, '0')
+                              const hh = kst.getUTCHours().toString().padStart(2, '0')
+                              const min = kst.getUTCMinutes().toString().padStart(2, '0')
+                              return `${yy}. ${mm}. ${dd}. ${hh}:${min}`
+                            } catch { return dt }
                           }
-                          return cycles.map((c) => (
-                            <>
-                              {c.entry && (
-                                <tr key={`entry-${c.cycle}`} className="border-b border-white/5">
-                                  <td className="py-3 pr-6 text-white/40 font-mono">{c.cycle}회차</td>
-                                  <td className="py-3 pr-6">
-                                    <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 text-xs font-black">입장</span>
-                                  </td>
-                                  <td className="py-3 pr-6 text-white font-mono">{formatDT(c.entry.scanned_at)}</td>
-                                  <td className="py-3 text-white/60">{GATE_LABELS[c.entry.scan_site] || c.entry.scan_site}</td>
-                                </tr>
-                              )}
-                              {c.exit && (
-                                <tr key={`exit-${c.cycle}`} className="border-b border-white/5">
-                                  <td className="py-3 pr-6 text-white/40 font-mono">{!c.entry ? `${c.cycle}회차` : ""}</td>
-                                  <td className="py-3 pr-6">
-                                    <span className="px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-400 text-xs font-black">퇴장</span>
-                                  </td>
-                                  <td className="py-3 pr-6 text-white font-mono">{formatDT(c.exit.scanned_at)}</td>
-                                  <td className="py-3 text-white/60">{GATE_LABELS[c.exit.scan_site] || c.exit.scan_site}</td>
-                                </tr>
-                              )}
-                            </>
+                          // 부두 스캔(pier_1, pier_2)만 필터링
+                          const pierScans = scanHistory.filter(item =>
+                            item.scan_site === 'pier_1' || item.scan_site === 'pier_2'
+                          )
+                          // 표시할 이력이 없으면 전체 표시 (정문만 있는 경우 대비)
+                          const displayScans = pierScans.length > 0 ? pierScans : scanHistory
+                          return displayScans.map((item) => (
+                            <tr key={item.scan_id} className="border-b border-white/5">
+                              <td className="py-3 pr-6">
+                                {item.direction === "ENTRY"
+                                  ? <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 text-xs font-black">입장</span>
+                                  : <span className="px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-400 text-xs font-black">퇴장</span>
+                                }
+                              </td>
+                              <td className="py-3 pr-6 text-white font-mono">{formatDT(item.scanned_at)}</td>
+                              <td className="py-3 text-white/60">{GATE_LABELS[item.scan_site] || item.scan_site}</td>
+                            </tr>
                           ))
                         })()}
                       </tbody>
