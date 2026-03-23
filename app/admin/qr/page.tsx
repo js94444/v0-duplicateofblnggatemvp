@@ -343,6 +343,7 @@ export default function AdminQrScanPage() {
     if (!iso) return "-"
     const d = new Date(iso)
     if (Number.isNaN(d.getTime())) return "-"
+    console.log("[v0] formatDateTime input:", iso, "parsed UTC ms:", d.getTime(), "UTC hours:", d.getUTCHours())
     // UTC → KST (+9시간)
     const kst = new Date(d.getTime() + 9 * 60 * 60 * 1000)
     const year = kst.getUTCFullYear().toString().slice(-2)
