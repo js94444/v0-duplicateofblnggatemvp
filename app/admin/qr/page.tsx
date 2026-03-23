@@ -85,6 +85,7 @@ export default function AdminQrScanPage() {
   // 수동 체크인/아웃/재입장용 선택된 row 키 (pass_id-cycleNum 형태)
   const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set())
   const [manualActionLoading, setManualActionLoading] = useState(false)
+  const [pierNameSearch, setPierNameSearch] = useState("")
   const [sortKey, setSortKey] = useState<string | null>(null)
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc")
 
@@ -307,6 +308,12 @@ export default function AdminQrScanPage() {
     else if (cardFilter === "checkIn") rows = rowsByPerson.filter(r => r.lastScanDirection === 'ENTRY')
     else if (cardFilter === "checkOut") rows = rowsByPerson.filter(r => r.lastScanDirection === 'EXIT')
 
+    // 부두 탭 이름 검색 필터
+    if (activeTab === "pier" && pierNameSearch.trim()) {
+      const keyword = pierNameSearch.trim().toLowerCase()
+      rows = rows.filter(r => (r.visitor_name || "").toLowerCase().includes(keyword))
+    }
+
     if (!sortKey) return rows
 
     return [...rows].sort((a, b) => {
@@ -325,7 +332,7 @@ export default function AdminQrScanPage() {
       if (aVal > bVal) return sortDir === "asc" ? 1 : -1
       return 0
     })
-  }, [rowsByPerson, cardFilter, sortKey, sortDir])
+  }, [rowsByPerson, cardFilter, sortKey, sortDir, activeTab, pierNameSearch])
 
   // 최근 10분 이내 스캔 여부
   const TEN_MINUTES_MS = 10 * 60 * 1000
@@ -844,9 +851,51 @@ export default function AdminQrScanPage() {
               </button>
             </div>
 
+            {/* 이름 검색 + 범위 검색 */}
+            <div className="mb-4 flex items-center gap-2">
+              <input
+                type="text"
+                placeholder="이름 검색"
+                value={pierNameSearch}
+                onChange={e => setPierNameSearch(e.target.value)}
+                className="h-9 px-3 rounded-xl bg-white/5 border border-white/10 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-amber-500/50 w-40"
+              />
+              <span className="text-sm text-white/50">범위 검색</span>
+              <div className="flex items-center gap-1 bg-white/5 border border-white/10 rounded-xl px-2 py-1">
+                <Calendar size={14} className="text-white/60" />
+                <Popover open={rangeStartCalendarOpen} onOpenChange={setRangeStartCalendarOpen}>
+                  <PopoverTrigger asChild>
+                    <button type="button" className={`h-7 px-2 font-mono text-sm hover:bg-white/10 rounded-md transition-colors ${rangeStartDate ? "text-white" : "text-white/30"}`}>
+                      {rangeStartDate ? format(rangeStartDate, "yyyy-MM-dd") : "시작날짜"}
+                    </button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0 bg-zinc-900 border-white/10 z-[100]" align="start" sideOffset={4}>
+                    <CalendarComponent mode="single" selected={rangeStartDate ?? undefined} onSelect={(date) => { if (date) { setRangeStartDate(date); if (rangeEndDate) setUseRangeSearch(true); setRangeStartCalendarOpen(false) } }} locale={ko} className="rounded-md" initialFocus />
+                  </PopoverContent>
+                </Popover>
+              </div>
+              <span className="text-white/40 text-sm">~</span>
+              <div className="flex items-center gap-1 bg-white/5 border border-white/10 rounded-xl px-2 py-1">
+                <Calendar size={14} className="text-white/60" />
+                <Popover open={rangeEndCalendarOpen} onOpenChange={setRangeEndCalendarOpen}>
+                  <PopoverTrigger asChild>
+                    <button type="button" className={`h-7 px-2 font-mono text-sm hover:bg-white/10 rounded-md transition-colors ${rangeEndDate ? "text-white" : "text-white/30"}`}>
+                      {rangeEndDate ? format(rangeEndDate, "yyyy-MM-dd") : "종료날짜"}
+                    </button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0 bg-zinc-900 border-white/10 z-[100]" align="start" sideOffset={4}>
+                    <CalendarComponent mode="single" selected={rangeEndDate ?? undefined} onSelect={(date) => { if (date) { setRangeEndDate(date); if (rangeStartDate) setUseRangeSearch(true); setRangeEndCalendarOpen(false) } }} locale={ko} className="rounded-md" initialFocus />
+                  </PopoverContent>
+                </Popover>
+              </div>
+              {(rangeStartDate || rangeEndDate) && (
+                <Button size="sm" variant="ghost" className="h-8 px-2 text-white/40 hover:text-white hover:bg-white/10 text-xs" onClick={() => { setRangeStartDate(null); setRangeEndDate(null); setUseRangeSearch(false) }}>초기화</Button>
+              )}
+            </div>
+
             <div className="mb-6 flex items-start justify-between gap-4">
               <div>
-                <h2 className="text-2xl font-black text-white">{pierTab} 출입 이력 ({rowsByPerson.length}명)</h2>
+                <h2 className="text-2xl font-black text-white">{pierTab} 출입 이력 ({filteredRows.length}명)</h2>
                 <p className="text-sm text-white/40 mt-1">
                   {pierTab} 구역 방문자 출입 이력을 확인합니다.
                 </p>
