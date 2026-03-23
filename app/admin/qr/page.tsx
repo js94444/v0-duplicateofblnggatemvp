@@ -906,7 +906,7 @@ export default function AdminQrScanPage() {
               </div>
             )}
 
-            {rowsByPerson.length === 0 && !loading ? (
+            {filteredRows.length === 0 && !loading ? (
               <div className="text-center py-12 text-white/40">표시할 출입 이력이 없습니다.</div>
             ) : loading ? (
               <div className="space-y-3">
@@ -927,8 +927,8 @@ export default function AdminQrScanPage() {
                     <TableRow className="border-white/10 hover:bg-transparent">
                       <TableHead className="text-white/70 w-10">
                         <Checkbox
-                          checked={rowsByPerson.length > 0 && rowsByPerson.every(r => selectedRows.has(`${r.pass_id}-${r.cycleNum ?? 0}`))}
-                          onCheckedChange={() => toggleAllRows(rowsByPerson)}
+                          checked={filteredRows.length > 0 && filteredRows.every(r => selectedRows.has(`${r.pass_id}-${r.cycleNum ?? 0}`))}
+                          onCheckedChange={() => toggleAllRows(filteredRows)}
                           className="border-white/30"
                         />
                       </TableHead>
@@ -943,7 +943,7 @@ export default function AdminQrScanPage() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {rowsByPerson.map((row) => {
+                    {filteredRows.map((row) => {
                       const recentClass = getRecentHighlight(row)
                       const rowKey = `${row.pass_id}-${row.cycleNum ?? 0}`
                       return (
