@@ -425,13 +425,13 @@ export function ApplicationDetailModal({ application, open, loading = false, sca
                           const GATE_LABELS: Record<string, string> = { main: "정문", pier_1: "제1부두", pier_2: "제2부두" }
                           const formatDT = (dt: string) => {
                             try {
+                              // DB에 KST로 저장되어 있으므로 UTC 필드 그대로 사용
                               const d = new Date(dt)
-                              const kst = new Date(d.getTime() + 9 * 60 * 60 * 1000)
-                              const yy = kst.getUTCFullYear().toString().slice(-2)
-                              const mm = (kst.getUTCMonth() + 1).toString().padStart(2, '0')
-                              const dd = kst.getUTCDate().toString().padStart(2, '0')
-                              const hh = kst.getUTCHours().toString().padStart(2, '0')
-                              const min = kst.getUTCMinutes().toString().padStart(2, '0')
+                              const yy = d.getUTCFullYear().toString().slice(-2)
+                              const mm = (d.getUTCMonth() + 1).toString().padStart(2, '0')
+                              const dd = d.getUTCDate().toString().padStart(2, '0')
+                              const hh = d.getUTCHours().toString().padStart(2, '0')
+                              const min = d.getUTCMinutes().toString().padStart(2, '0')
                               return `${yy}. ${mm}. ${dd}. ${hh}:${min}`
                             } catch { return dt }
                           }
