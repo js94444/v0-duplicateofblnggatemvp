@@ -8,10 +8,20 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { type Application, APPLICATION_STATUS_LABELS } from "@/lib/types"
 import { X, Download, FileText, ZoomIn } from "lucide-react"
 
+interface ScanHistoryItem {
+  scan_id: number
+  direction: "ENTRY" | "EXIT"
+  scanned_at: string
+  result: string
+  scan_site: string
+  user_agent: string
+}
+
 interface ApplicationDetailModalProps {
   application: Application | null
   open: boolean
   loading?: boolean
+  scanHistory?: ScanHistoryItem[]
   onClose: () => void
 }
 
@@ -185,7 +195,7 @@ function AttachmentSection({ title, files }: { title: string; files: any[] }) {
   )
 }
 
-export function ApplicationDetailModal({ application, open, loading = false, onClose }: ApplicationDetailModalProps) {
+export function ApplicationDetailModal({ application, open, loading = false, scanHistory = [], onClose }: ApplicationDetailModalProps) {
   // application이 null일 때 로딩 상태로 처리
   const app = application as any
 
@@ -388,6 +398,79 @@ export function ApplicationDetailModal({ application, open, loading = false, onC
                         </div>
                       )
                     })}
+                  </div>
+                </div>
+              )}
+
+              {/* 출입 이력 */}
+              {scanHistory.length > 0 && (
+                <div className="bg-white/5 border border-white/10 rounded-[32px] p-8 transition-colors">
+                  <h3 className="text-xl font-black text-white mb-6 flex items-center gap-3">
+                    <span className="p-2 bg-emerald-500/20 rounded-xl text-emerald-400 text-sm">
+                      {app.companions && app.companions.length > 0 ? "04" : "03"}
+                    </span>
+                    출입 이력
+                  </h3>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="border-b border-white/10">
+                          <th className="text-left text-xs font-black text-white/40 uppercase tracking-wider pb-3 pr-6">회차</th>
+                          <th className="text-left text-xs font-black text-white/40 uppercase tracking-wider pb-3 pr-6">구분</th>
+                          <th className="text-left text-xs font-black text-white/40 uppercase tracking-wider pb-3 pr-6">시각</th>
+                          <th className="text-left text-xs font-black text-white/40 uppercase tracking-wider pb-3">출입구</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {(() => {
+                          // 입장/퇴장을 회차별로 그룹핑
+                          const cycles: { cycle: number; entry?: ScanHistoryItem; exit?: ScanHistoryItem }[] = []
+                          let cycleNum = 0
+                          scanHistory.forEach((item) => {
+                            if (item.direction === "ENTRY") {
+                              cycleNum++
+                              cycles.push({ cycle: cycleNum, entry: item })
+                            } else if (item.direction === "EXIT") {
+                              const last = cycles[cycles.length - 1]
+                              if (last && !last.exit) {
+                                last.exit = item
+                              } else {
+                                cycleNum++
+                                cycles.push({ cycle: cycleNum, exit: item })
+                              }
+                            }
+                          })
+                          const GATE_LABELS: Record<string, string> = { main: "정문", pier_1: "제1부두", pier_2: "제2부두" }
+                          const formatDT = (dt: string) => {
+                            try { return new Date(dt).toLocaleString("ko-KR") } catch { return dt }
+                          }
+                          return cycles.map((c) => (
+                            <>
+                              {c.entry && (
+                                <tr key={`entry-${c.cycle}`} className="border-b border-white/5">
+                                  <td className="py-3 pr-6 text-white/40 font-mono">{c.cycle}회차</td>
+                                  <td className="py-3 pr-6">
+                                    <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 text-xs font-black">입장</span>
+                                  </td>
+                                  <td className="py-3 pr-6 text-white font-mono">{formatDT(c.entry.scanned_at)}</td>
+                                  <td className="py-3 text-white/60">{GATE_LABELS[c.entry.scan_site] || c.entry.scan_site}</td>
+                                </tr>
+                              )}
+                              {c.exit && (
+                                <tr key={`exit-${c.cycle}`} className="border-b border-white/5">
+                                  <td className="py-3 pr-6 text-white/40 font-mono">{!c.entry ? `${c.cycle}회차` : ""}</td>
+                                  <td className="py-3 pr-6">
+                                    <span className="px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-400 text-xs font-black">퇴장</span>
+                                  </td>
+                                  <td className="py-3 pr-6 text-white font-mono">{formatDT(c.exit.scanned_at)}</td>
+                                  <td className="py-3 text-white/60">{GATE_LABELS[c.exit.scan_site] || c.exit.scan_site}</td>
+                                </tr>
+                              )}
+                            </>
+                          ))
+                        })()}
+                      </tbody>
+                    </table>
                   </div>
                 </div>
               )}
