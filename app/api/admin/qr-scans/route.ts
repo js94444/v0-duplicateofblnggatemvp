@@ -20,6 +20,12 @@ export async function GET(request: NextRequest) {
     const data = await AzureSqlDB.getQrScanLogs(scanSite, 100, dateParam)
     const stats = await AzureSqlDB.getQrScanStats(scanSite, dateParam)
 
+    // 시간 raw 값 디버그
+    const sample = data.find((d: any) => d.entry_at)
+    if (sample) {
+      console.log("[v0] entry_at raw:", sample.entry_at, "type:", typeof sample.entry_at, "instanceof Date:", sample.entry_at instanceof Date)
+    }
+
     // 신청자(companion_id가 null 또는 0)와 동행인(companion_id가 있음) 분리
     const applicantRows = data.filter((d: any) => !d.companion_id || d.companion_id === 0)
     const companionRows = data.filter((d: any) => d.companion_id && d.companion_id !== 0)
