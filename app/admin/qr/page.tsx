@@ -341,20 +341,16 @@ export default function AdminQrScanPage() {
 
   const formatDateTime = (iso: string | null) => {
     if (!iso) return "-"
-    // DB에 이미 한국시간으로 저장되어 있으므로 UTC로 파싱하여 그대로 표시
     const d = new Date(iso)
     if (Number.isNaN(d.getTime())) return "-"
-
-    // UTC 시간 그대로 사용 (DB 저장값이 이미 KST)
-    const year = d.getUTCFullYear().toString().slice(-2)
-    const month = (d.getUTCMonth() + 1).toString().padStart(2, '0')
-    const day = d.getUTCDate().toString().padStart(2, '0')
-
-    // 24시간 형식: 오전/오후 없이 00~23시로 표현
-    const hour24 = d.getUTCHours().toString().padStart(2, '0')
-    const minute = d.getUTCMinutes().toString().padStart(2, '0')
-
-    return `${year}. ${month}. ${day}. ${hour24}:${minute}`
+    // UTC → KST (+9시간)
+    const kst = new Date(d.getTime() + 9 * 60 * 60 * 1000)
+    const year = kst.getUTCFullYear().toString().slice(-2)
+    const month = (kst.getUTCMonth() + 1).toString().padStart(2, '0')
+    const day = kst.getUTCDate().toString().padStart(2, '0')
+    const hour = kst.getUTCHours().toString().padStart(2, '0')
+    const minute = kst.getUTCMinutes().toString().padStart(2, '0')
+    return `${year}. ${month}. ${day}. ${hour}:${minute}`
   }
   // 방문일 포맷: YY.MM.DD~MM.DD
   const formatVisitPeriod = (startDate: string | null, endDate: string | null) => {
