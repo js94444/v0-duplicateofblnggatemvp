@@ -851,7 +851,7 @@ export default function AdminQrScanPage() {
               </button>
             </div>
 
-            {/* 이름 검색 + 범위 검색 */}
+            {/* 이름 검색 */}
             <div className="mb-4 flex items-center gap-2">
               <input
                 type="text"
@@ -860,37 +860,6 @@ export default function AdminQrScanPage() {
                 onChange={e => setPierNameSearch(e.target.value)}
                 className="h-9 px-3 rounded-xl bg-white/5 border border-white/10 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-amber-500/50 w-40"
               />
-              <span className="text-sm text-white/50">범위 검색</span>
-              <div className="flex items-center gap-1 bg-white/5 border border-white/10 rounded-xl px-2 py-1">
-                <Calendar size={14} className="text-white/60" />
-                <Popover open={rangeStartCalendarOpen} onOpenChange={setRangeStartCalendarOpen}>
-                  <PopoverTrigger asChild>
-                    <button type="button" className={`h-7 px-2 font-mono text-sm hover:bg-white/10 rounded-md transition-colors ${rangeStartDate ? "text-white" : "text-white/30"}`}>
-                      {rangeStartDate ? format(rangeStartDate, "yyyy-MM-dd") : "시작날짜"}
-                    </button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0 bg-zinc-900 border-white/10 z-[100]" align="start" sideOffset={4}>
-                    <CalendarComponent mode="single" selected={rangeStartDate ?? undefined} onSelect={(date) => { if (date) { setRangeStartDate(date); if (rangeEndDate) setUseRangeSearch(true); setRangeStartCalendarOpen(false) } }} locale={ko} className="rounded-md" initialFocus />
-                  </PopoverContent>
-                </Popover>
-              </div>
-              <span className="text-white/40 text-sm">~</span>
-              <div className="flex items-center gap-1 bg-white/5 border border-white/10 rounded-xl px-2 py-1">
-                <Calendar size={14} className="text-white/60" />
-                <Popover open={rangeEndCalendarOpen} onOpenChange={setRangeEndCalendarOpen}>
-                  <PopoverTrigger asChild>
-                    <button type="button" className={`h-7 px-2 font-mono text-sm hover:bg-white/10 rounded-md transition-colors ${rangeEndDate ? "text-white" : "text-white/30"}`}>
-                      {rangeEndDate ? format(rangeEndDate, "yyyy-MM-dd") : "종료날짜"}
-                    </button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0 bg-zinc-900 border-white/10 z-[100]" align="start" sideOffset={4}>
-                    <CalendarComponent mode="single" selected={rangeEndDate ?? undefined} onSelect={(date) => { if (date) { setRangeEndDate(date); if (rangeStartDate) setUseRangeSearch(true); setRangeEndCalendarOpen(false) } }} locale={ko} className="rounded-md" initialFocus />
-                  </PopoverContent>
-                </Popover>
-              </div>
-              {(rangeStartDate || rangeEndDate) && (
-                <Button size="sm" variant="ghost" className="h-8 px-2 text-white/40 hover:text-white hover:bg-white/10 text-xs" onClick={() => { setRangeStartDate(null); setRangeEndDate(null); setUseRangeSearch(false) }}>초기화</Button>
-              )}
             </div>
 
             <div className="mb-6 flex items-start justify-between gap-4">
