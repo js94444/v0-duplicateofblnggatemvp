@@ -118,8 +118,8 @@ export default function AdminQrScanPage() {
       })
       if (!res.ok) throw new Error("저장 실패")
       alert(`${updates.length}건의 카드번호가 저장되었습니다.`)
+      await mutate()
       setCardNumbers({})
-      mutate()
     } catch (e) {
       alert("카드번호 저장 중 오류가 발생했습니다.")
     } finally {
@@ -258,7 +258,7 @@ export default function AdminQrScanPage() {
       setRangeEndDate(null)
       setUseRangeSearch(false)
 
-      // 2. 초기화될 URL을 직접 계산해서 mutate에 전달
+      // 2. 초기화될 URL을 직접 계산���서 mutate에 전달
       // 이렇게 하면 현재 state와 상관없이 즉시 해당 API를 호출합니다.
       const defaultDateParam = `date=${format(selectedDate, "yyyy-MM-dd")}`
       const targetUrl = `/api/admin/qr-scans?scan_site=${scanSiteParam}&${defaultDateParam}`
