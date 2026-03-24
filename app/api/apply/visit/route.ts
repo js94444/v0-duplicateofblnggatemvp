@@ -39,7 +39,7 @@ export async function POST(request: Request) {
         visit_purpose: body.visit_purpose || body.purpose || "",
         status: "pending",
         companionsCount: body.companions?.length || 0,
-        statusUrl: `https://v0-lng-tml.vercel.app/apply/status/${result.application_number || result.receipt}`,
+        statusUrl: "https://v0-lng-tml.vercel.app",
       }, 'security')
 
       // 담당자용 메시지
@@ -54,7 +54,7 @@ export async function POST(request: Request) {
         visit_purpose: body.visit_purpose || body.purpose || "",
         status: "pending",
         companionsCount: body.companions?.length || 0,
-        statusUrl: `https://v0-lng-tml.vercel.app/apply/status/${result.application_number || result.receipt}`,
+        statusUrl: "https://v0-lng-tml.vercel.app",
       }, 'contact')
 
       // 보안담당자들에게 발송
