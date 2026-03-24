@@ -86,6 +86,8 @@ export default function AdminQrScanPage() {
   const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set())
   const [manualActionLoading, setManualActionLoading] = useState(false)
   const [pierNameSearch, setPierNameSearch] = useState("")
+  const [cardNumbers, setCardNumbers] = useState<Record<string, string>>({})
+  const [cardNumberSaving, setCardNumberSaving] = useState(false)
   const [sortKey, setSortKey] = useState<string | null>(null)
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc")
 
@@ -95,6 +97,32 @@ export default function AdminQrScanPage() {
     } else {
       setSortKey(key)
       setSortDir("asc")
+    }
+  }
+
+  const handleSaveCardNumbers = async () => {
+    const updates = Object.entries(cardNumbers)
+      .filter(([, val]) => val !== undefined && val !== "")
+      .map(([pass_id, card_number]) => ({ pass_id, card_number }))
+    if (updates.length === 0) {
+      alert("저장할 카드번호가 없습니다.")
+      return
+    }
+    setCardNumberSaving(true)
+    try {
+      const res = await fetch("/api/admin/card-number", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ updates }),
+      })
+      if (!res.ok) throw new Error("저장 실패")
+      alert(`${updates.length}건의 카드번호가 저장되었습니다.`)
+      setCardNumbers({})
+      mutate()
+    } catch (e) {
+      alert("카드번호 저장 중 오류가 발생했습니다.")
+    } finally {
+      setCardNumberSaving(false)
     }
   }
 
@@ -649,14 +677,24 @@ export default function AdminQrScanPage() {
         {activeTab === "main" && (
           <>
             <div className="mb-6 flex items-start justify-between gap-4">
-              <div>
-                <h2 className="text-2xl font-black text-white">정문 출입 이력 ({filteredRows.length}명)</h2>
-                <p className="text-sm text-white/40 mt-1">
-                  {cardFilter === "all" && "승인된 전체 방문자 목록"}
-                  {cardFilter === "pending" && "아직 입장하지 않은 방문자 목록"}
-                  {cardFilter === "checkIn" && "현재 내부 체류 중인 방문자 목록"}
-                  {cardFilter === "checkOut" && "퇴장 완료된 방문자 목록"}
-                </p>
+              <div className="flex items-center gap-4">
+                <div>
+                  <h2 className="text-2xl font-black text-white">정문 출입 이력 ({filteredRows.length}명)</h2>
+                  <p className="text-sm text-white/40 mt-1">
+                    {cardFilter === "all" && "승인된 전체 방문자 목록"}
+                    {cardFilter === "pending" && "아직 입장하지 않은 방문자 목록"}
+                    {cardFilter === "checkIn" && "현재 내부 체류 중인 방문자 목록"}
+                    {cardFilter === "checkOut" && "퇴장 완료된 방문자 목록"}
+                  </p>
+                </div>
+                <Button
+                  size="sm"
+                  disabled={cardNumberSaving || Object.keys(cardNumbers).length === 0}
+                  onClick={handleSaveCardNumbers}
+                  className="bg-amber-500/20 hover:bg-amber-500/40 border border-amber-500/50 text-amber-300 font-bold rounded-xl text-xs px-3 py-2"
+                >
+                  {cardNumberSaving ? "저장 중..." : "카드번호 저장"}
+                </Button>
               </div>
               <div className="flex items-center gap-2 shrink-0">
                 {selectedRows.size > 0 && (
@@ -724,14 +762,11 @@ export default function AdminQrScanPage() {
                       <TableHead className="text-white/70 min-w-[90px] cursor-pointer select-none" onClick={() => handleSort("visitor_name")}>방문자<SortIcon col="visitor_name" /></TableHead>
                       <TableHead className="text-white/70 min-w-[100px] cursor-pointer select-none" onClick={() => handleSort("visitor_birth_date")}>생년월일<SortIcon col="visitor_birth_date" /></TableHead>
                       <TableHead className="text-white/70 min-w-[120px] cursor-pointer select-none" onClick={() => handleSort("visitor_organization")}>소속<SortIcon col="visitor_organization" /></TableHead>
-                      <TableHead className="text-white/70 min-w-[120px]">방문일</TableHead>
+                      <TableHead className="text-white/70 min-w-[100px]">카드번호</TableHead>
                       <TableHead className="text-white/70 min-w-[140px] cursor-pointer select-none" onClick={() => handleSort("contact_name")}>담당자<SortIcon col="contact_name" /></TableHead>
                       <TableHead className="text-white/70 min-w-[100px] cursor-pointer select-none" onClick={() => handleSort("access_area")}>출입구역<SortIcon col="access_area" /></TableHead>
                       <TableHead className="text-white/70 min-w-[140px] cursor-pointer select-none" onClick={() => handleSort("lastEntryAt")}>입장시각<SortIcon col="lastEntryAt" /></TableHead>
                       <TableHead className="text-white/70 min-w-[140px] cursor-pointer select-none" onClick={() => handleSort("lastExitAt")}>퇴장시각<SortIcon col="lastExitAt" /></TableHead>
-                      <TableHead className="text-white/70 min-w-[90px]">차량번호</TableHead>
-                      <TableHead className="text-white/70 min-w-[70px]">차량유종</TableHead>
-                      <TableHead className="text-white/70 min-w-[70px]">불꽃방지망</TableHead>
                       <TableHead className="text-white/70 min-w-[70px]">상세</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -775,8 +810,14 @@ export default function AdminQrScanPage() {
                           <TableCell className="text-sm text-white/60 max-w-[140px] truncate">
                             {row.visitor_organization || "-"}
                           </TableCell>
-                          <TableCell className="text-sm text-white/60">
-                            {formatVisitPeriod(row.visit_start_date, row.visit_end_date)}
+                          <TableCell>
+                            <input
+                              type="text"
+                              value={cardNumbers[row.pass_id] ?? row.card_number ?? ""}
+                              onChange={(e) => setCardNumbers(prev => ({ ...prev, [row.pass_id]: e.target.value }))}
+                              placeholder="-"
+                              className="w-24 h-7 px-2 rounded-lg bg-white/5 border border-white/10 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-amber-500/50"
+                            />
                           </TableCell>
                           <TableCell className="max-w-[140px]">
                             <div className="flex flex-col gap-0.5">
@@ -796,15 +837,6 @@ export default function AdminQrScanPage() {
                           </TableCell>
                           <TableCell className="text-sm text-white/80">
                             {formatDateTime(row.lastExitAt)}
-                          </TableCell>
-                          <TableCell className="text-sm text-white/80">
-                            {row.vehicle_number || "-"}
-                          </TableCell>
-                          <TableCell className="text-sm text-white/80">
-                            {row.vehicle_model || "-"}
-                          </TableCell>
-                          <TableCell className="text-sm text-center text-white/80">
-                            {row.spark_arrestor || "-"}
                           </TableCell>
                           <TableCell>
                             <Button
