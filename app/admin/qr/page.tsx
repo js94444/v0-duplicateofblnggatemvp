@@ -23,6 +23,7 @@ interface ScanRow {
   pass_id: string
   application_id: number
   companion_id: number | null
+  card_number: string | null
   visitor_name: string | null
   visitor_organization: string | null
   contact_name: string | null
@@ -304,6 +305,7 @@ export default function AdminQrScanPage() {
       pass_id: row.pass_id,
       application_id: row.application_id,
       companion_id: row.companion_id,
+      card_number: row.card_number,
       visitor_name: row.visitor_name,
       visitor_organization: row.visitor_organization,
       contact_name: row.contact_name,
