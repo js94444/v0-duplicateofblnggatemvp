@@ -871,6 +871,7 @@ export default function AdminQrScanPage() {
               </div>
             )}
           </>
+        )}
 
         {activeTab === "pier" && (
           <>
