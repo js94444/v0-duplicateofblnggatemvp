@@ -349,7 +349,7 @@ export class AzureSqlDB {
     if (uploadedFiles && uploadedFiles.length > 0) {
       console.log('[v0] Processing', uploadedFiles.length, 'uploaded files')
       for (const file of uploadedFiles) {
-        // 일명과 키가 유효한 경우에만 �������장
+        // 일명과 키가 유효한 경우에만 ��������장
         if (file && file.filename && file.fileKey && file.filename.trim() !== '' && file.fileKey.trim() !== '') {
           console.log('[v0] Saving file attachment:', {
             filename: file.filename,
@@ -1702,7 +1702,7 @@ export class AzureSqlDB {
 
     return {
       result: "ALLOW",
-      message: `${direction === 'ENTRY' ? '입장' : '퇴장'} 처����었습니다`,
+      message: `${direction === 'ENTRY' ? '입장' : '퇴��'} 처����었습니다`,
       visitor_name: displayName,
       visitor_org: app.visitor_org,
       access_area: app.access_area,
@@ -1798,6 +1798,7 @@ export class AzureSqlDB {
             p.application_id,
             p.companion_id,
             p.issued_at,
+            p.card_number,
             a.visitor_name,
             a.visitor_organization,
             a.contact_name,
@@ -1905,11 +1906,12 @@ export class AzureSqlDB {
           FROM FilteredScans
           GROUP BY pass_id
         )
-        -- 스캔 기록이 있는 방문자 (각 사이클별로 별도 ��)
+        -- 스캔 기록이 있는 방문자 (각 사이클별로 별도 행)
         SELECT TOP (@limit)
           ap.pass_id,
           ap.application_id,
           ap.companion_id,
+          ap.card_number,
           COALESCE(ap.companion_name, ap.visitor_name) as visitor_name,
           ap.visitor_organization,
           ap.contact_name,
@@ -1946,6 +1948,7 @@ export class AzureSqlDB {
           ap.pass_id,
           ap.application_id,
           ap.companion_id,
+          ap.card_number,
           COALESCE(ap.companion_name, ap.visitor_name) as visitor_name,
           ap.visitor_organization,
           ap.contact_name,
@@ -2351,5 +2354,21 @@ export class AzureSqlDB {
         ORDER BY scanned_at ASC
       `)
     return result.recordset
+  }
+
+  // 카드번호 일괄 업데이트
+  static async updateCardNumbers(updates: { pass_id: string; card_number: string }[]) {
+    const dbPool = await getPool()
+    for (const { pass_id, card_number } of updates) {
+      await dbPool.request()
+        .input('pass_id', sql.NVarChar(100), pass_id)
+        .input('card_number', sql.NVarChar(50), card_number || null)
+        .query(`
+          UPDATE visit_passes
+          SET card_number = @card_number
+          WHERE pass_id = @pass_id
+        `)
+    }
+    return { success: true }
   }
 }
