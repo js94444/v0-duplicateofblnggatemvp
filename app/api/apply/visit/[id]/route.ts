@@ -100,7 +100,7 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
         visit_purpose: body.visit_purpose || existingApp.visit_purpose || "",
         status: "pending",
         companionsCount: body.companions?.length || 0,
-        statusUrl: "",
+        statusUrl: `https://v0-lng-tml.vercel.app/apply/status/${updatedApp.receipt || existingApp.receipt}`,
         isChangeResubmission: true, // 수정 재접수 플래그
       }, 'security')
 
@@ -116,7 +116,7 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
         visit_purpose: body.visit_purpose || existingApp.visit_purpose || "",
         status: "pending",
         companionsCount: body.companions?.length || 0,
-        statusUrl: "",
+        statusUrl: `https://v0-lng-tml.vercel.app/apply/status/${updatedApp.receipt || existingApp.receipt}`,
         isChangeResubmission: true,
       }, 'contact')
 
@@ -200,7 +200,7 @@ export async function DELETE(request: NextRequest, { params }: { params: { id: s
         visit_end_date: existingApp.visit_end_date || "",
         access_area: existingApp.access_area || "",
         visit_purpose: existingApp.visit_purpose || "",
-        statusUrl: "",
+        statusUrl: `https://v0-lng-tml.vercel.app/apply/status/${existingApp.receipt}`,
         companionsCount: 0,
       })
 
