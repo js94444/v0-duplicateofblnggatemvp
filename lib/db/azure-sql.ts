@@ -349,7 +349,7 @@ export class AzureSqlDB {
     if (uploadedFiles && uploadedFiles.length > 0) {
       console.log('[v0] Processing', uploadedFiles.length, 'uploaded files')
       for (const file of uploadedFiles) {
-        // 일명과 키가 유효한 경우에만 ��������장
+        // 일명과 키가 유효한 경우에만 ���������장
         if (file && file.filename && file.fileKey && file.filename.trim() !== '' && file.fileKey.trim() !== '') {
           console.log('[v0] Saving file attachment:', {
             filename: file.filename,
@@ -1781,12 +1781,14 @@ export class AzureSqlDB {
     }
 
     // scan_site → access_area 매핑 (부두 탭일 경우에만 필터 적용)
-    // "제1부두"는 포함하되 "제2부두"는 제외, 반대도 동일하게 처리
+    // "제1부두", "제2부두", "제1,2부두"(양쪽 모두 노출) 처리
     let accessAreaClause = ""
     if (scanSite === 'pier_1') {
-      accessAreaClause = `AND (a.access_area LIKE '%제1부두%' OR a.access_area = '1부두') AND (a.access_area NOT LIKE '%제2부두%')`
+      // 제1부두 또는 제1,2부두 선택 시 노출
+      accessAreaClause = `AND (a.access_area LIKE '%제1부두%' OR a.access_area = '1부두' OR a.access_area = '제1,2부두')`
     } else if (scanSite === 'pier_2') {
-      accessAreaClause = `AND (a.access_area LIKE '%제2부두%' OR a.access_area = '2부두') AND (a.access_area NOT LIKE '%제1부두%')`
+      // 제2부두 또는 제1,2부두 선택 시 노출
+      accessAreaClause = `AND (a.access_area LIKE '%제2부두%' OR a.access_area = '2부두' OR a.access_area = '제1,2부두')`
     }
 
     const result = await request.query(`
