@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="ko">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -7,31 +8,44 @@
   <title>출입관리 가이드 | 보령LNG터미널</title>
 
   <!-- Pretendard (Korean premium font) -->
-  <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" />
+  <link rel="stylesheet" as="style" crossorigin
+    href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" />
   <!-- Outfit (display / numbers) -->
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;700;900&display=swap" rel="stylesheet" />
 
   <style>
     /* ═══ DESIGN TOKENS ═══════════════════════════════════════ */
     :root {
-      --bg:        #0a0a0a;
-      --bg2:       #111111;
-      --bg3:       #1a1a1a;
-      --surface:   rgba(255,255,255,.04);
-      --border:    rgba(255,255,255,.08);
-      --border-hi: rgba(255,255,255,.18);
-      --lime:      #f59e0b;
-      --lime-d:    #d97706;
-      --lime-glow: rgba(245,158,11,.18);
-      --txt:       #f5f5f5;
-      --txt-2:     #a3a3a3;
-      --txt-3:     #a3a3a3;
-      --r:         14px;
-      --ease:      cubic-bezier(0.16, 1, 0.3, 1);
+      --bg: #0a0a0a;
+      --bg2: #111111;
+      --bg3: #1a1a1a;
+      --surface: rgba(255, 255, 255, .04);
+      --border: rgba(255, 255, 255, .08);
+      --border-hi: rgba(255, 255, 255, .18);
+      --lime: #f59e0b;
+      --lime-d: #d97706;
+      --lime-glow: rgba(245, 158, 11, .18);
+      --txt: #f5f5f5;
+      --txt-2: #a3a3a3;
+      --txt-3: #a3a3a3;
+      --r: 14px;
+      --ease: cubic-bezier(0.16, 1, 0.3, 1);
     }
+
     /* ═══ RESET ═══════════════════════════════════════════════ */
-    *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
-    html { scroll-behavior:smooth; font-size:16px; }
+    *,
+    *::before,
+    *::after {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+      font-size: 16px;
+    }
+
     body {
       background: var(--bg);
       color: var(--txt);
@@ -40,13 +54,21 @@
       -webkit-font-smoothing: antialiased;
       word-break: keep-all;
     }
-    a { text-decoration: none; color: inherit; }
-    img { display: block; }
+
+    a {
+      text-decoration: none;
+      color: inherit;
+    }
+
+    img {
+      display: block;
+    }
 
     /* ═══ NOISE OVERLAY ═══════════════════════════════════════ */
     body::after {
       content: '';
-      position: fixed; inset: 0;
+      position: fixed;
+      inset: 0;
       background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
       opacity: .032;
       pointer-events: none;
@@ -54,111 +76,204 @@
     }
 
     /* ═══ SCROLLBAR ═══════════════════════════════════════════ */
-    ::-webkit-scrollbar { width: 4px; }
-    ::-webkit-scrollbar-track { background: var(--bg); }
-    ::-webkit-scrollbar-thumb { background: var(--bg3); border-radius: 2px; }
+    ::-webkit-scrollbar {
+      width: 4px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: var(--bg);
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: var(--bg3);
+      border-radius: 2px;
+    }
 
     /* ═══ NAV ═════════════════════════════════════════════════ */
     nav {
-      position: fixed; top: 0; left: 0; right: 0; z-index: 200;
-      display: flex; align-items: center; justify-content: space-between;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 200;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
       padding: 0 clamp(20px, 5vw, 80px);
       height: 64px;
-      background: rgba(10,10,10,0);
+      background: rgba(10, 10, 10, 0);
       backdrop-filter: blur(0px);
       border-bottom: 1px solid transparent;
       transition: background .4s, backdrop-filter .4s, border-color .4s;
     }
+
     nav.scrolled {
-      background: rgba(10,10,10,.88);
+      background: rgba(10, 10, 10, .88);
       backdrop-filter: blur(16px);
       border-color: var(--border);
     }
+
     .nav-brand {
-      display: flex; align-items: center;
+      display: flex;
+      align-items: center;
     }
+
     .nav-logo-img {
-      height: 36px; width: auto; display: block;
+      height: 36px;
+      width: auto;
+      display: block;
       opacity: .95;
       transition: opacity .2s;
     }
-    .nav-logo-img:hover { opacity: 1; }
-    .nav-brand span { color: rgba(245,245,245,.4); margin-left: 6px; font-weight: 400; font-size: .8rem; }
-    .nav-menu { display: flex; align-items: center; gap: 32px; }
-    .nav-menu a { font-size: .83rem; color: var(--txt-2); transition: color .2s; }
-    .nav-menu a:hover { color: var(--txt); }
+
+    .nav-logo-img:hover {
+      opacity: 1;
+    }
+
+    .nav-brand span {
+      color: rgba(245, 245, 245, .4);
+      margin-left: 6px;
+      font-weight: 400;
+      font-size: .8rem;
+    }
+
+    .nav-menu {
+      display: flex;
+      align-items: center;
+      gap: 32px;
+    }
+
+    .nav-menu a {
+      font-size: .83rem;
+      color: var(--txt-2);
+      transition: color .2s;
+    }
+
+    .nav-menu a:hover {
+      color: var(--txt);
+    }
+
     .nav-cta {
-      background: var(--lime); color: #0a0a0a;
-      border: none; border-radius: 8px;
-      padding: 9px 20px; font-size: .83rem; font-weight: 700;
-      cursor: pointer; transition: all .3s var(--ease);
+      background: var(--lime);
+      color: #0a0a0a;
+      border: none;
+      border-radius: 8px;
+      padding: 9px 20px;
+      font-size: .83rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all .3s var(--ease);
       font-family: 'Pretendard Variable', sans-serif;
     }
-    .nav-cta:hover { background: #fff; transform: translateY(-1px); }
-    @media(max-width:640px) { .nav-menu { display:none; } }
+
+    .nav-cta:hover {
+      background: #fff;
+      transform: translateY(-1px);
+    }
+
+    @media(max-width:640px) {
+      .nav-menu {
+        display: none;
+      }
+    }
 
     /* ═══ HERO ════════════════════════════════════════════════ */
-    #hero { height: 300vh; position: relative; }
+    #hero {
+      height: 300vh;
+      position: relative;
+    }
 
     .hero-sticky {
-      position: sticky; top: 0;
-      height: 100dvh; overflow: hidden;
-      display: flex; align-items: flex-end;
+      position: sticky;
+      top: 0;
+      height: 100dvh;
+      overflow: hidden;
+      display: flex;
+      align-items: flex-end;
     }
 
     /* Canvas fullscreen */
     #hero-canvas {
-      position: absolute; inset: 0;
-      width: 100%; height: 100%;
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
       object-fit: cover;
     }
 
     /* Video fallback before frames load */
     #hero-video {
-      position: absolute; inset: 0;
-      width: 100%; height: 100%;
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
       object-fit: cover;
-      opacity: 1; transition: opacity .6s ease;
+      opacity: 1;
+      transition: opacity .6s ease;
     }
-    #hero-video.hidden { opacity: 0; pointer-events: none; }
+
+    #hero-video.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
 
     /* Dark gradient overlay */
     .hero-overlay {
-      position: absolute; inset: 0;
-      background: linear-gradient(
-        to bottom,
-        rgba(10,10,10,.3) 0%,
-        rgba(10,10,10,.1) 40%,
-        rgba(10,10,10,.55) 70%,
-        rgba(10,10,10,.92) 100%
-      );
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(to bottom,
+          rgba(10, 10, 10, .3) 0%,
+          rgba(10, 10, 10, .1) 40%,
+          rgba(10, 10, 10, .55) 70%,
+          rgba(10, 10, 10, .92) 100%);
     }
 
     /* Hero content */
     .hero-content {
-      position: relative; z-index: 10;
+      position: relative;
+      z-index: 10;
       width: 100%;
       padding: 0 clamp(20px, 6vw, 100px) clamp(56px, 8vh, 96px);
-      display: flex; flex-direction: column; gap: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
     }
+
     .hero-badge {
-      display: inline-flex; align-items: center; gap: 8px;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
       width: fit-content;
-      background: rgba(245,158,11,.1);
-      border: 1px solid rgba(245,158,11,.25);
-      border-radius: 999px; padding: 5px 14px;
-      font-size: .75rem; font-weight: 500;
-      color: var(--lime); letter-spacing: .04em;
+      background: rgba(245, 158, 11, .1);
+      border: 1px solid rgba(245, 158, 11, .25);
+      border-radius: 999px;
+      padding: 5px 14px;
+      font-size: .75rem;
+      font-weight: 500;
+      color: var(--lime);
+      letter-spacing: .04em;
     }
+
     .badge-pulse {
-      width: 6px; height: 6px; border-radius: 50%;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
       background: var(--lime);
       animation: pulse 1.8s ease-in-out infinite;
     }
+
     @keyframes pulse {
-      0%,100% { box-shadow: 0 0 0 0 rgba(245,158,11,.5); }
-      50% { box-shadow: 0 0 0 7px rgba(245,158,11,0); }
+
+      0%,
+      100% {
+        box-shadow: 0 0 0 0 rgba(245, 158, 11, .5);
+      }
+
+      50% {
+        box-shadow: 0 0 0 7px rgba(245, 158, 11, 0);
+      }
     }
+
     .hero-title {
       font-family: 'Pretendard Variable', sans-serif;
       font-weight: 900;
@@ -167,95 +282,180 @@
       letter-spacing: -.03em;
       text-wrap: balance;
     }
-    .hero-title .lime { color: var(--lime); }
+
+    .hero-title .lime {
+      color: var(--lime);
+    }
+
     .hero-subtitle {
       font-size: clamp(.95rem, 1.5vw, 1.15rem);
-      color: rgba(245,245,245,.65);
+      color: rgba(245, 245, 245, .65);
       line-height: 1.75;
       max-width: 520px;
     }
+
     .hero-actions {
-      display: flex; gap: 12px; flex-wrap: wrap;
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
       padding-top: 4px;
     }
+
     .btn-lime {
-      background: var(--lime); color: #0a0a0a;
-      border: none; border-radius: 10px;
-      padding: 14px 30px; font-size: .95rem; font-weight: 700;
-      cursor: none; transition: all .35s var(--ease);
+      background: var(--lime);
+      color: #0a0a0a;
+      border: none;
+      border-radius: 10px;
+      padding: 14px 30px;
+      font-size: .95rem;
+      font-weight: 700;
+      cursor: none;
+      transition: all .35s var(--ease);
       font-family: 'Pretendard Variable', sans-serif;
       display: inline-block;
       active: scale(.98);
     }
-    .btn-lime:hover { transform: translateY(-2px); box-shadow: 0 12px 32px rgba(245,158,11,.25); }
-    .btn-lime:active { transform: scale(.98); }
+
+    .btn-lime:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 32px rgba(245, 158, 11, .25);
+    }
+
+    .btn-lime:active {
+      transform: scale(.98);
+    }
+
     .btn-outline {
       background: transparent;
-      border: 1.5px solid var(--border-hi); color: var(--txt);
-      border-radius: 10px; padding: 14px 30px;
-      font-size: .95rem; cursor: none;
+      border: 1.5px solid var(--border-hi);
+      color: var(--txt);
+      border-radius: 10px;
+      padding: 14px 30px;
+      font-size: .95rem;
+      cursor: none;
       transition: all .35s var(--ease);
       font-family: 'Pretendard Variable', sans-serif;
       display: inline-block;
     }
-    .btn-outline:hover { border-color: var(--lime); color: var(--lime); }
+
+    .btn-outline:hover {
+      border-color: var(--lime);
+      color: var(--lime);
+    }
 
     /* Loading bar */
     .hero-loader {
-      position: absolute; bottom: 0; left: 0; right: 0; height: 2px;
-      background: rgba(255,255,255,.06);
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: rgba(255, 255, 255, .06);
     }
+
     .hero-loader-fill {
-      height: 100%; background: var(--lime);
-      width: 0%; transition: width .1s linear;
+      height: 100%;
+      background: var(--lime);
+      width: 0%;
+      transition: width .1s linear;
     }
 
     /* Scroll indicator */
     .scroll-hint {
-      position: absolute; bottom: 32px; right: clamp(20px, 5vw, 80px);
-      z-index: 10; opacity: .5;
-      display: flex; flex-direction: column; align-items: center; gap: 6px;
-      font-size: .72rem; color: var(--txt-2); letter-spacing: .1em;
+      position: absolute;
+      bottom: 32px;
+      right: clamp(20px, 5vw, 80px);
+      z-index: 10;
+      opacity: .5;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      font-size: .72rem;
+      color: var(--txt-2);
+      letter-spacing: .1em;
     }
+
     .scroll-line {
-      width: 1px; height: 48px; background: var(--txt-2);
+      width: 1px;
+      height: 48px;
+      background: var(--txt-2);
       animation: scrollDown 1.8s ease-in-out infinite;
     }
+
     @keyframes scrollDown {
-      0%,100% { transform: scaleY(1); transform-origin: top; }
-      50% { transform: scaleY(.4); }
+
+      0%,
+      100% {
+        transform: scaleY(1);
+        transform-origin: top;
+      }
+
+      50% {
+        transform: scaleY(.4);
+      }
     }
 
     /* ═══ COMMON SECTION ══════════════════════════════════════ */
-    .container { max-width: 1280px; margin: 0 auto; padding: 0 clamp(20px, 5vw, 80px); }
+    .container {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 0 clamp(20px, 5vw, 80px);
+    }
+
     .section-kicker {
       font-family: 'Outfit', sans-serif;
-      font-size: .72rem; font-weight: 700;
-      letter-spacing: .18em; text-transform: uppercase;
-      color: var(--lime); margin-bottom: 14px;
+      font-size: .72rem;
+      font-weight: 700;
+      letter-spacing: .18em;
+      text-transform: uppercase;
+      color: var(--lime);
+      margin-bottom: 14px;
     }
+
     .section-h {
       font-weight: 900;
       font-size: clamp(1.75rem, 3.5vw, 2.8rem);
-      letter-spacing: -.025em; line-height: 1.18;
+      letter-spacing: -.025em;
+      line-height: 1.18;
       text-wrap: balance;
     }
+
     .section-sub {
       margin-top: 14px;
-      font-size: 1rem; color: var(--txt-2);
-      line-height: 1.75; max-width: 540px;
+      font-size: 1rem;
+      color: var(--txt-2);
+      line-height: 1.75;
+      max-width: 540px;
     }
 
     /* Reveal animation */
     .reveal {
-      opacity: 0; transform: translateY(28px);
+      opacity: 0;
+      transform: translateY(28px);
       transition: opacity .7s var(--ease), transform .7s var(--ease);
     }
-    .reveal.visible { opacity: 1; transform: none; }
-    .reveal.d1 { transition-delay: .08s; }
-    .reveal.d2 { transition-delay: .16s; }
-    .reveal.d3 { transition-delay: .24s; }
-    .reveal.d4 { transition-delay: .32s; }
+
+    .reveal.visible {
+      opacity: 1;
+      transform: none;
+    }
+
+    .reveal.d1 {
+      transition-delay: .08s;
+    }
+
+    .reveal.d2 {
+      transition-delay: .16s;
+    }
+
+    .reveal.d3 {
+      transition-delay: .24s;
+    }
+
+    .reveal.d4 {
+      transition-delay: .32s;
+    }
 
     /* ═══ FLOW SECTION ════════════════════════════════════════ */
     #flow {
@@ -263,6 +463,7 @@
       background: var(--bg);
       border-bottom: 1px solid var(--border);
     }
+
     .flow-inner {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -270,35 +471,77 @@
       align-items: start;
       margin-top: 64px;
     }
-    @media(max-width:768px) { .flow-inner { grid-template-columns: 1fr; gap:40px; } }
+
+    @media(max-width:768px) {
+      .flow-inner {
+        grid-template-columns: 1fr;
+        gap: 40px;
+      }
+    }
+
     .flow-text {}
-    .flow-steps { display: flex; flex-direction: column; gap: 0; }
+
+    .flow-steps {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+
     .flow-step {
-      display: flex; gap: 20px; align-items: flex-start;
+      display: flex;
+      gap: 20px;
+      align-items: flex-start;
       position: relative;
     }
-    .flow-step:not(:last-child) { padding-bottom: 32px; }
+
+    .flow-step:not(:last-child) {
+      padding-bottom: 32px;
+    }
+
     .flow-step:not(:last-child) .step-line {
-      position: absolute; left: 19px; top: 48px;
-      width: 2px; height: calc(100% - 48px);
+      position: absolute;
+      left: 19px;
+      top: 48px;
+      width: 2px;
+      height: calc(100% - 48px);
       background: linear-gradient(to bottom, var(--border-hi), transparent);
     }
+
     .step-num-wrap {
       flex-shrink: 0;
-      width: 40px; height: 40px;
+      width: 40px;
+      height: 40px;
       border-radius: 50%;
       border: 1.5px solid var(--border-hi);
-      display: flex; align-items: center; justify-content: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       background: var(--bg2);
     }
+
     .step-num-wrap span {
       font-family: 'Outfit', sans-serif;
-      font-size: .75rem; font-weight: 700;
+      font-size: .75rem;
+      font-weight: 700;
       color: var(--lime);
     }
-    .step-body { padding-top: 8px; }
-    .step-body h4 { font-weight: 700; font-size: 1.02rem; margin-bottom: 6px; }
-    .step-body p { font-size: .87rem; color: var(--txt-2); line-height: 1.7; }
+
+    .step-body {
+      padding-top: 8px;
+    }
+
+    .step-body h4 {
+      font-weight: 700;
+      font-size: 1.02rem;
+      margin-bottom: 6px;
+    }
+
+    .step-body p {
+      font-size: .87rem;
+      color: var(--txt-2);
+      line-height: 1.7;
+    }
+
     .step-line {}
 
     /* ═══ ROLES — BENTO GRID ══════════════════════════════════ */
@@ -306,189 +549,478 @@
       padding: 140px 0;
       background: var(--bg2);
     }
-    .roles-head { margin-bottom: 56px; }
+
+    .roles-head {
+      margin-bottom: 56px;
+    }
+
     .bento {
       display: grid;
       grid-template-columns: repeat(12, 1fr);
       grid-template-rows: auto;
       gap: 14px;
     }
+
     .bento-card {
       background: var(--bg);
       border: 1px solid var(--border);
       border-radius: var(--r);
       padding: 32px 28px;
-      overflow: hidden; position: relative;
+      overflow: hidden;
+      position: relative;
       transition: border-color .35s var(--ease), transform .35s var(--ease);
     }
-    .bento-card:hover { border-color: var(--border-hi); transform: translateY(-3px); }
-    .bc-visitor  { grid-column: span 6; }
-    .bc-manager  { grid-column: span 6; }
-    .bc-security { grid-column: span 6; }
-    .bc-admin    { grid-column: span 6; }
-    .bc-stat1    { grid-column: span 3; }
-    .bc-stat2    { grid-column: span 3; }
-    .bc-access   { grid-column: span 6; }
-    @media(max-width:900px) {
-      .bc-visitor,.bc-manager,.bc-security,.bc-admin,
-      .bc-stat1,.bc-stat2,.bc-access { grid-column: span 12; }
+
+    .bento-card:hover {
+      border-color: var(--border-hi);
+      transform: translateY(-3px);
     }
-    .role-icon { font-size: 2.2rem; margin-bottom: 18px; }
+
+    .bc-visitor {
+      grid-column: span 6;
+    }
+
+    .bc-manager {
+      grid-column: span 6;
+    }
+
+    .bc-security {
+      grid-column: span 6;
+    }
+
+    .bc-admin {
+      grid-column: span 6;
+    }
+
+    .bc-stat1 {
+      grid-column: span 3;
+    }
+
+    .bc-stat2 {
+      grid-column: span 3;
+    }
+
+    .bc-access {
+      grid-column: span 6;
+    }
+
+    @media(max-width:900px) {
+
+      .bc-visitor,
+      .bc-manager,
+      .bc-security,
+      .bc-admin,
+      .bc-stat1,
+      .bc-stat2,
+      .bc-access {
+        grid-column: span 12;
+      }
+    }
+
+    .role-icon {
+      font-size: 2.2rem;
+      margin-bottom: 18px;
+    }
+
     .role-pill {
       display: inline-block;
       font-family: 'Outfit', sans-serif;
-      font-size: .68rem; font-weight: 700; letter-spacing: .12em;
-      padding: 3px 10px; border-radius: 999px;
+      font-size: .68rem;
+      font-weight: 700;
+      letter-spacing: .12em;
+      padding: 3px 10px;
+      border-radius: 999px;
       margin-bottom: 14px;
     }
-    .pill-v { background: rgba(245,158,11,.1); color: var(--lime); border: 1px solid rgba(245,158,11,.2); }
-    .pill-m { background: rgba(251,191,36,.08); color: #fbbf24; border: 1px solid rgba(251,191,36,.18); }
-    .pill-s { background: rgba(248,113,113,.08); color: #f87171; border: 1px solid rgba(248,113,113,.18); }
-    .pill-a { background: rgba(168,85,247,.08); color: #a855f7; border: 1px solid rgba(168,85,247,.18); }
-    .bento-title { font-weight: 800; font-size: 1.25rem; margin-bottom: 10px; letter-spacing: -.015em; }
-    .bento-desc { font-size: .85rem; color: var(--txt-2); line-height: 1.72; margin-bottom: 18px; }
+
+    .pill-v {
+      background: rgba(245, 158, 11, .1);
+      color: var(--lime);
+      border: 1px solid rgba(245, 158, 11, .2);
+    }
+
+    .pill-m {
+      background: rgba(251, 191, 36, .08);
+      color: #fbbf24;
+      border: 1px solid rgba(251, 191, 36, .18);
+    }
+
+    .pill-s {
+      background: rgba(248, 113, 113, .08);
+      color: #f87171;
+      border: 1px solid rgba(248, 113, 113, .18);
+    }
+
+    .pill-a {
+      background: rgba(168, 85, 247, .08);
+      color: #a855f7;
+      border: 1px solid rgba(168, 85, 247, .18);
+    }
+
+    .bento-title {
+      font-weight: 800;
+      font-size: 1.25rem;
+      margin-bottom: 10px;
+      letter-spacing: -.015em;
+    }
+
+    .bento-desc {
+      font-size: .85rem;
+      color: var(--txt-2);
+      line-height: 1.72;
+      margin-bottom: 18px;
+    }
+
     .bento-link {
-      display: inline-flex; align-items: center; gap: 6px;
-      font-size: .83rem; font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: .83rem;
+      font-weight: 600;
       transition: gap .25s var(--ease);
       cursor: none;
     }
-    .bl-v { color: var(--lime); }
-    .bl-m { color: #fbbf24; }
-    .bl-s { color: #f87171; }
-    .bl-a { color: #a855f7; }
-    .bento-link:hover { gap: 12px; }
+
+    .bl-v {
+      color: var(--lime);
+    }
+
+    .bl-m {
+      color: #fbbf24;
+    }
+
+    .bl-s {
+      color: #f87171;
+    }
+
+    .bl-a {
+      color: #a855f7;
+    }
+
+    .bento-link:hover {
+      gap: 12px;
+    }
 
     /* stat bento cards */
     .stat-big {
       font-family: 'Outfit', sans-serif;
-      font-size: 3rem; font-weight: 900;
-      line-height: 1; letter-spacing: -.04em;
-      color: var(--lime); margin-bottom: 8px;
+      font-size: 3rem;
+      font-weight: 900;
+      line-height: 1;
+      letter-spacing: -.04em;
+      color: var(--lime);
+      margin-bottom: 8px;
     }
-    .stat-label { font-size: .83rem; color: var(--txt-2); line-height: 1.5; }
+
+    .stat-label {
+      font-size: .83rem;
+      color: var(--txt-2);
+      line-height: 1.5;
+    }
 
     /* access bento card */
-    .access-list { display: flex; flex-direction: column; gap: 10px; margin-top: 16px; }
+    .access-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: 16px;
+    }
+
     .access-item {
-      display: flex; align-items: center; gap: 14px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
       padding: 12px 16px;
       background: var(--bg2);
       border: 1px solid var(--border);
       border-radius: 10px;
       font-size: .87rem;
     }
+
     .gate-dot {
-      width: 8px; height: 8px; border-radius: 50%;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
       flex-shrink: 0;
     }
-    .gate-dot.main { background: var(--lime); }
-    .gate-dot.pier { background: #60a5fa; }
+
+    .gate-dot.main {
+      background: var(--lime);
+    }
+
+    .gate-dot.pier {
+      background: #60a5fa;
+    }
 
     /* ═══ GUIDE SECTION ═══════════════════════════════════════ */
     #guide {
       padding: 140px 0;
       background: var(--bg);
     }
+
     .guide-layout {
       display: grid;
       grid-template-columns: 200px 1fr;
       gap: 0 48px;
       margin-top: 72px;
     }
-    @media(max-width:768px) { .guide-layout { grid-template-columns: 1fr; } }
+
+    @media(max-width:768px) {
+      .guide-layout {
+        grid-template-columns: 1fr;
+      }
+    }
 
     /* Vertical tab bar */
     .vtab-bar {
-      display: flex; flex-direction: column; gap: 4px;
-      position: sticky; top: 90px; align-self: start;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      position: sticky;
+      top: 90px;
+      align-self: start;
     }
+
     @media(max-width:768px) {
-      .vtab-bar { flex-direction: row; flex-wrap: wrap; position: static; margin-bottom: 32px; }
+      .vtab-bar {
+        flex-direction: row;
+        flex-wrap: wrap;
+        position: static;
+        margin-bottom: 32px;
+      }
     }
+
     .vtab {
-      padding: 10px 16px; border-radius: 8px;
-      background: none; border: none;
-      color: var(--txt-3); font-size: .87rem; font-weight: 500;
-      cursor: none; text-align: left;
+      padding: 10px 16px;
+      border-radius: 8px;
+      background: none;
+      border: none;
+      color: var(--txt-3);
+      font-size: .87rem;
+      font-weight: 500;
+      cursor: none;
+      text-align: left;
       transition: all .25s var(--ease);
       font-family: 'Pretendard Variable', sans-serif;
-      display: flex; align-items: center; gap: 8px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
     }
-    .vtab:hover { color: var(--txt-2); background: var(--bg2); }
-    .vtab.av { color: var(--lime); background: rgba(245,158,11,.07); }
-    .vtab.am { color: #fbbf24; background: rgba(251,191,36,.06); }
-    .vtab.as { color: #f87171; background: rgba(248,113,113,.06); }
-    .vtab.aa { color: #a855f7; background: rgba(168,85,247,.06); }
+
+    .vtab:hover {
+      color: var(--txt-2);
+      background: var(--bg2);
+    }
+
+    .vtab.av {
+      color: var(--lime);
+      background: rgba(245, 158, 11, .07);
+    }
+
+    .vtab.am {
+      color: #fbbf24;
+      background: rgba(251, 191, 36, .06);
+    }
+
+    .vtab.as {
+      color: #f87171;
+      background: rgba(248, 113, 113, .06);
+    }
+
+    .vtab.aa {
+      color: #a855f7;
+      background: rgba(168, 85, 247, .06);
+    }
+
     .vtab-line {
-      width: 2px; height: 0; background: var(--lime);
-      margin-left: 4px; flex-shrink: 0;
+      width: 2px;
+      height: 0;
+      background: var(--lime);
+      margin-left: 4px;
+      flex-shrink: 0;
       transition: height .3s var(--ease);
     }
-    .vtab.av .vtab-line { height: 14px; }
+
+    .vtab.av .vtab-line {
+      height: 14px;
+    }
 
     /* Guide panels */
-    .gpanel { display: none; animation: gfadeIn .3s var(--ease); }
-    .gpanel.active { display: block; }
-    @keyframes gfadeIn { from { opacity:0; transform:translateX(8px); } to { opacity:1; transform:none; } }
+    .gpanel {
+      display: none;
+      animation: gfadeIn .3s var(--ease);
+    }
 
-    .steps-list { display: flex; flex-direction: column; gap: 12px; }
+    .gpanel.active {
+      display: block;
+    }
+
+    @keyframes gfadeIn {
+      from {
+        opacity: 0;
+        transform: translateX(8px);
+      }
+
+      to {
+        opacity: 1;
+        transform: none;
+      }
+    }
+
+    .steps-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
     .gstep {
       background: var(--bg2);
       border: 1px solid var(--border);
       border-radius: var(--r);
       padding: 24px 28px;
-      display: flex; gap: 18px;
+      display: flex;
+      gap: 18px;
       transition: border-color .3s var(--ease), transform .3s var(--ease);
     }
-    .gstep:hover { border-color: var(--border-hi); transform: translateX(4px); }
+
+    .gstep:hover {
+      border-color: var(--border-hi);
+      transform: translateX(4px);
+    }
+
     .gstep-num {
       flex-shrink: 0;
       font-family: 'Outfit', sans-serif;
-      font-size: .72rem; font-weight: 700;
-      width: 28px; height: 28px; border-radius: 6px;
-      display: flex; align-items: center; justify-content: center;
+      font-size: .72rem;
+      font-weight: 700;
+      width: 28px;
+      height: 28px;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
-    .gn-v { background: rgba(245,158,11,.12); color: var(--lime); }
-    .gn-m { background: rgba(251,191,36,.1); color: #fbbf24; }
-    .gn-s { background: rgba(248,113,113,.1); color: #f87171; }
-    .gn-a { background: rgba(168,85,247,.1); color: #a855f7; }
-    .gstep-body h4 { font-weight: 700; font-size: .95rem; margin-bottom: 8px; letter-spacing: -.01em; }
-    .gstep-body p { font-size: .85rem; color: var(--txt-2); line-height: 1.72; }
-    .gstep-body a { color: var(--lime); text-decoration: underline; text-decoration-color: rgba(187,244,81,.3); }
+
+    .gn-v {
+      background: rgba(245, 158, 11, .12);
+      color: var(--lime);
+    }
+
+    .gn-m {
+      background: rgba(251, 191, 36, .1);
+      color: #fbbf24;
+    }
+
+    .gn-s {
+      background: rgba(248, 113, 113, .1);
+      color: #f87171;
+    }
+
+    .gn-a {
+      background: rgba(168, 85, 247, .1);
+      color: #a855f7;
+    }
+
+    .gstep-body h4 {
+      font-weight: 700;
+      font-size: .95rem;
+      margin-bottom: 8px;
+      letter-spacing: -.01em;
+    }
+
+    .gstep-body p {
+      font-size: .85rem;
+      color: var(--txt-2);
+      line-height: 1.72;
+    }
+
+    .gstep-body a {
+      color: var(--lime);
+      text-decoration: underline;
+      text-decoration-color: rgba(187, 244, 81, .3);
+    }
+
     .gtip {
       margin-top: 10px;
       padding: 10px 14px;
       border-radius: 8px;
-      font-size: .81rem; line-height: 1.65;
+      font-size: .81rem;
+      line-height: 1.65;
       color: var(--txt-2);
     }
-    .gt-v { background: rgba(245,158,11,.05); border-left: 2px solid var(--lime); }
-    .gt-m { background: rgba(251,191,36,.05); border-left: 2px solid #fbbf24; }
-    .gt-s { background: rgba(248,113,113,.05); border-left: 2px solid #f87171; }
-    .gt-a { background: rgba(168,85,247,.05); border-left: 2px solid #a855f7; }
-    .result-pair { display: flex; gap: 12px; margin-top: 12px; flex-wrap: wrap; }
-    .res-ok, .res-ng {
-      flex: 1; min-width: 180px;
-      padding: 14px 16px; border-radius: 10px;
-      font-size: .83rem; line-height: 1.6;
+
+    .gt-v {
+      background: rgba(245, 158, 11, .05);
+      border-left: 2px solid var(--lime);
     }
-    .res-ok { background: rgba(74,222,128,.07); border: 1px solid rgba(74,222,128,.2); }
-    .res-ng { background: rgba(248,113,113,.07); border: 1px solid rgba(248,113,113,.2); }
-    .res-ok strong { color: #4ade80; display: block; margin-bottom: 4px; }
-    .res-ng strong { color: #f87171; display: block; margin-bottom: 4px; }
+
+    .gt-m {
+      background: rgba(251, 191, 36, .05);
+      border-left: 2px solid #fbbf24;
+    }
+
+    .gt-s {
+      background: rgba(248, 113, 113, .05);
+      border-left: 2px solid #f87171;
+    }
+
+    .gt-a {
+      background: rgba(168, 85, 247, .05);
+      border-left: 2px solid #a855f7;
+    }
+
+    .result-pair {
+      display: flex;
+      gap: 12px;
+      margin-top: 12px;
+      flex-wrap: wrap;
+    }
+
+    .res-ok,
+    .res-ng {
+      flex: 1;
+      min-width: 180px;
+      padding: 14px 16px;
+      border-radius: 10px;
+      font-size: .83rem;
+      line-height: 1.6;
+    }
+
+    .res-ok {
+      background: rgba(74, 222, 128, .07);
+      border: 1px solid rgba(74, 222, 128, .2);
+    }
+
+    .res-ng {
+      background: rgba(248, 113, 113, .07);
+      border: 1px solid rgba(248, 113, 113, .2);
+    }
+
+    .res-ok strong {
+      color: #4ade80;
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    .res-ng strong {
+      color: #f87171;
+      display: block;
+      margin-bottom: 4px;
+    }
 
     /* ═══ FEATURES — TRUE BENTO ═══════════════════════════════ */
     #features {
       padding: 140px 0;
       background: var(--bg2);
     }
+
     .feat-bento {
       display: grid;
       grid-template-columns: repeat(12, 1fr);
       gap: 14px;
       margin-top: 56px;
     }
+
     .fb {
       background: var(--bg);
       border: 1px solid var(--border);
@@ -496,31 +1028,84 @@
       padding: 32px 28px;
       transition: border-color .35s var(--ease), transform .35s var(--ease);
     }
-    .fb:hover { border-color: var(--border-hi); transform: translateY(-3px); }
-    .fb1 { grid-column: span 7; }
-    .fb2 { grid-column: span 5; }
-    .fb3 { grid-column: span 4; }
-    .fb4 { grid-column: span 4; }
-    .fb5 { grid-column: span 4; }
-    @media(max-width:900px) {
-      .fb1,.fb2,.fb3,.fb4,.fb5 { grid-column: span 12; }
+
+    .fb:hover {
+      border-color: var(--border-hi);
+      transform: translateY(-3px);
     }
+
+    .fb1 {
+      grid-column: span 7;
+    }
+
+    .fb2 {
+      grid-column: span 5;
+    }
+
+    .fb3 {
+      grid-column: span 4;
+    }
+
+    .fb4 {
+      grid-column: span 4;
+    }
+
+    .fb5 {
+      grid-column: span 4;
+    }
+
+    @media(max-width:900px) {
+
+      .fb1,
+      .fb2,
+      .fb3,
+      .fb4,
+      .fb5 {
+        grid-column: span 12;
+      }
+    }
+
     .fb-icon {
-      font-size: 1.6rem; margin-bottom: 18px;
-      width: 48px; height: 48px;
-      display: flex; align-items: center; justify-content: center;
-      background: var(--bg2); border-radius: 10px;
+      font-size: 1.6rem;
+      margin-bottom: 18px;
+      width: 48px;
+      height: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--bg2);
+      border-radius: 10px;
       border: 1px solid var(--border);
     }
-    .fb h3 { font-weight: 700; font-size: 1.05rem; margin-bottom: 10px; letter-spacing: -.015em; }
-    .fb p { font-size: .85rem; color: var(--txt-2); line-height: 1.72; }
-    .fb-big { font-family: 'Outfit', sans-serif; font-size: 4rem; font-weight: 900; color: var(--lime); line-height: 1; margin: 12px 0 6px; }
+
+    .fb h3 {
+      font-weight: 700;
+      font-size: 1.05rem;
+      margin-bottom: 10px;
+      letter-spacing: -.015em;
+    }
+
+    .fb p {
+      font-size: .85rem;
+      color: var(--txt-2);
+      line-height: 1.72;
+    }
+
+    .fb-big {
+      font-family: 'Outfit', sans-serif;
+      font-size: 4rem;
+      font-weight: 900;
+      color: var(--lime);
+      line-height: 1;
+      margin: 12px 0 6px;
+    }
 
     /* ═══ FAQ — INLINE EXPAND ═════════════════════════════════ */
     #faq {
       padding: 140px 0;
       background: var(--bg);
     }
+
     .faq-layout {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -528,75 +1113,165 @@
       margin-top: 64px;
       align-items: start;
     }
-    @media(max-width:768px) { .faq-layout { grid-template-columns: 1fr; } }
-    .faq-sticky { position: sticky; top: 90px; }
-    .faq-list { display: flex; flex-direction: column; gap: 2px; }
+
+    @media(max-width:768px) {
+      .faq-layout {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .faq-sticky {
+      position: sticky;
+      top: 90px;
+    }
+
+    .faq-list {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
     .faq-item {
       border-bottom: 1px solid var(--border);
     }
+
     .faq-q {
-      width: 100%; padding: 18px 4px;
-      display: flex; justify-content: space-between; align-items: start; gap: 16px;
-      background: none; border: none; color: var(--txt);
+      width: 100%;
+      padding: 18px 4px;
+      display: flex;
+      justify-content: space-between;
+      align-items: start;
+      gap: 16px;
+      background: none;
+      border: none;
+      color: var(--txt);
       font-family: 'Pretendard Variable', sans-serif;
-      font-size: .93rem; font-weight: 600;
-      cursor: none; text-align: left;
+      font-size: .93rem;
+      font-weight: 600;
+      cursor: none;
+      text-align: left;
       transition: color .2s;
     }
-    .faq-q:hover { color: var(--lime); }
-    .faq-item.open .faq-q { color: var(--lime); }
-    .faq-icon { flex-shrink: 0; font-size: 1.1rem; margin-top: 1px; transition: transform .3s var(--ease); }
-    .faq-item.open .faq-icon { transform: rotate(45deg); }
+
+    .faq-q:hover {
+      color: var(--lime);
+    }
+
+    .faq-item.open .faq-q {
+      color: var(--lime);
+    }
+
+    .faq-icon {
+      flex-shrink: 0;
+      font-size: 1.1rem;
+      margin-top: 1px;
+      transition: transform .3s var(--ease);
+    }
+
+    .faq-item.open .faq-icon {
+      transform: rotate(45deg);
+    }
+
     .faq-a {
-      max-height: 0; overflow: hidden;
-      font-size: .87rem; color: var(--txt-2); line-height: 1.78;
+      max-height: 0;
+      overflow: hidden;
+      font-size: .87rem;
+      color: var(--txt-2);
+      line-height: 1.78;
       padding: 0 4px;
       transition: max-height .4s var(--ease), padding .4s var(--ease);
     }
-    .faq-item.open .faq-a { max-height: 400px; padding: 0 4px 18px; }
+
+    .faq-item.open .faq-a {
+      max-height: 400px;
+      padding: 0 4px 18px;
+    }
 
     /* ═══ CTA — FULL BLEED ════════════════════════════════════ */
     #cta {
-      position: relative; overflow: hidden;
+      position: relative;
+      overflow: hidden;
       padding: 160px clamp(20px, 6vw, 100px);
       background: var(--bg2);
       border-top: 1px solid var(--border);
       text-align: center;
     }
+
     #cta::before {
       content: '';
-      position: absolute; inset: 0;
+      position: absolute;
+      inset: 0;
       background:
-        radial-gradient(ellipse 60% 60% at 50% 50%, rgba(245,158,11,.06) 0%, transparent 70%);
+        radial-gradient(ellipse 60% 60% at 50% 50%, rgba(245, 158, 11, .06) 0%, transparent 70%);
     }
+
     #cta .lime-ring {
       position: absolute;
-      width: 600px; height: 600px;
+      width: 600px;
+      height: 600px;
       border-radius: 50%;
-      border: 1px solid rgba(245,158,11,.06);
-      left: 50%; top: 50%;
-      transform: translate(-50%,-50%);
+      border: 1px solid rgba(245, 158, 11, .06);
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
     }
-    #cta .lime-ring:nth-child(2) { width: 900px; height: 900px; border-color: rgba(245,158,11,.03); }
-    .cta-content { position: relative; z-index: 1; }
+
+    #cta .lime-ring:nth-child(2) {
+      width: 900px;
+      height: 900px;
+      border-color: rgba(245, 158, 11, .03);
+    }
+
+    .cta-content {
+      position: relative;
+      z-index: 1;
+    }
+
     .cta-eyebrow {
       display: inline-block;
-      background: rgba(245,158,11,.08);
-      border: 1px solid rgba(245,158,11,.2);
-      color: var(--lime); border-radius: 999px;
-      padding: 5px 16px; font-size: .75rem; font-weight: 600;
-      letter-spacing: .06em; margin-bottom: 28px;
+      background: rgba(245, 158, 11, .08);
+      border: 1px solid rgba(245, 158, 11, .2);
+      color: var(--lime);
+      border-radius: 999px;
+      padding: 5px 16px;
+      font-size: .75rem;
+      font-weight: 600;
+      letter-spacing: .06em;
+      margin-bottom: 28px;
     }
+
     .cta-title {
       font-weight: 900;
       font-size: clamp(2rem, 4.5vw, 3.8rem);
-      letter-spacing: -.03em; line-height: 1.12;
-      margin-bottom: 18px; text-wrap: balance;
+      letter-spacing: -.03em;
+      line-height: 1.12;
+      margin-bottom: 18px;
+      text-wrap: balance;
     }
-    .cta-sub { font-size: 1.02rem; color: var(--txt-2); margin-bottom: 48px; line-height: 1.7; }
-    .cta-btns { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
-    .cta-btns .btn-lime { padding: 16px 40px; font-size: 1rem; }
-    .cta-btns .btn-outline { padding: 16px 32px; font-size: 1rem; }
+
+    .cta-sub {
+      font-size: 1.02rem;
+      color: var(--txt-2);
+      margin-bottom: 48px;
+      line-height: 1.7;
+    }
+
+    .cta-btns {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .cta-btns .btn-lime {
+      padding: 16px 40px;
+      font-size: 1rem;
+    }
+
+    .cta-btns .btn-outline {
+      padding: 16px 32px;
+      font-size: 1rem;
+    }
 
     /* ═══ FOOTER ══════════════════════════════════════════════ */
     footer {
@@ -604,14 +1279,22 @@
       border-top: 1px solid var(--border);
       padding: 48px clamp(20px, 5vw, 80px) 32px;
     }
+
     .footer-top {
-      display: flex; justify-content: space-between;
-      align-items: flex-start; flex-wrap: wrap; gap: 32px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      flex-wrap: wrap;
+      gap: 32px;
       margin-bottom: 40px;
     }
+
     .footer-brand {
-      display: flex; flex-direction: column; gap: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
     }
+
     .footer-brand img {
       height: auto;
       max-height: 40px;
@@ -621,827 +1304,917 @@
       object-position: left center;
       display: block;
     }
-    .footer-brand p { font-family: 'Pretendard Variable', sans-serif; font-size: .8rem; color: var(--txt-3); margin-top: 8px; font-weight: 400; max-width: 240px; line-height: 1.6; }
-    .footer-contacts { display: flex; gap: 48px; flex-wrap: wrap; }
-    .fc-item strong { display: block; font-size: .8rem; color: var(--txt); margin-bottom: 4px; }
-    .fc-item a, .fc-item span { font-size: .8rem; color: var(--txt-3); }
-    .fc-item a:hover { color: var(--lime); }
+
+    .footer-brand p {
+      font-family: 'Pretendard Variable', sans-serif;
+      font-size: .8rem;
+      color: var(--txt-3);
+      margin-top: 8px;
+      font-weight: 400;
+      max-width: 240px;
+      line-height: 1.6;
+    }
+
+    .footer-contacts {
+      display: flex;
+      gap: 48px;
+      flex-wrap: wrap;
+    }
+
+    .fc-item strong {
+      display: block;
+      font-size: .8rem;
+      color: var(--txt);
+      margin-bottom: 4px;
+    }
+
+    .fc-item a,
+    .fc-item span {
+      font-size: .8rem;
+      color: var(--txt-3);
+    }
+
+    .fc-item a:hover {
+      color: var(--lime);
+    }
+
     .footer-btm {
       border-top: 1px solid var(--border);
       padding-top: 24px;
-      font-size: .76rem; color: var(--txt-3);
-      display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;
+      font-size: .76rem;
+      color: var(--txt-3);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
     }
-    .footer-links { display: flex; gap: 20px; }
-    .footer-links a { color: var(--txt-3); transition: color .2s; }
-    .footer-links a:hover { color: var(--lime); }
+
+    .footer-links {
+      display: flex;
+      gap: 20px;
+    }
+
+    .footer-links a {
+      color: var(--txt-3);
+      transition: color .2s;
+    }
+
+    .footer-links a:hover {
+      color: var(--lime);
+    }
   </style>
 </head>
+
 <body>
 
-<!-- ════════════════════════════════════
+  <!-- ════════════════════════════════════
      NAV
 ════════════════════════════════════ -->
-<nav id="main-nav">
-  <div class="nav-brand">
-    <img src="/manual/logo-transparent.png" alt="보령LNG터미널" class="nav-logo-img" />
-  </div>
-  <div class="nav-menu">
-    <a href="#flow">이용 흐름</a>
-    <a href="#roles">역할 안내</a>
-    <a href="#guide">사용 가이드</a>
-    <a href="#features">주요 기능</a>
-    <a href="#faq">Q&amp;A</a>
-  </div>
-</nav>
+  <nav id="main-nav">
+    <div class="nav-brand">
+      <img src="/manual/logo-transparent.png" alt="보령LNG터미널" class="nav-logo-img" />
+    </div>
+    <div class="nav-menu">
+      <a href="#flow">이용 흐름</a>
+      <a href="#roles">역할 안내</a>
+      <a href="#guide">사용 가이드</a>
+      <a href="#features">주요 기능</a>
+      <a href="#faq">Q&amp;A</a>
+    </div>
+  </nav>
 
-<!-- ════════════════════════════════════
+  <!-- ════════════════════════════════════
      HERO (scroll-driven frame animation)
 ════════════════════════════════════ -->
-<section id="hero">
-  <div class="hero-sticky">
+  <section id="hero">
+    <div class="hero-sticky">
 
-    <!-- Video fallback (plays until canvas is ready) -->
-    <video id="hero-video" src="/manual/hero.mp4" autoplay muted loop playsinline></video>
+      <!-- Video fallback (plays until canvas is ready) -->
+      <video id="hero-video" src="/manual/hero.mp4" autoplay muted loop playsinline></video>
 
-    <!-- Canvas: scroll-driven frame playback -->
-    <canvas id="hero-canvas"></canvas>
+      <!-- Canvas: scroll-driven frame playback -->
+      <canvas id="hero-canvas"></canvas>
 
-    <!-- Gradient overlay -->
-    <div class="hero-overlay"></div>
+      <!-- Gradient overlay -->
+      <div class="hero-overlay"></div>
 
-    <!-- Text content -->
-    <div class="hero-content">
-      <div class="hero-badge">
-        <span class="badge-pulse"></span>
-        보령LNG터미널 방문자 출입 관리 시스템
+      <!-- Text content -->
+      <div class="hero-content">
+        <div class="hero-badge">
+          <span class="badge-pulse"></span>
+          보령LNG터미널 방문자 출입 관리 시스템
+        </div>
+        <h1 class="hero-title">
+          방문 신청부터<br>
+          현장 입장까지,<br>
+          <span class="lime">QR 하나면 됩니다</span>
+        </h1>
+        <p class="hero-subtitle">
+          복잡한 서류 없이 온라인으로 신청하세요.<br>
+          승인되면 SMS로 QR 출입증이 도착합니다.
+        </p>
+        <div class="hero-actions">
+          <a href="https://v0-lng-tml.vercel.app" target="_blank" class="btn-lime">방문 신청하기</a>
+          <a href="#guide" class="btn-outline">사용 가이드 보기</a>
+        </div>
       </div>
-      <h1 class="hero-title">
-        방문 신청부터<br>
-        현장 입장까지,<br>
-        <span class="lime">QR 하나면 됩니다</span>
-      </h1>
-      <p class="hero-subtitle">
-        복잡한 서류 없이 온라인으로 신청하세요.<br>
-        승인되면 SMS로 QR 출입증이 도착합니다.
-      </p>
-      <div class="hero-actions">
-        <a href="https://v0-lng-tml.vercel.app" target="_blank" class="btn-lime">방문 신청하기</a>
-        <a href="#guide" class="btn-outline">사용 가이드 보기</a>
+
+      <!-- Progress bar while loading -->
+      <div class="hero-loader">
+        <div class="hero-loader-fill" id="loader-fill"></div>
+      </div>
+
+      <!-- Scroll hint -->
+      <div class="scroll-hint">
+        <span>SCROLL</span>
+        <div class="scroll-line"></div>
       </div>
     </div>
+  </section>
 
-    <!-- Progress bar while loading -->
-    <div class="hero-loader">
-      <div class="hero-loader-fill" id="loader-fill"></div>
-    </div>
-
-    <!-- Scroll hint -->
-    <div class="scroll-hint">
-      <span>SCROLL</span>
-      <div class="scroll-line"></div>
-    </div>
-  </div>
-</section>
-
-<!-- ════════════════════════════════════
+  <!-- ════════════════════════════════════
      FLOW
 ════════════════════════════════════ -->
-<section id="flow">
-  <div class="container">
-    <div class="flow-inner">
-      <div class="flow-text">
-        <p class="section-kicker reveal">이용 흐름</p>
-        <h2 class="section-h reveal d1">신청하면<br>나머지는<br>자동입니다</h2>
-        <p class="section-sub reveal d2">
-          담당자가 확인하고 보안팀이 승인하면, 방문자에게 QR 출입증이 문자로 자동 발송됩니다.
-          입장도, 퇴장도 QR 한 번이면 끝납니다.
-        </p>
-      </div>
-      <div class="flow-steps">
-        <div class="flow-step reveal d1">
-          <div class="step-line"></div>
-          <div class="step-num-wrap"><span>01</span></div>
-          <div class="step-body">
-            <h4>방문 신청</h4>
-            <p>방문자가 홈페이지에서 방문 정보, 동행인, 반입 기기 등을 입력하고 신청합니다.</p>
-          </div>
+  <section id="flow">
+    <div class="container">
+      <div class="flow-inner">
+        <div class="flow-text">
+          <p class="section-kicker reveal">이용 흐름</p>
+          <h2 class="section-h reveal d1">신청하면<br>나머지는<br>자동입니다</h2>
+          <p class="section-sub reveal d2">
+            담당자가 확인하고 보안팀이 승인하면, 방문자에게 QR 출입증이 문자로 자동 발송됩니다.
+            입장도, 퇴장도 QR 한 번이면 끝납니다.
+          </p>
         </div>
-        <div class="flow-step reveal d2">
-          <div class="step-line"></div>
-          <div class="step-num-wrap"><span>02</span></div>
-          <div class="step-body">
-            <h4>담당자 SMS 수신 및 검토</h4>
-            <p>신청 접수 즉시 담당자에게 SMS 알림이 발송됩니다. 담당자가 신청서를 검토합니다.</p>
+        <div class="flow-steps">
+          <div class="flow-step reveal d1">
+            <div class="step-line"></div>
+            <div class="step-num-wrap"><span>01</span></div>
+            <div class="step-body">
+              <h4>방문 신청</h4>
+              <p>방문자가 홈페이지에서 방문 정보, 동행인, 반입 기기 등을 입력하고 신청합니다.</p>
+            </div>
           </div>
-        </div>
-        <div class="flow-step reveal d3">
-          <div class="step-line"></div>
-          <div class="step-num-wrap"><span>03</span></div>
-          <div class="step-body">
-            <h4>보안담당자 최종 승인</h4>
-            <p>담당자 확인 후 보안담당자가 최종 승인합니다. 방문자에게 QR 출입증 링크가 자동 발송됩니다.</p>
+          <div class="flow-step reveal d2">
+            <div class="step-line"></div>
+            <div class="step-num-wrap"><span>02</span></div>
+            <div class="step-body">
+              <h4>담당자 SMS 수신 및 검토</h4>
+              <p>신청 접수 즉시 담당자에게 SMS 알림이 발송됩니다. 담당자가 신청서를 검토합니다.</p>
+            </div>
           </div>
-        </div>
-        <div class="flow-step reveal d4">
-          <div class="step-num-wrap"><span>04</span></div>
-          <div class="step-body">
-            <h4>QR 스캔으로 현장 출입</h4>
-            <p>경비 초소에서 QR코드를 스캔합니다. 녹색 화면이 나오면 입장 가능입니다.</p>
+          <div class="flow-step reveal d3">
+            <div class="step-line"></div>
+            <div class="step-num-wrap"><span>03</span></div>
+            <div class="step-body">
+              <h4>보안담당자 최종 승인</h4>
+              <p>담당자 확인 후 보안담당자가 최종 승인합니다. 방문자에게 QR 출입증 링크가 자동 발송됩니다.</p>
+            </div>
+          </div>
+          <div class="flow-step reveal d4">
+            <div class="step-num-wrap"><span>04</span></div>
+            <div class="step-body">
+              <h4>QR 스캔으로 현장 출입</h4>
+              <p>경비 초소에서 QR코드를 스캔합니다. 녹색 화면이 나오면 입장 가능입니다.</p>
+            </div>
           </div>
         </div>
       </div>
     </div>
-  </div>
-</section>
+  </section>
 
-<!-- ════════════════════════════════════
+  <!-- ════════════════════════════════════
      ROLES — BENTO GRID
 ════════════════════════════════════ -->
-<section id="roles">
-  <div class="container">
-    <div class="roles-head reveal">
-      <p class="section-kicker">역할별 안내</p>
-      <h2 class="section-h">당신은 어떤 역할인가요?</h2>
-      <p class="section-sub">역할마다 사용하는 기능이 다릅니다. 아래에서 선택하세요.</p>
-    </div>
-    <div class="bento">
-      <!-- Visitor card — wide -->
-      <div class="bento-card bc-visitor reveal d1">
-        <div class="role-icon">🙋</div>
-        <div class="role-pill pill-v">VISITOR</div>
-        <h3 class="bento-title">방문자</h3>
-        <p class="bento-desc">
-          보령LNG터미널을 방문하시는 분들을 위한 안내입니다.
-          온라인으로 신청하고, SMS로 QR 출입증을 받아 현장에서 사용합니다.
-        </p>
-        <a href="#guide" onclick="switchGuide('v')" class="bento-link bl-v">방문자 가이드 →</a>
+  <section id="roles">
+    <div class="container">
+      <div class="roles-head reveal">
+        <p class="section-kicker">역할별 안내</p>
+        <h2 class="section-h">당신은 어떤 역할인가요?</h2>
+        <p class="section-sub">역할마다 사용하는 기능이 다릅니다. 아래에서 선택하세요.</p>
       </div>
-      <!-- Manager card -->
-      <div class="bento-card bc-manager reveal d2">
-        <div class="role-icon">💼</div>
-        <div class="role-pill pill-m">MANAGER</div>
-        <h3 class="bento-title">담당자</h3>
-        <p class="bento-desc">
-          방문 신청서를 검토·확인하는 역할입니다.
-          체크박스 하나로 담당자 처리가 완료됩니다.
-        </p>
-        <a href="#guide" onclick="switchGuide('m')" class="bento-link bl-m">담당자 가이드 →</a>
-      </div>
-      <!-- Security card -->
-      <div class="bento-card bc-security reveal d3">
-        <div class="role-icon">🛡️</div>
-        <div class="role-pill pill-s">SECURITY</div>
-        <h3 class="bento-title">특수경비대</h3>
-        <p class="bento-desc">
-          QR 스캐너로 출입을 관리합니다. 공휴일·근무시간 외에는 슈퍼어드민을 대신하여 승인·반려도 수행합니다.
-        </p>
-        <a href="#guide" onclick="switchGuide('s')" class="bento-link bl-s">경비대 가이드 →</a>
-      </div>
-      <!-- Super Admin card -->
-      <div class="bento-card bc-admin reveal d4">
-        <div class="role-icon">👑</div>
-        <div class="role-pill pill-a">SUPER ADMIN</div>
-        <h3 class="bento-title">슈퍼어드민</h3>
-        <p class="bento-desc">
-          시스템 전체를 관리합니다. 방문 신청 승인·반려, 계정 관리, 역할 권한 설정, 보안 연락처 관리 등 모든 권한을 가집니다.
-        </p>
-        <a href="#guide" onclick="switchGuide('a')" class="bento-link bl-a">슈퍼어드민 가이드 →</a>
-      </div>
-      <!-- Stat cards -->
-      <div class="bento-card bc-stat1 reveal d1">
-        <div class="stat-big">3</div>
-        <div class="stat-label">출입 게이트<br>정문 · 1부두 · 2부두</div>
-      </div>
-      <div class="bento-card bc-stat2 reveal d2">
-        <div class="stat-big">QR</div>
-        <div class="stat-label">스마트 출입증<br>동행인 개별 발급 지원</div>
-      </div>
-      <!-- Access gates card -->
-      <div class="bento-card bc-access reveal d3">
-        <p class="section-kicker" style="margin-bottom:8px;">출입 게이트 현황</p>
-        <div class="access-list">
-          <div class="access-item">
-            <div class="gate-dot main"></div>
-            <div>
-              <strong style="font-size:.87rem;">정문 (Main Gate)</strong>
-              <span style="font-size:.8rem;color:var(--txt-2);">터미널 정문 출입구 — QR 스캔 또는 휴대전화번호 인증</span>
+      <div class="bento">
+        <!-- Visitor card — wide -->
+        <div class="bento-card bc-visitor reveal d1">
+          <div class="role-icon">🙋</div>
+          <div class="role-pill pill-v">VISITOR</div>
+          <h3 class="bento-title">방문자</h3>
+          <p class="bento-desc">
+            보령LNG터미널을 방문하시는 분들을 위한 안내입니다.
+            온라인으로 신청하고, SMS로 QR 출입증을 받아 현장에서 사용합니다.
+          </p>
+          <a href="#guide" onclick="switchGuide('v')" class="bento-link bl-v">방문자 가이드 →</a>
+        </div>
+        <!-- Manager card -->
+        <div class="bento-card bc-manager reveal d2">
+          <div class="role-icon">💼</div>
+          <div class="role-pill pill-m">MANAGER</div>
+          <h3 class="bento-title">담당자</h3>
+          <p class="bento-desc">
+            방문 신청서를 검토·확인하는 역할입니다.
+            체크박스 하나로 담당자 처리가 완료됩니다.
+          </p>
+          <a href="#guide" onclick="switchGuide('m')" class="bento-link bl-m">담당자 가이드 →</a>
+        </div>
+        <!-- Security card -->
+        <div class="bento-card bc-security reveal d3">
+          <div class="role-icon">🛡️</div>
+          <div class="role-pill pill-s">SECURITY</div>
+          <h3 class="bento-title">특수경비대</h3>
+          <p class="bento-desc">
+            QR 스캐너로 출입을 관리합니다. 공휴일·근무시간 외에는 슈퍼어드민을 대신하여 승인·반려도 수행합니다.
+          </p>
+          <a href="#guide" onclick="switchGuide('s')" class="bento-link bl-s">경비대 가이드 →</a>
+        </div>
+        <!-- Super Admin card -->
+        <div class="bento-card bc-admin reveal d4">
+          <div class="role-icon">👑</div>
+          <div class="role-pill pill-a">SUPER ADMIN</div>
+          <h3 class="bento-title">슈퍼어드민</h3>
+          <p class="bento-desc">
+            시스템 전체를 관리합니다. 방문 신청 승인·반려, 계정 관리, 역할 권한 설정, 보안 연락처 관리 등 모든 권한을 가집니다.
+          </p>
+          <a href="#guide" onclick="switchGuide('a')" class="bento-link bl-a">슈퍼어드민 가이드 →</a>
+        </div>
+        <!-- Stat cards -->
+        <div class="bento-card bc-stat1 reveal d1">
+          <div class="stat-big">3</div>
+          <div class="stat-label">출입 게이트<br>정문 · 1부두 · 2부두</div>
+        </div>
+        <div class="bento-card bc-stat2 reveal d2">
+          <div class="stat-big">QR</div>
+          <div class="stat-label">스마트 출입증<br>동행인 개별 발급 지원</div>
+        </div>
+        <!-- Access gates card -->
+        <div class="bento-card bc-access reveal d3">
+          <p class="section-kicker" style="margin-bottom:8px;">출입 게이트 현황</p>
+          <div class="access-list">
+            <div class="access-item">
+              <div class="gate-dot main"></div>
+              <div>
+                <strong style="font-size:.87rem;">정문 (Main Gate)</strong>
+                <span style="font-size:.8rem;color:var(--txt-2);">터미널 정문 출입구 — QR 스캔 또는 휴대전화번호 인증</span>
+              </div>
             </div>
-          </div>
-          <div class="access-item">
-            <div class="gate-dot pier"></div>
-            <div>
-              <strong style="font-size:.87rem;">1부두 (Pier 1)</strong>
-              <span style="font-size:.8rem;color:var(--txt-2);">1부두 출입구 — 정문 입장자 대상</span>
+            <div class="access-item">
+              <div class="gate-dot pier"></div>
+              <div>
+                <strong style="font-size:.87rem;">1부두 (Pier 1)</strong>
+                <span style="font-size:.8rem;color:var(--txt-2);">1부두 출입구 — 정문 입장자 대상</span>
+              </div>
             </div>
-          </div>
-          <div class="access-item">
-            <div class="gate-dot pier"></div>
-            <div>
-              <strong style="font-size:.87rem;">2부두 (Pier 2)</strong>
-              <span style="font-size:.8rem;color:var(--txt-2);">2부두 출입구 — 정문 입장자 대상</span>
+            <div class="access-item">
+              <div class="gate-dot pier"></div>
+              <div>
+                <strong style="font-size:.87rem;">2부두 (Pier 2)</strong>
+                <span style="font-size:.8rem;color:var(--txt-2);">2부두 출입구 — 정문 입장자 대상</span>
+              </div>
             </div>
           </div>
         </div>
       </div>
     </div>
-  </div>
-</section>
+  </section>
 
-<!-- ════════════════════════════════════
+  <!-- ════════════════════════════════════
      GUIDE — VERTICAL TABS
 ════════════════════════════════════ -->
-<section id="guide">
-  <div class="container">
-    <p class="section-kicker reveal">단계별 사용 가이드</p>
-    <h2 class="section-h reveal d1">역할을 선택하면<br>해당 가이드가 나옵니다</h2>
+  <section id="guide">
+    <div class="container">
+      <p class="section-kicker reveal">단계별 사용 가이드</p>
+      <h2 class="section-h reveal d1">역할을 선택하면<br>해당 가이드가 나옵니다</h2>
 
-    <div class="guide-layout">
-      <!-- Vertical tab bar -->
-      <div class="vtab-bar">
-        <button class="vtab av" id="gtab-v" onclick="switchGuide('v')">
-          <span>🙋</span> 방문자
-          <div class="vtab-line"></div>
-        </button>
-        <button class="vtab" id="gtab-m" onclick="switchGuide('m')">
-          <span>💼</span> 담당자
-        </button>
-        <button class="vtab" id="gtab-s" onclick="switchGuide('s')">
-          <span>🛡️</span> 특수경비대
-        </button>
-        <button class="vtab" id="gtab-a" onclick="switchGuide('a')">
-          <span>👑</span> 슈퍼어드민
-        </button>
-      </div>
+      <div class="guide-layout">
+        <!-- Vertical tab bar -->
+        <div class="vtab-bar">
+          <button class="vtab av" id="gtab-v" onclick="switchGuide('v')">
+            <span>🙋</span> 방문자
+            <div class="vtab-line"></div>
+          </button>
+          <button class="vtab" id="gtab-m" onclick="switchGuide('m')">
+            <span>💼</span> 담당자
+          </button>
+          <button class="vtab" id="gtab-s" onclick="switchGuide('s')">
+            <span>🛡️</span> 특수경비대
+          </button>
+          <button class="vtab" id="gtab-a" onclick="switchGuide('a')">
+            <span>👑</span> 슈퍼어드민
+          </button>
+        </div>
 
-      <!-- Panels -->
-      <div>
+        <!-- Panels -->
+        <div>
 
-        <!-- VISITOR PANEL -->
-        <div class="gpanel active" id="gp-v">
-          <div class="steps-list">
-            <div class="gstep">
-              <div class="gstep-num gn-v">01</div>
-              <div class="gstep-body">
-                <h4>홈페이지 접속 후 "방문 신청하기" 클릭</h4>
-                <p><a href="https://v0-lng-tml.vercel.app" target="_blank">v0-lng-tml.vercel.app</a>에 접속합니다. 메인 화면에서 <strong>"방문 신청하기"</strong> 버튼을 누릅니다.</p>
-                <div class="gtip gt-v">Chrome, Safari, Edge 최신 버전을 권장합니다. 스마트폰에서도 이용할 수 있습니다.</div>
+          <!-- VISITOR PANEL -->
+          <div class="gpanel active" id="gp-v">
+            <div class="steps-list">
+              <div class="gstep">
+                <div class="gstep-num gn-v">01</div>
+                <div class="gstep-body">
+                  <h4>홈페이지 접속 후 "방문 신청하기" 클릭</h4>
+                  <p><a href="https://v0-lng-tml.vercel.app" target="_blank">v0-lng-tml.vercel.app</a>에 접속합니다. 메인 화면에서
+                    <strong>"방문 신청하기"</strong> 버튼을 누릅니다.</p>
+                  <div class="gtip gt-v">Chrome, Safari, Edge 최신 버전을 권장합니다. 스마트폰에서도 이용할 수 있습니다.</div>
+                </div>
               </div>
-            </div>
-            <div class="gstep">
-              <div class="gstep-num gn-v">02</div>
-              <div class="gstep-body">
-                <h4>서약 동의 (3가지 필수)</h4>
-                <p><strong>개인정보 처리방침</strong>(3년 보관), <strong>보안 서약서</strong>, <strong>안전 준수 서약서</strong>에 모두 동의해야 다음 단계로 진행됩니다.</p>
+              <div class="gstep">
+                <div class="gstep-num gn-v">02</div>
+                <div class="gstep-body">
+                  <h4>서약 동의 (3가지 필수)</h4>
+                  <p><strong>개인정보 처리방침</strong>(3년 보관), <strong>보안 서약서</strong>, <strong>안전 준수 서약서</strong>에 모두 동의해야 다음
+                    단계로 진행됩니다.</p>
+                </div>
               </div>
-            </div>
-            <div class="gstep">
-              <div class="gstep-num gn-v">03</div>
-              <div class="gstep-body">
-                <h4>신청 정보 입력</h4>
-                <p>이름·연락처·생년월일·소속·직위를 입력합니다. 담당자 선택, 방문 목적, 출입 구역, 방문 기간(최대 14일)을 설정합니다.</p>
-                <div class="gtip gt-v">차량 정보, 전자기기(노트북·태블릿 등 모델/시리얼/용도) 신고, 동반 방문자 등록도 가능합니다. 동반자에게도 개별 QR 출입증이 발급됩니다. 항만 구역 접근 시 안전교육 수료증 업로드가 필요합니다.</div>
+              <div class="gstep">
+                <div class="gstep-num gn-v">03</div>
+                <div class="gstep-body">
+                  <h4>신청 정보 입력</h4>
+                  <p>이름·연락처·생년월일·소속·직위를 입력합니다. 담당자 선택, 방문 목적, 출입 구역, 방문 기간(최대 14일)을 설정합니다.</p>
+                  <div class="gtip gt-v">차량 정보, 전자기기(노트북·태블릿 등 모델/시리얼/용도) 신고, 동반 방문자 등록도 가능합니다. 동반자에게도 개별 QR 출입증이 발급됩니다.
+                    항만 구역 접근 시 안전교육 수료증 업로드가 필요합니다.</div>
+                </div>
               </div>
-            </div>
-            <div class="gstep">
-              <div class="gstep-num gn-v">04</div>
-              <div class="gstep-body">
-                <h4>"신청하기" 후 접수번호 저장</h4>
-                <p>신청 완료 후 화면에 <strong>접수번호</strong>가 표시됩니다. 반드시 저장해 두세요 — 상태 확인 및 QR 코드에 사용됩니다.</p>
+              <div class="gstep">
+                <div class="gstep-num gn-v">04</div>
+                <div class="gstep-body">
+                  <h4>"신청하기" 후 접수번호 저장</h4>
+                  <p>신청 완료 후 화면에 <strong>접수번호</strong>가 표시됩니다. 반드시 저장해 두세요 — 상태 확인 및 QR 코드에 사용됩니다.</p>
+                </div>
               </div>
-            </div>
-            <div class="gstep">
-              <div class="gstep-num gn-v">05</div>
-              <div class="gstep-body">
-                <h4>신청 상태 확인</h4>
-                <p>메인 화면 <strong>"신청 현황 조회"</strong>에서 휴대전화번호로 검색하여 모든 신청서 상태를 확인할 수 있습니다.</p>
-                <div class="gtip gt-v">대기중: 수정/취소 가능 | 검토중: 담당자 확인 중 | 승인됨: QR 코드 확인 가능 | 반려됨: 반려 사유 확인 가능</div>
+              <div class="gstep">
+                <div class="gstep-num gn-v">05</div>
+                <div class="gstep-body">
+                  <h4>신청 상태 확인</h4>
+                  <p>메인 화면 <strong>"신청 현황 조회"</strong>에서 휴대전화번호로 검색하여 모든 신청서 상태를 확인할 수 있습니다.</p>
+                  <div class="gtip gt-v">대기중: 수정/취소 가능 | 검토중: 담당자 확인 중 | 승인됨: QR 코드 확인 가능 | 반려됨: 반려 사유 확인 가능</div>
+                </div>
               </div>
-            </div>
-            <div class="gstep">
-              <div class="gstep-num gn-v">06</div>
-              <div class="gstep-body">
-                <h4>승인 시 QR 코드 수신 및 현장 출입</h4>
-                <p>승인 완료 시 <strong>SMS로 QR 코드 링크</strong>가 발송됩니다. SMS 링크로 QR 화면을 열고 경비 초소에 제시합니다. 화면 밝기를 최대로 설정하면 스캔이 더 잘 됩니다.</p>
-                <div class="result-pair">
-                  <div class="res-ok"><strong>✅ 입장 허용</strong>녹색 화면 + 체크 아이콘이 표시되면 입장 가능합니다.</div>
-                  <div class="res-ng"><strong>❌ 입장 거부</strong>빨간 화면이 나오면 사유를 확인하고 담당자에게 문의하세요.</div>
+              <div class="gstep">
+                <div class="gstep-num gn-v">06</div>
+                <div class="gstep-body">
+                  <h4>승인 시 QR 코드 수신 및 현장 출입</h4>
+                  <p>승인 완료 시 <strong>SMS로 QR 코드 링크</strong>가 발송됩니다. SMS 링크로 QR 화면을 열고 경비 초소에 제시합니다. 화면 밝기를 최대로 설정하면 스캔이
+                    더 잘 됩니다.</p>
+                  <div class="result-pair">
+                    <div class="res-ok"><strong>✅ 입장 허용</strong>녹색 화면 + 체크 아이콘이 표시되면 입장 가능합니다.</div>
+                    <div class="res-ng"><strong>❌ 입장 거부</strong>빨간 화면이 나오면 사유를 확인하고 담당자에게 문의하세요.</div>
+                  </div>
+                </div>
+              </div>
+              <div class="gstep">
+                <div class="gstep-num gn-v">07</div>
+                <div class="gstep-body">
+                  <h4>기타 기능</h4>
+                  <p><strong>SHE 가이드라인</strong>: 안전/보건/환경 안내 자료 다운로드 | <strong>오시는 길</strong>: 본사 주소, 카카오맵/네이버맵 연동 |
+                    <strong>건의사항 게시판</strong>: 건의·버그 리포트·문의 작성 가능</p>
                 </div>
               </div>
             </div>
-            <div class="gstep">
-              <div class="gstep-num gn-v">07</div>
-              <div class="gstep-body">
-                <h4>기타 기능</h4>
-                <p><strong>SHE 가이드라인</strong>: 안전/보건/환경 안내 자료 다운로드 | <strong>오시는 길</strong>: 본사 주소, 카카오맵/네이버맵 연동 | <strong>건의사항 게시판</strong>: 건의·버그 리포트·문의 작성 가능</p>
-              </div>
-            </div>
           </div>
-        </div>
 
-        <!-- MANAGER PANEL -->
-        <div class="gpanel" id="gp-m">
-          <div class="steps-list">
-            <div class="gstep">
-              <div class="gstep-num gn-m">01</div>
-              <div class="gstep-body">
-                <h4>관리자 페이지 로그인</h4>
-                <p><a href="https://v0-lng-tml.vercel.app/admin/login" target="_blank">v0-lng-tml.vercel.app/admin/login</a>에 접속합니다. 슈퍼어드민이 생성한 계정으로 로그인합니다.</p>
-                <div class="gtip gt-m">최초 로그인 시 반드시 비밀번호를 변경해야 합니다.</div>
+          <!-- MANAGER PANEL -->
+          <div class="gpanel" id="gp-m">
+            <div class="steps-list">
+              <div class="gstep">
+                <div class="gstep-num gn-m">01</div>
+                <div class="gstep-body">
+                  <h4>관리자 페이지 로그인</h4>
+                  <p><a href="https://v0-lng-tml.vercel.app/admin/login"
+                      target="_blank">v0-lng-tml.vercel.app/admin/login</a>에 접속합니다. 슈퍼어드민이 생성한 계정으로 로그인합니다.</p>
+                  <div class="gtip gt-m">최초 로그인 시 반드시 비밀번호를 변경해야 합니다.</div>
+                </div>
               </div>
-            </div>
-            <div class="gstep">
-              <div class="gstep-num gn-m">02</div>
-              <div class="gstep-body">
-                <h4>대시보드 확인</h4>
-                <p>로그인 후 <strong>대시보드</strong>에서 방문 현황을 한눈에 파악합니다. 전체/대기/승인/반려/취소 건수, 월별 트렌드(6개월), 신청 유형 분포, 상위 8개 방문 기관 순위를 확인할 수 있습니다.</p>
+              <div class="gstep">
+                <div class="gstep-num gn-m">02</div>
+                <div class="gstep-body">
+                  <h4>대시보드 확인</h4>
+                  <p>로그인 후 <strong>대시보드</strong>에서 방문 현황을 한눈에 파악합니다. 전체/대기/승인/반려/취소 건수, 월별 트렌드(6개월), 신청 유형 분포, 상위 8개 방문
+                    기관 순위를 확인할 수 있습니다.</p>
+                </div>
               </div>
-            </div>
-            <div class="gstep">
-              <div class="gstep-num gn-m">03</div>
-              <div class="gstep-body">
-                <h4>신청 관리 — 본인 담당 건 조회</h4>
-                <p><strong>신청 관리</strong> 메뉴에서 자신이 담당자로 지정된 신청만 조회됩니다. 접수번호·담당자명·조직명·방문자명으로 검색하고, 상태·출입 구역·날짜 범위로 필터링할 수 있습니다.</p>
-                <div class="gtip gt-m">매니저는 자신이 담당자(contact_name)로 지정된 신청만 볼 수 있습니다. 전체 조회는 경비대 또는 슈퍼어드민만 가능합니다.</div>
+              <div class="gstep">
+                <div class="gstep-num gn-m">03</div>
+                <div class="gstep-body">
+                  <h4>신청 관리 — 본인 담당 건 조회</h4>
+                  <p><strong>신청 관리</strong> 메뉴에서 자신이 담당자로 지정된 신청만 조회됩니다. 접수번호·담당자명·조직명·방문자명으로 검색하고, 상태·출입 구역·날짜 범위로 필터링할
+                    수 있습니다.</p>
+                  <div class="gtip gt-m">매니저는 자신이 담당자(contact_name)로 지정된 신청만 볼 수 있습니다. 전체 조회는 경비대 또는 슈퍼어드민만 가능합니다.</div>
+                </div>
               </div>
-            </div>
-            <div class="gstep">
-              <div class="gstep-num gn-m">04</div>
-              <div class="gstep-body">
-                <h4>검토 확인 (체크박스)</h4>
-                <p>신청서를 열어 내용 확인 후 <strong>"담당자확인" 체크박스</strong>를 클릭합니다. 이 확인은 "검토 완료" 표시이며, 승인/반려와는 다릅니다. 이후 슈퍼어드민이 최종 승인하면 방문자에게 QR 출입증이 자동 발송됩니다.</p>
-                <div class="gtip gt-m">매니저는 승인 또는 반려 권한이 없습니다. 승인/반려는 슈퍼어드민(또는 공휴일·근무시간 외 특수경비대)만 가능합니다.</div>
+              <div class="gstep">
+                <div class="gstep-num gn-m">04</div>
+                <div class="gstep-body">
+                  <h4>검토 확인 (체크박스)</h4>
+                  <p>신청서를 열어 내용 확인 후 <strong>"담당자확인" 체크박스</strong>를 클릭합니다. 이 확인은 "검토 완료" 표시이며, 승인/반려와는 다릅니다. 이후 슈퍼어드민이
+                    최종 승인하면 방문자에게 QR 출입증이 자동 발송됩니다.</p>
+                  <div class="gtip gt-m">매니저는 승인 또는 반려 권한이 없습니다. 승인/반려는 슈퍼어드민(또는 공휴일·근무시간 외 특수경비대)만 가능합니다.</div>
+                </div>
               </div>
-            </div>
-            <div class="gstep">
-              <div class="gstep-num gn-m">05</div>
-              <div class="gstep-body">
-                <h4>방문 캘린더</h4>
-                <p>월별 캘린더 뷰에서 방문 일정을 확인합니다. 신청 유형별 색상 구분(단체=보라, 항만=청록, 개인=에메랄드), 상태 배지, 이벤트 클릭 시 상세 팝업을 제공합니다.</p>
+              <div class="gstep">
+                <div class="gstep-num gn-m">05</div>
+                <div class="gstep-body">
+                  <h4>방문 캘린더</h4>
+                  <p>월별 캘린더 뷰에서 방문 일정을 확인합니다. 신청 유형별 색상 구분(단체=보라, 항만=청록, 개인=에메랄드), 상태 배지, 이벤트 클릭 시 상세 팝업을 제공합니다.</p>
+                </div>
               </div>
-            </div>
-            <div class="gstep">
-              <div class="gstep-num gn-m">06</div>
-              <div class="gstep-body">
-                <h4>매니저가 할 수 없는 것</h4>
-                <p>신청 승인/반려, 계정 관리, 역할 권한 수정은 불가합니다. QR 출입 현황 조회는 슈퍼어드민이 별도 권한을 부여한 경우에만 가능합니다.</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- SECURITY PANEL -->
-        <div class="gpanel" id="gp-s">
-          <div class="steps-list">
-            <div class="gstep">
-              <div class="gstep-num gn-s">01</div>
-              <div class="gstep-body">
-                <h4>관리자 로그인 및 전체 신청 조회</h4>
-                <p><a href="https://v0-lng-tml.vercel.app/admin/login" target="_blank">v0-lng-tml.vercel.app/admin/login</a>에 접속하여 보안 계정으로 로그인합니다. 대시보드 및 캘린더를 확인하고, <strong>신청 관리</strong>에서 모든 신청서를 조회할 수 있습니다.</p>
-                <div class="gtip gt-s">매니저와 달리 경비대는 담당자 필터 없이 <strong>모든 신청서를 조회</strong>할 수 있습니다.</div>
-              </div>
-            </div>
-            <div class="gstep">
-              <div class="gstep-num gn-s">02</div>
-              <div class="gstep-body">
-                <h4>QR 출입 현황 모니터링</h4>
-                <p><strong>QR 출입 현황</strong> 메뉴에서 탭별 구역(정문/부두1/부두2)을 전환하며 실시간 출입 상황을 모니터링합니다. 대기 방문, 현재 체크인, 체크아웃 완료, 총 승인 수를 요약 카드로 확인합니다.</p>
-                <div class="gtip gt-s">수동 체크인/아웃, 재입장 추적, 카드번호 일괄 등록, 항만 수료증 열람, 날짜/상태 필터, 이름 검색 기능을 활용하세요. 최근 10분 활동은 하이라이팅됩니다.</div>
-              </div>
-            </div>
-            <div class="gstep">
-              <div class="gstep-num gn-s">03</div>
-              <div class="gstep-body">
-                <h4>QR 스캐너로 게이트 출입 처리</h4>
-                <p><a href="https://v0-lng-tml.vercel.app/scanner" target="_blank">v0-lng-tml.vercel.app/scanner</a>에서 인증 방식(QR/전화번호), 방향(입장/퇴장), 게이트(정문/1부두/2부두)를 설정합니다. 카메라로 QR 코드를 스캔하면 즉시 결과가 표시됩니다.</p>
-                <div class="result-pair">
-                  <div class="res-ok"><strong>🟢 입장 허용 (ALLOW)</strong>녹색 화면 + 체크 아이콘. 방문자명·소속·방문 기간 확인 후 입장 안내. 3초 후 자동 복귀.</div>
-                  <div class="res-ng"><strong>🔴 입장 거부 (DENY)</strong>빨간 화면 + X 아이콘. 거부 사유 확인 → 담당자 연락 안내. 노란색(MISMATCH)은 중복 스캔.</div>
+              <div class="gstep">
+                <div class="gstep-num gn-m">06</div>
+                <div class="gstep-body">
+                  <h4>매니저가 할 수 없는 것</h4>
+                  <p>신청 승인/반려, 계정 관리, 역할 권한 수정은 불가합니다. QR 출입 현황 조회는 슈퍼어드민이 별도 권한을 부여한 경우에만 가능합니다.</p>
                 </div>
               </div>
             </div>
-            <div class="gstep">
-              <div class="gstep-num gn-s">04</div>
-              <div class="gstep-body">
-                <h4>부두 출입 관리</h4>
-                <p>부두 출입현황 화면에서 방문자의 <strong>카드번호, 이름, 생년월일</strong>을 확인합니다. 확인 후 해당 카드 우측 상단의 <strong>"체크인"</strong> 또는 <strong>"체크아웃"</strong> 버튼을 클릭하여 출입을 처리합니다.</p>
-                <div class="gtip gt-s"><strong>재입장 처리:</strong> 퇴장 완료된 방문자가 재입장해야 할 경우, 해당 인원의 <strong>체크박스를 선택</strong>한 뒤 <strong>"재입장"</strong> 버튼을 클릭합니다. 새로운 행이 생성되며 체크인 시간이 자동으로 기록됩니다.</div>
+          </div>
+
+          <!-- SECURITY PANEL -->
+          <div class="gpanel" id="gp-s">
+            <div class="steps-list">
+              <div class="gstep">
+                <div class="gstep-num gn-s">01</div>
+                <div class="gstep-body">
+                  <h4>관리자 로그인 및 전체 신청 조회</h4>
+                  <p><a href="https://v0-lng-tml.vercel.app/admin/login"
+                      target="_blank">v0-lng-tml.vercel.app/admin/login</a>에 접속하여 보안 계정으로 로그인합니다. 대시보드 및 캘린더를 확인하고,
+                    <strong>신청 관리</strong>에서 모든 신청서를 조회할 수 있습니다.</p>
+                  <div class="gtip gt-s">매니저와 달리 경비대는 담당자 필터 없이 <strong>모든 신청서를 조회</strong>할 수 있습니다.</div>
+                </div>
               </div>
-            </div>
-            <div class="gstep">
-              <div class="gstep-num gn-s">05</div>
-              <div class="gstep-body">
-                <h4>QR 스캔 안 될 때 대처</h4>
-                <p>카메라가 작동하지 않으면 인증 방식을 <strong>"휴대전화번호"</strong>로 전환하여 처리합니다. 당일 승인된 신청서를 자동으로 조회합니다.</p>
-                <div class="gtip gt-s">QR 분실 시: 방문자 폰에서 신청현황 접속 → 휴대전화번호로 조회 → 접수번호 클릭 → QR 재확인 가능.</div>
+              <div class="gstep">
+                <div class="gstep-num gn-s">02</div>
+                <div class="gstep-body">
+                  <h4>QR 출입 현황 모니터링</h4>
+                  <p><strong>QR 출입 현황</strong> 메뉴에서 탭별 구역(정문/부두1/부두2)을 전환하며 실시간 출입 상황을 모니터링합니다. 대기 방문, 현재 체크인, 체크아웃 완료,
+                    총 승인 수를 요약 카드로 확인합니다.</p>
+                  <div class="gtip gt-s">수동 체크인/아웃, 재입장 추적, 카드번호 일괄 등록, 항만 수료증 열람, 날짜/상태 필터, 이름 검색 기능을 활용하세요. 최근 10분 활동은
+                    하이라이팅됩니다.</div>
+                </div>
               </div>
-            </div>
-            <div class="gstep">
-              <div class="gstep-num gn-s">06</div>
-              <div class="gstep-body">
-                <h4>⚡ 공휴일/근무시간 외 — 신청 승인·반려</h4>
-                <p><strong>공휴일 및 근무시간 외(평일 18:00~익일 09:00, 주말/공휴일 전일)</strong>에는 슈퍼어드민을 대신하여 방문 신청의 승인·반려를 수행할 수 있습니다.</p>
-                <div class="gtip gt-s" style="margin-bottom:12px;">터미널은 24시간 운영되지만 슈퍼어드민이 부재할 수 있는 시간대에 긴급 방문을 처리하기 위한 위임 권한입니다.</div>
-                <p style="font-size:.85rem;color:var(--txt-2);line-height:1.72;margin-top:8px;"><strong style="color:#f87171;">승인 절차:</strong> 신청 관리 → 대기중/검토중 신청서 선택 → 상세 내용 확인 → <strong>"승인" 버튼</strong> 클릭 → QR 패스 자동 생성 + 방문자·동반자·담당자에게 SMS/이메일 자동 발송</p>
-                <p style="font-size:.85rem;color:var(--txt-2);line-height:1.72;margin-top:8px;"><strong style="color:#f87171;">반려 절차:</strong> 해당 신청서 선택 → <strong>"반려" 버튼</strong> 클릭 → <strong>반려 사유 입력(필수)</strong> → 방문자에게 반려 사유 포함 SMS/이메일 자동 발송</p>
+              <div class="gstep">
+                <div class="gstep-num gn-s">03</div>
+                <div class="gstep-body">
+                  <h4>QR 스캐너로 게이트 출입 처리</h4>
+                  <p><a href="https://v0-lng-tml.vercel.app/scanner" target="_blank">v0-lng-tml.vercel.app/scanner</a>에서
+                    인증 방식(QR/전화번호), 방향(입장/퇴장), 게이트(정문/1부두/2부두)를 설정합니다. 카메라로 QR 코드를 스캔하면 즉시 결과가 표시됩니다.</p>
+                  <div class="result-pair">
+                    <div class="res-ok"><strong>🟢 입장 허용 (ALLOW)</strong>녹색 화면 + 체크 아이콘. 방문자명·소속·방문 기간 확인 후 입장 안내. 3초 후
+                      자동 복귀.</div>
+                    <div class="res-ng"><strong>🔴 입장 거부 (DENY)</strong>빨간 화면 + X 아이콘. 거부 사유 확인 → 담당자 연락 안내.
+                      노란색(MISMATCH)은 중복 스캔.</div>
+                  </div>
+                </div>
               </div>
-            </div>
-            <div class="gstep">
-              <div class="gstep-num gn-s">07</div>
-              <div class="gstep-body">
-                <h4>승인·반려 시 유의사항</h4>
-                <p>승인 전 확인: 방문 목적 타당성, 출입 구역 적절성, 항만 구역 시 안전교육 수료증 여부, 동반자 정보 완전성, 전자기기 신고 내용. 반려 사유는 구체적으로 작성하여 재신청 시 참고하도록 합니다.</p>
-                <div class="gtip gt-s">승인/반려 이력은 시스템에 기록되며 슈퍼어드민이 추후 확인 가능합니다. 판단이 어려운 경우 슈퍼어드민에게 유선 연락 후 처리를 권장합니다.</div>
+              <div class="gstep">
+                <div class="gstep-num gn-s">04</div>
+                <div class="gstep-body">
+                  <h4>부두 출입 관리</h4>
+                  <p>부두 출입현황 화면에서 방문자의 <strong>카드번호, 이름, 생년월일</strong>을 확인합니다. 확인 후 해당 카드 우측 상단의 <strong>"체크인"</strong>
+                    또는 <strong>"체크아웃"</strong> 버튼을 클릭하여 출입을 처리합니다.</p>
+                  <div class="gtip gt-s"><strong>재입장 처리:</strong> 퇴장 완료된 방문자가 재입장해야 할 경우, 해당 인원의 <strong>체크박스를
+                      선택</strong>한 뒤 <strong>"재입장"</strong> 버튼을 클릭합니다. 새로운 행이 생성되며 체크인 시간이 자동으로 기록됩니다.</div>
+                </div>
               </div>
-            </div>
-            <div class="gstep">
-              <div class="gstep-num gn-s">08</div>
-              <div class="gstep-body">
-                <h4>긴급 상황 대처</h4>
-                <p>시스템 장애 시 수기로 방문자 정보(이름·소속·시간)를 기록하고 IT 관리팀에 즉시 연락합니다. 시스템 복구 후 수기 기록을 입력합니다.</p>
-                <div class="gtip gt-s">📞 안전 문의: 대외협력팀 <strong>041-939-9955</strong> | 보안 연락처로 지정된 경우 새 방문 신청 접수 시 SMS 알림을 자동 수신합니다.</div>
+              <div class="gstep">
+                <div class="gstep-num gn-s">05</div>
+                <div class="gstep-body">
+                  <h4>QR 스캔 안 될 때 대처</h4>
+                  <p>카메라가 작동하지 않으면 인증 방식을 <strong>"휴대전화번호"</strong>로 전환하여 처리합니다. 당일 승인된 신청서를 자동으로 조회합니다.</p>
+                  <div class="gtip gt-s">QR 분실 시: 방문자 폰에서 신청현황 접속 → 휴대전화번호로 조회 → 접수번호 클릭 → QR 재확인 가능.</div>
+                </div>
+              </div>
+              <div class="gstep">
+                <div class="gstep-num gn-s">06</div>
+                <div class="gstep-body">
+                  <h4>⚡ 공휴일/근무시간 외 — 신청 승인·반려</h4>
+                  <p><strong>공휴일 및 근무시간 외(평일 18:00~익일 09:00, 주말/공휴일 전일)</strong>에는 슈퍼어드민을 대신하여 방문 신청의 승인·반려를 수행할 수 있습니다.
+                  </p>
+                  <div class="gtip gt-s" style="margin-bottom:12px;">터미널은 24시간 운영되지만 슈퍼어드민이 부재할 수 있는 시간대에 긴급 방문을 처리하기 위한
+                    위임 권한입니다.</div>
+                  <p style="font-size:.85rem;color:var(--txt-2);line-height:1.72;margin-top:8px;"><strong
+                      style="color:#f87171;">승인 절차:</strong> 신청 관리 → 대기중/검토중 신청서 선택 → 상세 내용 확인 → <strong>"승인"
+                      버튼</strong> 클릭 → QR 패스 자동 생성 + 방문자·동반자·담당자에게 SMS/이메일 자동 발송</p>
+                  <p style="font-size:.85rem;color:var(--txt-2);line-height:1.72;margin-top:8px;"><strong
+                      style="color:#f87171;">반려 절차:</strong> 해당 신청서 선택 → <strong>"반려" 버튼</strong> 클릭 → <strong>반려 사유
+                      입력(필수)</strong> → 방문자에게 반려 사유 포함 SMS/이메일 자동 발송</p>
+                </div>
+              </div>
+              <div class="gstep">
+                <div class="gstep-num gn-s">07</div>
+                <div class="gstep-body">
+                  <h4>승인·반려 시 유의사항</h4>
+                  <p>승인 전 확인: 방문 목적 타당성, 출입 구역 적절성, 항만 구역 시 안전교육 수료증 여부, 동반자 정보 완전성, 전자기기 신고 내용. 반려 사유는 구체적으로 작성하여 재신청 시
+                    참고하도록 합니다.</p>
+                  <div class="gtip gt-s">승인/반려 이력은 시스템에 기록되며 슈퍼어드민이 추후 확인 가능합니다. 판단이 어려운 경우 슈퍼어드민에게 유선 연락 후 처리를 권장합니다.
+                  </div>
+                </div>
+              </div>
+              <div class="gstep">
+                <div class="gstep-num gn-s">08</div>
+                <div class="gstep-body">
+                  <h4>긴급 상황 대처</h4>
+                  <p>시스템 장애 시 수기로 방문자 정보(이름·소속·시간)를 기록하고 IT 관리팀에 즉시 연락합니다. 시스템 복구 후 수기 기록을 입력합니다.</p>
+                  <div class="gtip gt-s">📞 안전 문의: 대외협력팀 <strong>041-939-9955</strong> | 보안 연락처로 지정된 경우 새 방문 신청 접수 시 SMS
+                    알림을 자동 수신합니다.</div>
+                </div>
               </div>
             </div>
           </div>
-        </div>
 
-        <!-- SUPER ADMIN PANEL -->
-        <div class="gpanel" id="gp-a">
-          <div class="steps-list">
-            <div class="gstep">
-              <div class="gstep-num gn-a">01</div>
-              <div class="gstep-body">
-                <h4>슈퍼어드민 로그인 — 모든 기능 접근</h4>
-                <p><a href="https://v0-lng-tml.vercel.app/admin/login" target="_blank">v0-lng-tml.vercel.app/admin/login</a>에 접속합니다. 슈퍼어드민은 매니저+경비대의 모든 기능(대시보드, 캘린더, 전체 신청 조회, QR 출입 현황, 스캐너)에 접근할 수 있습니다.</p>
+          <!-- SUPER ADMIN PANEL -->
+          <div class="gpanel" id="gp-a">
+            <div class="steps-list">
+              <div class="gstep">
+                <div class="gstep-num gn-a">01</div>
+                <div class="gstep-body">
+                  <h4>슈퍼어드민 로그인 — 모든 기능 접근</h4>
+                  <p><a href="https://v0-lng-tml.vercel.app/admin/login"
+                      target="_blank">v0-lng-tml.vercel.app/admin/login</a>에 접속합니다. 슈퍼어드민은 매니저+경비대의 모든 기능(대시보드, 캘린더, 전체
+                    신청 조회, QR 출입 현황, 스캐너)에 접근할 수 있습니다.</p>
+                </div>
               </div>
-            </div>
-            <div class="gstep">
-              <div class="gstep-num gn-a">02</div>
-              <div class="gstep-body">
-                <h4>신청 승인 처리</h4>
-                <p><strong>신청 관리</strong>에서 ���기중(PENDING) 또는 검토중(UNDER_REVIEW) 신청서를 선택하고 <strong>"승인" 버튼</strong>을 클릭합니다.</p>
-                <div class="gtip gt-a">승인 시 자동 수행: 방문자 및 동반자별 <strong>QR 패스 생성</strong> → 방문자에게 <strong>QR 코드 링크 SMS 발송</strong> → 동반 방문자에게 개별 SMS → 담당자에게 SMS → <strong>이메일 알림</strong> 발송</div>
+              <div class="gstep">
+                <div class="gstep-num gn-a">02</div>
+                <div class="gstep-body">
+                  <h4>신청 승인 처리</h4>
+                  <p><strong>신청 관리</strong>에서 ���기중(PENDING) 또는 검토중(UNDER_REVIEW) 신청서를 선택하고 <strong>"승인" 버튼</strong>을
+                    클릭합니다.</p>
+                  <div class="gtip gt-a">승인 시 자동 수행: 방문자 및 동반자별 <strong>QR 패스 생성</strong> → 방문자에게 <strong>QR 코드 링크 SMS
+                      발송</strong> → 동반 방문자에게 개별 SMS → 담당자에게 SMS → <strong>이메일 알림</strong> 발송</div>
+                </div>
               </div>
-            </div>
-            <div class="gstep">
-              <div class="gstep-num gn-a">03</div>
-              <div class="gstep-body">
-                <h4>신청 반려 처리</h4>
-                <p>해당 신청서에서 <strong>"반려" 버튼</strong>을 클릭하고 <strong>반려 사유를 입력</strong>합니다 (필수). 방문자에게 반려 사유가 포함된 SMS 및 이메일이 자동 발송됩니다.</p>
-                <div class="gtip gt-a">근무시간 내(평일 09:00~18:00)에는 슈퍼어드민이 전담합니다. 공휴일·근무시간 외에는 특수경비대도 승인/반려가 가능합니다.</div>
+              <div class="gstep">
+                <div class="gstep-num gn-a">03</div>
+                <div class="gstep-body">
+                  <h4>신청 반려 처리</h4>
+                  <p>해당 신청서에서 <strong>"반려" 버튼</strong>을 클릭하고 <strong>반려 사유를 입력</strong>합니다 (필수). 방문자에게 반려 사유가 포함된 SMS 및
+                    이메일이 자동 발송됩니다.</p>
+                  <div class="gtip gt-a">근무시간 내(평일 09:00~18:00)에는 슈퍼어드민이 전담합니다. 공휴일·근무시간 외에는 특수경비대도 승인/반려가 가능합니다.</div>
+                </div>
               </div>
-            </div>
-            <div class="gstep">
-              <div class="gstep-num gn-a">04</div>
-              <div class="gstep-body">
-                <h4>계정 관리</h4>
-                <p><strong>계정 관리</strong> 메뉴에서 관리자 계정을 생성·수정·삭제합니다. 아이디, 이름, 연락처, 비밀번호, 역할(super_admin / security / manager)을 설정합니다.</p>
-                <div class="gtip gt-a">비밀번호 초기화 시 임시 비밀번호가 발급되며, 해당 계정은 첫 로그인 시 변경이 강제됩니다. <strong>CSV 파일로 대량 계정 일괄 등록</strong>도 가능합니다. 본인 계정은 삭제할 수 없습니다.</div>
+              <div class="gstep">
+                <div class="gstep-num gn-a">04</div>
+                <div class="gstep-body">
+                  <h4>계정 관리</h4>
+                  <p><strong>계정 관리</strong> 메뉴에서 관리자 계정을 생성·수정·삭제합니다. 아이디, 이름, 연락처, 비밀번호, 역할(super_admin / security /
+                    manager)을 설정합니다.</p>
+                  <div class="gtip gt-a">비밀번호 초기화 시 임시 비밀번호가 발급되며, 해당 계정은 첫 로그인 시 변경이 강제됩니다. <strong>CSV 파일로 대량 계정 일괄
+                      등록</strong>도 가능합니다. 본인 계정은 삭제할 수 없습니다.</div>
+                </div>
               </div>
-            </div>
-            <div class="gstep">
-              <div class="gstep-num gn-a">05</div>
-              <div class="gstep-body">
-                <h4>역할 권한 관리</h4>
-                <p><strong>계정 관리 → 권한 탭</strong>에서 security와 manager 역할이 접근할 수 있는 페이지(대시보드, 신청 관리, 캘린더, QR 출입 현황)를 동적으로 설정합니다.</p>
-                <div class="gtip gt-a">슈퍼어드민의 권한은 항상 전체 접근이며 변경할 수 없습니다. 계정 관리 페이지는 슈퍼어드민 전용입니다.</div>
+              <div class="gstep">
+                <div class="gstep-num gn-a">05</div>
+                <div class="gstep-body">
+                  <h4>역할 권한 관리</h4>
+                  <p><strong>계정 관리 → 권한 탭</strong>에서 security와 manager 역할이 접근할 수 있는 페이지(대시보드, 신청 관리, 캘린더, QR 출입 현황)를
+                    동적으로 설정합니다.</p>
+                  <div class="gtip gt-a">슈퍼어드민의 권한은 항상 전체 접근이며 변경할 수 없습니다. 계정 관리 페이지는 슈퍼어드민 전용입니다.</div>
+                </div>
               </div>
-            </div>
-            <div class="gstep">
-              <div class="gstep-num gn-a">06</div>
-              <div class="gstep-body">
-                <h4>보안 연락처 관리</h4>
-                <p><strong>계정 관리 → 보안 연락처 탭</strong>에서 슈퍼어드민 계정을 보안 연락처로 지정하고 전화번호를 설정합니다. 새 방문 신청이 접수될 때마다 지정된 연락처로 <strong>SMS가 자동 발송</strong>됩니다.</p>
+              <div class="gstep">
+                <div class="gstep-num gn-a">06</div>
+                <div class="gstep-body">
+                  <h4>보안 연락처 관리</h4>
+                  <p><strong>계정 관리 → 보안 연락처 탭</strong>에서 슈퍼어드민 계정을 보안 연락처로 지정하고 전화번호를 설정합니다. 새 방문 신청이 접수될 때마다 지정된 연락처로
+                    <strong>SMS가 자동 발송</strong>됩니다.</p>
+                </div>
               </div>
-            </div>
-            <div class="gstep">
-              <div class="gstep-num gn-a">07</div>
-              <div class="gstep-body">
-                <h4>초기 설정</h4>
-                <p>시스템 최초 구축 시 <strong>/api/admin/setup</strong> 엔드포인트를 통해 초기 슈퍼어드민 계정을 생성하고 시스템을 설정합니다.</p>
+              <div class="gstep">
+                <div class="gstep-num gn-a">07</div>
+                <div class="gstep-body">
+                  <h4>초기 설정</h4>
+                  <p>시스템 최초 구축 시 <strong>/api/admin/setup</strong> 엔드포인트를 통해 초기 슈퍼어드민 계정을 생성하고 시스템을 설정합니다.</p>
+                </div>
               </div>
             </div>
           </div>
-        </div>
 
-      </div><!-- /panels -->
-    </div><!-- /guide-layout -->
-  </div>
-</section>
+        </div><!-- /panels -->
+      </div><!-- /guide-layout -->
+    </div>
+  </section>
 
-<!-- ════════════════════════════════════
+  <!-- ════════════════════════════════════
      FEATURES — TRUE BENTO
 ════════════════════════════════════ -->
-<section id="features">
-  <div class="container">
-    <p class="section-kicker reveal">주요 기능</p>
-    <h2 class="section-h reveal d1">출입 관리에 필요한 건<br>전부 들어있습니다</h2>
-    <div class="feat-bento">
-      <div class="fb fb1 reveal d1">
-        <div class="fb-icon">📱</div>
-        <h3>QR 출입증 자동 발급</h3>
-        <p>승인 완료와 동시에 신청자 및 동행인 각각에게 개별 QR 출입증이 생성·발송됩니다. 방문자가 별도로 요청할 필요가 없습니다.</p>
-      </div>
-      <div class="fb fb2 reveal d2">
-        <div class="fb-icon">💬</div>
-        <h3>SMS 자동 알림</h3>
-        <p>신청 접수·승인·반려 모든 상태 변화를 SMS로 실시간 전달합니다.</p>
-      </div>
-      <div class="fb fb3 reveal d1">
-        <div class="fb-big">3</div>
-        <h3>출입 게이트</h3>
-        <p>정문·1부두·2부두 통합 관리</p>
-      </div>
-      <div class="fb fb4 reveal d2">
-        <div class="fb-icon">📊</div>
-        <h3>실시간 출입 현황</h3>
-        <p>날짜 범위별 게이트 출입 이력 조회. 방문자명 클릭 시 첨부파일도 확인 가능합니다.</p>
-      </div>
-      <div class="fb fb5 reveal d3">
-        <div class="fb-icon">🔄</div>
-        <h3>재입장 지원</h3>
-        <p>정문 및 부두 방문 기간 내 퇴장 후 재입장 처리도 지원합니다.</p>
+  <section id="features">
+    <div class="container">
+      <p class="section-kicker reveal">주요 기능</p>
+      <h2 class="section-h reveal d1">출입 관리에 필요한 건<br>전부 들어있습니다</h2>
+      <div class="feat-bento">
+        <div class="fb fb1 reveal d1">
+          <div class="fb-icon">📱</div>
+          <h3>QR 출입증 자동 발급</h3>
+          <p>승인 완료와 동시에 신청자 및 동행인 각각에게 개별 QR 출입증이 생성·발송됩니다. 방문자가 별도로 요청할 필요가 없습니다.</p>
+        </div>
+        <div class="fb fb2 reveal d2">
+          <div class="fb-icon">💬</div>
+          <h3>SMS 자동 알림</h3>
+          <p>신청 접수·승인·반려 모든 상태 변화를 SMS로 실시간 전달합니다.</p>
+        </div>
+        <div class="fb fb3 reveal d1">
+          <div class="fb-big">3</div>
+          <h3>출입 게이트</h3>
+          <p>정문·1부두·2부두 통합 관리</p>
+        </div>
+        <div class="fb fb4 reveal d2">
+          <div class="fb-icon">📊</div>
+          <h3>실시간 출입 현황</h3>
+          <p>날짜 범위별 게이트 출입 이력 조회. 방문자명 클릭 시 첨부파일도 확인 가능합니다.</p>
+        </div>
+        <div class="fb fb5 reveal d3">
+          <div class="fb-icon">🔄</div>
+          <h3>재입장 지원</h3>
+          <p>정문 및 부두 방문 기간 내 퇴장 후 재입장 처리도 지원합니다.</p>
+        </div>
       </div>
     </div>
-  </div>
-</section>
+  </section>
 
-<!-- ════════════════════════════════════
+  <!-- ════════════════════════════════════
      FAQ — INLINE EXPAND
 ════════════════════════════════════ -->
-<section id="faq">
-  <div class="container">
-    <div class="faq-layout">
-      <div class="faq-sticky reveal">
-        <p class="section-kicker">자주 묻는 질문</p>
-        <h2 class="section-h">헷갈리는 거<br>여기서 해결하세요</h2>
-        <p class="section-sub" style="max-width:340px;">사용하다 막히면 여기서 먼저 확인해보세요. 그래도 모르겠으면 담당자에게 연락하세요.</p>
-        <div style="margin-top:32px;">
-          <a href="tel:041-939-9955" style="display:flex;align-items:center;gap:10px;font-size:.87rem;color:var(--txt-2);">
-            <span style="color:var(--lime);">📞</span> 대외협력팀 041-939-9955
-          </a>
+  <section id="faq">
+    <div class="container">
+      <div class="faq-layout">
+        <div class="faq-sticky reveal">
+          <p class="section-kicker">자주 묻는 질문</p>
+          <h2 class="section-h">헷갈리는 거<br>여기서 해결하세요</h2>
+          <p class="section-sub" style="max-width:340px;">사용하다 막히면 여기서 먼저 확인해보세요. 그래도 모르겠으면 담당자에게 연락하세요.</p>
+          <div style="margin-top:32px;">
+            <a href="tel:041-939-9955"
+              style="display:flex;align-items:center;gap:10px;font-size:.87rem;color:var(--txt-2);">
+              <span style="color:var(--lime);">📞</span> 대외협력팀 041-939-9955
+            </a>
+          </div>
         </div>
-      </div>
-      <div class="faq-list reveal d2">
-        <div class="faq-item">
-          <button class="faq-q"><span>접수번호를 잊어버렸어요.</span><span class="faq-icon">+</span></button>
-          <div class="faq-a">메인 화면 "신청 현황 조회"에서 휴대전화번호로 신청 목록을 확인할 수 있습니다. 처음 신청 완료 시 발송된 SMS에도 접수번호가 포함되어 있습니다. 두 방법 다 안 된다면 담당자에게 성함과 방문일을 알려주시면 됩니다.</div>
-        </div>
-        <div class="faq-item">
-          <button class="faq-q"><span>QR코드가 스캔되지 않아요.</span><span class="faq-icon">+</span></button>
-          <div class="faq-a">화면 밝기를 최대로 높여주세요. 빛 반사가 있으면 각도를 조절하세요. 경비 초소의 카메라 문제라면 페이지를 새로고침하거나, "휴대전화번호 인증" 방식으로 전환해 처리할 수 있습니다.</div>
-        </div>
-        <div class="faq-item">
-          <button class="faq-q"><span>방문 일정이 바뀌었어요.</span><span class="faq-icon">+</span></button>
-          <div class="faq-a">기존 신청을 취소하고 새로 신청해야 합니다. 신청 현황 조회에서 접수번호를 확인 후 취소할 수 있습니다. 이미 승인된 경우에는 담당자에게 직접 연락하세요.</div>
-        </div>
-        <div class="faq-item">
-          <button class="faq-q"><span>동행인도 별도 QR이 필요한가요?</span><span class="faq-icon">+</span></button>
-          <div class="faq-a">네, 동행인은 각자의 QR코드로 출입합니다. 신청 시 동행인 정보를 입력하면 승인 후 동행인 번호로도 QR 출입증이 발송됩니다.</div>
-        </div>
-        <div class="faq-item">
-          <button class="faq-q"><span>담당자 확인 후 방문자에게 QR이 안 갔어요.</span><span class="faq-icon">+</span></button>
-          <div class="faq-a">담당자 확인(체크박스) 이후 보안담당자의 최종 승인이 있어야 방문자에게 QR이 발송됩니다. 승인은 완료됐는데 SMS가 안 왔다면 SOLAPI 발신번호 등록 여부를 확인하세요.</div>
-        </div>
-        <div class="faq-item">
-          <button class="faq-q"><span>항만보안교육 이수증은 필수인가요?</span><span class="faq-icon">+</span></button>
-          <div class="faq-a">이수증은 선택 사항입니다. 다만 현장 작업을 하는 방문자는 안전교육 이수가 필요할 수 있습니다. 안전교육 관련 문의는 안전환경팀(041-939-9984)으로 연락하세요. 교육장은 본관동 1층 BLT Hall입니다.</div>
-        </div>
-        <div class="faq-item">
-          <button class="faq-q"><span>경비대가 방문 신청을 승인할 수 있나요?</span><span class="faq-icon">+</span></button>
-          <div class="faq-a">공휴일 및 근무시간 외(평일 18:00~익일 09:00, 주말/공휴일)에는 특수경비대가 슈퍼어드민을 대신하여 승인·반려를 수행할 수 있습니다. 근무시간 내(평일 09:00~18:00)에는 슈퍼어드민만 가능합니다. 승인/반려 이력은 모두 시스템에 기���됩니다.</div>
-        </div>
-        <div class="faq-item">
-          <button class="faq-q"><span>슈퍼어드민과 매니저의 차이는 무엇인가요?</span><span class="faq-icon">+</span></button>
-          <div class="faq-a">매니저는 본인 담당 신청만 조회하고 검토 확인(체크박스)만 할 수 있습니다. 슈퍼어드민은 모든 신청 조회, 승인·반려, 계정 관리, 역할 권한 설정, 보안 연락처 관리 등 시스템 전체를 관리합니다.</div>
-        </div>
-        <div class="faq-item">
-          <button class="faq-q"><span>시스템이 완전히 다운됐을 때는요?</span><span class="faq-icon">+</span></button>
-          <div class="faq-a">경비대는 즉시 수기로 방문자 정보(이름·소속·시간)를 기록하고 IT 관리팀에 연락합니다. 시스템 복구 후 수기 기록을 입력합니다. 안전 관련 문의는 안전환경팀(041-939-9984)으로 연락하세요.</div>
+        <div class="faq-list reveal d2">
+          <div class="faq-item">
+            <button class="faq-q"><span>접수번호를 잊어버렸어요.</span><span class="faq-icon">+</span></button>
+            <div class="faq-a">메인 화면 "신청 현황 조회"에서 휴대전화번호로 신청 목록을 확인할 수 있습니다. 처음 신청 완료 시 발송된 SMS에도 접수번호가 포함되어 있습니다. 두 방법
+              다 안 된다면 담당자에게 성함과 방문일을 알려주시면 됩니다.</div>
+          </div>
+          <div class="faq-item">
+            <button class="faq-q"><span>QR코드가 스캔되지 않아요.</span><span class="faq-icon">+</span></button>
+            <div class="faq-a">화면 밝기를 최대로 높여주세요. 빛 반사가 있으면 각도를 조절하세요. 경비 초소의 카메라 문제라면 페이지를 새로고침하거나, "휴대전화번호 인증" 방식으로 전환해
+              처리할 수 있습니다.</div>
+          </div>
+          <div class="faq-item">
+            <button class="faq-q"><span>방문 일정이 바뀌었어요.</span><span class="faq-icon">+</span></button>
+            <div class="faq-a">기존 신청을 취소하고 새로 신청해야 합니다. 신청 현황 조회에서 접수번호를 확인 후 취소할 수 있습니다. 이미 승인된 경우에는 담당자에게 직접 연락하세요.
+            </div>
+          </div>
+          <div class="faq-item">
+            <button class="faq-q"><span>동행인도 별도 QR이 필요한가요?</span><span class="faq-icon">+</span></button>
+            <div class="faq-a">네, 동행인은 각자의 QR코드로 출입합니다. 신청 시 동행인 정보를 입력하면 승인 후 동행인 번호로도 QR 출입증이 발송됩니다.</div>
+          </div>
+          <div class="faq-item">
+            <button class="faq-q"><span>담당자 확인 후 방문자에게 QR이 안 갔어요.</span><span class="faq-icon">+</span></button>
+            <div class="faq-a">담당자 확인(체크박스) 이후 보안담당자의 최종 승인이 있어야 방문자에게 QR이 발송됩니다. 승인은 완료됐는데 SMS가 안 왔다면 SOLAPI 발신번호 등록
+              여부를 확인하세요.</div>
+          </div>
+          <div class="faq-item">
+            <button class="faq-q"><span>항만보안교육 이수증은 필수인가요?</span><span class="faq-icon">+</span></button>
+            <div class="faq-a">이수증은 선택 사항입니다. 다만 현장 작업을 하는 방문자는 안전교육 이수가 필요할 수 있습니다. 안전교육 관련 문의는 안전환경팀(041-939-9984)으로
+              연락하세요. 교육장은 본관동 1층 BLT Hall입니다.</div>
+          </div>
+          <div class="faq-item">
+            <button class="faq-q"><span>경비대가 방문 신청을 승인할 수 있나요?</span><span class="faq-icon">+</span></button>
+            <div class="faq-a">공휴일 및 근무시간 외(평일 18:00~익일 09:00, 주말/공휴일)에는 특수경비대가 슈퍼어드민을 대신하여 승인·반려를 수행할 수 있습니다. 근무시간 내(평일
+              09:00~18:00)에는 슈퍼어드민만 가능합니다. 승인/반려 이력은 모두 시스템에 기���됩니다.</div>
+          </div>
+          <div class="faq-item">
+            <button class="faq-q"><span>슈퍼어드민과 매니저의 차이는 무엇인가요?</span><span class="faq-icon">+</span></button>
+            <div class="faq-a">매니저는 본인 담당 신청만 조회하고 검토 확인(체크박스)만 할 수 있습니다. 슈퍼어드민은 모든 신청 조회, 승인·반려, 계정 관리, 역할 권한 설정, 보안
+              연락처 관리 등 시스템 전체를 관리합니다.</div>
+          </div>
+          <div class="faq-item">
+            <button class="faq-q"><span>시스템이 완전히 다운됐을 때는요?</span><span class="faq-icon">+</span></button>
+            <div class="faq-a">경비대는 즉시 수기로 방문자 정보(이름·소속·시간)를 기록하고 IT 관리팀에 연락합니다. 시스템 복구 후 수기 기록을 입력합니다. 안전 관련 문의는
+              안전환경팀(041-939-9984)으로 연락하세요.</div>
+          </div>
         </div>
       </div>
     </div>
-  </div>
-</section>
+  </section>
 
-<!-- ════════════════════════════════════
+  <!-- ════════════════════════════════════
      CTA
 ════════════════════════════════════ -->
-<section id="cta">
-  <div class="lime-ring"></div>
-  <div class="lime-ring"></div>
-  <div class="cta-content reveal">
-    <div class="cta-eyebrow">LIVE SYSTEM</div>
-    <h2 class="cta-title">가이드 다 읽으셨나요?<br>이제 직접 써보세요</h2>
-    <p class="cta-sub">방문 신청, 담당자 관리, QR 스캐너 모두 한 곳에 있습니다.</p>
-    <div class="cta-btns">
-      <a href="https://v0-lng-tml.vercel.app" target="_blank" class="btn-lime">🏠 메인 페이지</a>
-      <a href="https://v0-lng-tml.vercel.app/admin/login" target="_blank" class="btn-outline">⚙️ 관리자 페이지</a>
-      <a href="https://v0-lng-tml.vercel.app/scanner" target="_blank" class="btn-outline">📷 QR 스캐너</a>
+  <section id="cta">
+    <div class="lime-ring"></div>
+    <div class="lime-ring"></div>
+    <div class="cta-content reveal">
+      <div class="cta-eyebrow">LIVE SYSTEM</div>
+      <h2 class="cta-title">가이드 다 읽으셨나요?<br>이제 직접 써보세요</h2>
+      <p class="cta-sub">방문 신청, 담당자 관리, QR 스캐너 모두 한 곳에 있습니다.</p>
+      <div class="cta-btns">
+        <a href="https://v0-lng-tml.vercel.app" target="_blank" class="btn-lime">🏠 메인 페이지</a>
+        <a href="https://v0-lng-tml.vercel.app/admin/login" target="_blank" class="btn-outline">⚙️ 관리자 페이지</a>
+      </div>
     </div>
-  </div>
-</section>
+  </section>
 
-<!-- ════════════════════════════════════
+  <!-- ════════════════════════════════════
      FOOTER
 ════════════════════════════════════ -->
-<footer>
-  <div class="footer-top">
-    <div class="footer-brand">
-      <img src="/manual/logo-transparent.png" alt="보령LNG터미널" />
-      <p>보령LNG터미널 방문자 출입 관리 시스템. 방문 신청부터 현장 출입까지 온라인으로 처리합니다.</p>
-    </div>
-    <div class="footer-contacts">
-      <div class="fc-item">
-        <strong>시스템 · 계정 문의</strong>
-        <span>대외협력팀 최민서 매니저</span><br>
-        <a href="tel:041-939-9955">041-939-9955</a>
+  <footer>
+    <div class="footer-top">
+      <div class="footer-brand">
+        <img src="/manual/logo-transparent.png" alt="보령LNG터미널" />
+        <p>보령LNG터미널 방문자 출입 관리 시스템. 방문 신청부터 현장 출입까지 온라인으로 처리합니다.</p>
       </div>
-      <div class="fc-item">
-        <strong>안전교육 문의</strong>
-        <span>안전환경팀</span><br>
-        <a href="tel:041-939-9984">041-939-9984</a>
-      </div>
-      <div class="fc-item">
-        <strong>시스템 URL</strong>
-        <a href="https://v0-lng-tml.vercel.app" target="_blank">v0-lng-tml.vercel.app</a>
+      <div class="footer-contacts">
+        <div class="fc-item">
+          <strong>시스템 · 계정 문의</strong>
+          <span>대외협력팀 최민서 매니저</span><br>
+          <a href="tel:041-939-9955">041-939-9955</a>
+        </div>
+        <div class="fc-item">
+          <strong>안전교육 문의</strong>
+          <span>안전환경팀</span><br>
+          <a href="tel:041-939-9984">041-939-9984</a>
+        </div>
+        <div class="fc-item">
+          <strong>시스템 URL</strong>
+          <a href="https://v0-lng-tml.vercel.app" target="_blank">v0-lng-tml.vercel.app</a>
+        </div>
       </div>
     </div>
-  </div>
-  <div class="footer-btm">
-    <span>© 2026 보령LNG터미널 방문자 출입 관리 시스템</span>
-    <div class="footer-links">
-      <a href="https://v0-lng-tml.vercel.app" target="_blank">시스템 접속</a>
-      <a href="https://v0-lng-tml.vercel.app/admin/login" target="_blank">관리자</a>
-      <a href="https://v0-lng-tml.vercel.app/scanner" target="_blank">스캐너</a>
+    <div class="footer-btm">
+      <span>© 2026 보령LNG터미널 방문자 출입 관리 시스템</span>
+      <div class="footer-links">
+        <a href="https://v0-lng-tml.vercel.app" target="_blank">시스템 접속</a>
+        <a href="https://v0-lng-tml.vercel.app/admin/login" target="_blank">관리자</a>
+      </div>
     </div>
-  </div>
-</footer>
+  </footer>
 
-<script>
-/* ════════════════════════════════════════
-   SCROLL-DRIVEN HERO FRAME ANIMATION
-════════════════════════════════════════ */
-const canvas = document.getElementById('hero-canvas');
-const ctx    = canvas.getContext('2d');
-const video  = document.getElementById('hero-video');
-const loaderFill = document.getElementById('loader-fill');
+  <script>
+    /* ════════════════════════════════════════
+       SCROLL-DRIVEN HERO FRAME ANIMATION
+    ════════════════════════════════════════ */
+    const canvas = document.getElementById('hero-canvas');
+    const ctx = canvas.getContext('2d');
+    const video = document.getElementById('hero-video');
+    const loaderFill = document.getElementById('loader-fill');
 
-const FRAME_COUNT = 90;
-const frames = new Array(FRAME_COUNT).fill(null);
-let loadedCount = 0;
-let animRunning = false;
-let lastFrameIdx = -1;
+    const FRAME_COUNT = 90;
+    const frames = new Array(FRAME_COUNT).fill(null);
+    let loadedCount = 0;
+    let animRunning = false;
+    let lastFrameIdx = -1;
 
-function resizeCanvas() {
-  canvas.width  = canvas.offsetWidth  || window.innerWidth;
-  canvas.height = canvas.offsetHeight || window.innerHeight;
-  if (lastFrameIdx >= 0 && frames[lastFrameIdx]) drawFrame(lastFrameIdx);
-}
+    function resizeCanvas() {
+      canvas.width = canvas.offsetWidth || window.innerWidth;
+      canvas.height = canvas.offsetHeight || window.innerHeight;
+      if (lastFrameIdx >= 0 && frames[lastFrameIdx]) drawFrame(lastFrameIdx);
+    }
 
-function drawFrameCover(img) {
-  const cw = canvas.width, ch = canvas.height;
-  const iw = img.naturalWidth, ih = img.naturalHeight;
-  const scale = Math.max(cw / iw, ch / ih);
-  const dw = iw * scale, dh = ih * scale;
-  const dx = (cw - dw) / 2, dy = (ch - dh) / 2;
-  ctx.clearRect(0, 0, cw, ch);
-  ctx.drawImage(img, dx, dy, dw, dh);
-}
+    function drawFrameCover(img) {
+      const cw = canvas.width, ch = canvas.height;
+      const iw = img.naturalWidth, ih = img.naturalHeight;
+      const scale = Math.max(cw / iw, ch / ih);
+      const dw = iw * scale, dh = ih * scale;
+      const dx = (cw - dw) / 2, dy = (ch - dh) / 2;
+      ctx.clearRect(0, 0, cw, ch);
+      ctx.drawImage(img, dx, dy, dw, dh);
+    }
 
-function drawFrame(idx) {
-  const img = frames[idx];
-  if (!img) return;
-  drawFrameCover(img);
-  lastFrameIdx = idx;
-}
+    function drawFrame(idx) {
+      const img = frames[idx];
+      if (!img) return;
+      drawFrameCover(img);
+      lastFrameIdx = idx;
+    }
 
-function getScrollFrame() {
-  const hero = document.getElementById('hero');
-  const scrollTop = window.scrollY;
-  const maxScroll = hero.offsetHeight - window.innerHeight;
-  const fraction = Math.max(0, Math.min(1, scrollTop / maxScroll));
-  return Math.min(Math.floor(fraction * (FRAME_COUNT - 1)), FRAME_COUNT - 1);
-}
+    function getScrollFrame() {
+      const hero = document.getElementById('hero');
+      const scrollTop = window.scrollY;
+      const maxScroll = hero.offsetHeight - window.innerHeight;
+      const fraction = Math.max(0, Math.min(1, scrollTop / maxScroll));
+      return Math.min(Math.floor(fraction * (FRAME_COUNT - 1)), FRAME_COUNT - 1);
+    }
 
-/* Smooth frame interpolation via rAF */
-let targetFrame = 0;
-let currentFrame = 0;
+    /* Smooth frame interpolation via rAF */
+    let targetFrame = 0;
+    let currentFrame = 0;
 
-function animLoop() {
-  animRunning = true;
-  const diff = targetFrame - currentFrame;
-  if (Math.abs(diff) > 0.5) {
-    currentFrame += diff * 0.15; // ease factor
-    const idx = Math.round(currentFrame);
-    if (idx !== lastFrameIdx) drawFrame(idx);
-  }
-  requestAnimationFrame(animLoop);
-}
+    function animLoop() {
+      animRunning = true;
+      const diff = targetFrame - currentFrame;
+      if (Math.abs(diff) > 0.5) {
+        currentFrame += diff * 0.15; // ease factor
+        const idx = Math.round(currentFrame);
+        if (idx !== lastFrameIdx) drawFrame(idx);
+      }
+      requestAnimationFrame(animLoop);
+    }
 
-window.addEventListener('scroll', () => {
-  targetFrame = getScrollFrame();
-  if (targetFrame > 0 && video && !video.classList.contains('hidden')) {
-    video.classList.add('hidden');
-    canvas.style.opacity = '1';
-  }
-}, { passive: true });
+    window.addEventListener('scroll', () => {
+      targetFrame = getScrollFrame();
+      if (targetFrame > 0 && video && !video.classList.contains('hidden')) {
+        video.classList.add('hidden');
+        canvas.style.opacity = '1';
+      }
+    }, { passive: true });
 
-/* Preload all WebP frames */
-function pad(n, len) { return String(n).padStart(len, '0'); }
+    /* Preload all WebP frames */
+    function pad(n, len) { return String(n).padStart(len, '0'); }
 
-(async function preload() {
-  canvas.style.opacity = '0';
-  canvas.style.transition = 'opacity .5s ease';
+    (async function preload() {
+      canvas.style.opacity = '0';
+      canvas.style.transition = 'opacity .5s ease';
 
-  const loadPromises = Array.from({ length: FRAME_COUNT }, (_, i) => {
-    return new Promise(resolve => {
-      const img = new Image();
-      img.src = `/manual/frames/frame_${pad(i, 4)}.webp`;
-      img.onload = () => {
-        frames[i] = img;
-        loadedCount++;
-        const pct = (loadedCount / FRAME_COUNT) * 100;
-        loaderFill.style.width = pct + '%';
-        // Show canvas once first frame is ready
-        if (i === 0) {
-          drawFrame(0);
-          canvas.style.opacity = '1';
-        }
-        resolve();
-      };
-      img.onerror = resolve; // skip missing frames
+      const loadPromises = Array.from({ length: FRAME_COUNT }, (_, i) => {
+        return new Promise(resolve => {
+          const img = new Image();
+          img.src = `/manual/frames/frame_${pad(i, 4)}.webp`;
+          img.onload = () => {
+            frames[i] = img;
+            loadedCount++;
+            const pct = (loadedCount / FRAME_COUNT) * 100;
+            loaderFill.style.width = pct + '%';
+            // Show canvas once first frame is ready
+            if (i === 0) {
+              drawFrame(0);
+              canvas.style.opacity = '1';
+            }
+            resolve();
+          };
+          img.onerror = resolve; // skip missing frames
+        });
+      });
+
+      // Start animation loop immediately
+      animLoop();
+
+      await Promise.all(loadPromises);
+      loaderFill.style.width = '100%';
+      setTimeout(() => { loaderFill.style.opacity = '0'; }, 600);
+    })();
+
+    window.addEventListener('resize', resizeCanvas, { passive: true });
+    resizeCanvas();
+
+
+    /* ════════════════════════════════════════
+       NAV SCROLL STATE
+    ════════════════════════════════════════ */
+    const nav = document.getElementById('main-nav');
+    window.addEventListener('scroll', () => {
+      nav.classList.toggle('scrolled', window.scrollY > 80);
+    }, { passive: true });
+
+
+    /* ════════════════════════════════════════
+       SCROLL REVEAL
+    ════════════════════════════════════════ */
+    const revealObs = new IntersectionObserver(entries => {
+      entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+    }, { threshold: 0.1 });
+    document.querySelectorAll('.reveal').forEach(el => revealObs.observe(el));
+
+
+    /* ════════════════════════════════════════
+       GUIDE TABS
+    ════════════════════════════════════════ */
+    function switchGuide(role) {
+      const roles = ['v', 'm', 's', 'a'];
+      roles.forEach(r => {
+        document.getElementById('gp-' + r).classList.remove('active');
+        const btn = document.getElementById('gtab-' + r);
+        btn.className = 'vtab';
+        // Remove vtab-line from non-active tabs
+        const line = btn.querySelector('.vtab-line');
+        if (line) line.remove();
+      });
+
+      document.getElementById('gp-' + role).classList.add('active');
+      const activeBtn = document.getElementById('gtab-' + role);
+      const classMap = { v: 'av', m: 'am', s: 'as', a: 'aa' };
+      activeBtn.className = 'vtab ' + classMap[role];
+      if (role === 'v') {
+        activeBtn.insertAdjacentHTML('beforeend', '<div class="vtab-line"></div>');
+      }
+
+      document.getElementById('guide').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+    window.switchGuide = switchGuide;
+
+
+    /* ════════════════════════════════════════
+       FAQ ACCORDION
+    ════════════════════════════════════════ */
+    document.querySelectorAll('.faq-q').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const item = btn.parentElement;
+        const wasOpen = item.classList.contains('open');
+        document.querySelectorAll('.faq-item.open').forEach(i => i.classList.remove('open'));
+        if (!wasOpen) item.classList.add('open');
+      });
     });
-  });
-
-  // Start animation loop immediately
-  animLoop();
-
-  await Promise.all(loadPromises);
-  loaderFill.style.width = '100%';
-  setTimeout(() => { loaderFill.style.opacity = '0'; }, 600);
-})();
-
-window.addEventListener('resize', resizeCanvas, { passive: true });
-resizeCanvas();
-
-
-/* ════════════════════════════════════════
-   NAV SCROLL STATE
-════════════════════════════════════════ */
-const nav = document.getElementById('main-nav');
-window.addEventListener('scroll', () => {
-  nav.classList.toggle('scrolled', window.scrollY > 80);
-}, { passive: true });
-
-
-/* ════════════════════════════════════════
-   SCROLL REVEAL
-════════════════════════════════════════ */
-const revealObs = new IntersectionObserver(entries => {
-  entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
-}, { threshold: 0.1 });
-document.querySelectorAll('.reveal').forEach(el => revealObs.observe(el));
-
-
-/* ════════════════════════════════════════
-   GUIDE TABS
-════════════════════════════════════════ */
-function switchGuide(role) {
-  const roles = ['v','m','s','a'];
-  roles.forEach(r => {
-    document.getElementById('gp-' + r).classList.remove('active');
-    const btn = document.getElementById('gtab-' + r);
-    btn.className = 'vtab';
-    // Remove vtab-line from non-active tabs
-    const line = btn.querySelector('.vtab-line');
-    if (line) line.remove();
-  });
-
-  document.getElementById('gp-' + role).classList.add('active');
-  const activeBtn = document.getElementById('gtab-' + role);
-  const classMap = { v: 'av', m: 'am', s: 'as', a: 'aa' };
-  activeBtn.className = 'vtab ' + classMap[role];
-  if (role === 'v') {
-    activeBtn.insertAdjacentHTML('beforeend', '<div class="vtab-line"></div>');
-  }
-
-  document.getElementById('guide').scrollIntoView({ behavior: 'smooth', block: 'start' });
-}
-window.switchGuide = switchGuide;
-
-
-/* ════════════════════════════════════════
-   FAQ ACCORDION
-════════════════════════════════════════ */
-document.querySelectorAll('.faq-q').forEach(btn => {
-  btn.addEventListener('click', () => {
-    const item = btn.parentElement;
-    const wasOpen = item.classList.contains('open');
-    document.querySelectorAll('.faq-item.open').forEach(i => i.classList.remove('open'));
-    if (!wasOpen) item.classList.add('open');
-  });
-});
-</script>
+  </script>
 </body>
+
 </html>
