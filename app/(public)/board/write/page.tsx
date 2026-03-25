@@ -19,6 +19,7 @@ export default function BoardWritePage() {
     name: "",
     email: "",
     phone: "",
+    password: "",
     category: "suggestion",
     title: "",
     content: "",
@@ -41,6 +42,7 @@ export default function BoardWritePage() {
           author: formData.name,
           contact: formData.phone,
           email: formData.email,
+          password: formData.password,
         }),
       })
 
@@ -127,6 +129,7 @@ export default function BoardWritePage() {
                       name: "",
                       email: "",
                       phone: "",
+                      password: "",
                       category: "suggestion",
                       title: "",
                       content: "",
@@ -168,17 +171,32 @@ export default function BoardWritePage() {
                   </div>
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-white/70 mb-2">
-                    {t("이메일", "Email")}
-                  </label>
-                  <Input
-                    type="email"
-                    value={formData.email}
-                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    placeholder={t("example@email.com", "example@email.com")}
-                    className="bg-white/5 border-white/10 text-white placeholder:text-white/30 rounded-xl"
-                  />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-white/70 mb-2">
+                      {t("이메일", "Email")}
+                    </label>
+                    <Input
+                      type="email"
+                      value={formData.email}
+                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                      placeholder={t("example@email.com", "example@email.com")}
+                      className="bg-white/5 border-white/10 text-white placeholder:text-white/30 rounded-xl"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-white/70 mb-2">
+                      {t("비밀번호", "Password")} <span className="text-red-400">*</span>
+                    </label>
+                    <Input
+                      required
+                      type="password"
+                      value={formData.password}
+                      onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                      placeholder={t("삭제 시 필요", "Required for deletion")}
+                      className="bg-white/5 border-white/10 text-white placeholder:text-white/30 rounded-xl"
+                    />
+                  </div>
                 </div>
 
                 {/* 카테고리 */}

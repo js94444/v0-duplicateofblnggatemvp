@@ -58,10 +58,14 @@ async function createIndexesIfNotExists(p: sql.ConnectionPool): Promise<void> {
        author NVARCHAR(100) NOT NULL,
        contact NVARCHAR(20) NOT NULL,
        email NVARCHAR(255),
+       password NVARCHAR(100) NOT NULL,
        status NVARCHAR(50) DEFAULT '접수',
        created_at DATETIME DEFAULT GETDATE(),
        updated_at DATETIME DEFAULT GETDATE()
      )`,
+    // 기존 테이블에 password 컬럼 추가 (없으면)
+    `IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('board_posts') AND name = 'password')
+     ALTER TABLE board_posts ADD password NVARCHAR(100)`,
   ]
     `IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_visit_applications_status') 
      CREATE NONCLUSTERED INDEX IX_visit_applications_status ON visit_applications(status) INCLUDE (application_number, visitor_name, created_at)`,
@@ -2416,6 +2420,7 @@ export class AzureSqlDB {
     author: string
     contact: string
     email?: string
+    password: string
   }): Promise<{ id: string }> {
     const dbPool = await getPool()
     const postId = `board-${Date.now()}`
@@ -2428,12 +2433,49 @@ export class AzureSqlDB {
       .input('author', sql.NVarChar(100), data.author)
       .input('contact', sql.NVarChar(20), data.contact)
       .input('email', sql.NVarChar(255), data.email || null)
+      .input('password', sql.NVarChar(100), data.password)
       .query(`
-        INSERT INTO board_posts (id, category, title, content, author, contact, email, status, created_at, updated_at)
-        VALUES (@id, @category, @title, @content, @author, @contact, @email, '접수', GETDATE(), GETDATE())
+        INSERT INTO board_posts (id, category, title, content, author, contact, email, password, status, created_at, updated_at)
+        VALUES (@id, @category, @title, @content, @author, @contact, @email, @password, '접수', GETDATE(), GETDATE())
       `)
     
     return { id: postId }
+  }
+
+  /** 게시물 삭제 (비밀번호 확인) */
+  static async deleteBoardPost(id: string, password: string): Promise<{ success: boolean; message: string }> {
+    const dbPool = await getPool()
+    
+    // 비밀번호 확인
+    const checkResult = await dbPool.request()
+      .input('id', sql.NVarChar(50), id)
+      .input('password', sql.NVarChar(100), password)
+      .query(`SELECT id FROM board_posts WHERE id = @id AND password = @password`)
+    
+    if (checkResult.recordset.length === 0) {
+      return { success: false, message: "비밀번호가 일치하지 않습니다." }
+    }
+    
+    await dbPool.request()
+      .input('id', sql.NVarChar(50), id)
+      .query(`DELETE FROM board_posts WHERE id = @id`)
+    
+    return { success: true, message: "삭제되었습니다." }
+  }
+
+  /** 게시물 삭제 (어드민용 - 비밀번호 불필요) */
+  static async deleteBoardPostAdmin(id: string): Promise<{ success: boolean; message: string }> {
+    const dbPool = await getPool()
+    
+    const result = await dbPool.request()
+      .input('id', sql.NVarChar(50), id)
+      .query(`DELETE FROM board_posts WHERE id = @id`)
+    
+    if (result.rowsAffected[0] === 0) {
+      return { success: false, message: "게시물을 찾을 수 없습니다." }
+    }
+    
+    return { success: true, message: "삭제되었습니다." }
   }
 }
 
