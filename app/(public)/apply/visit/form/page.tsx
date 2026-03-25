@@ -1051,7 +1051,7 @@ export default function VisitFormPage() {
                       <div className="p-2 bg-amber-500/10 text-amber-500 rounded-lg group-hover:bg-amber-500 group-hover:text-black transition-all">
                         <Plus size={18} strokeWidth={3} />
                       </div>
-                      <span className="text-base font-bold group-hover:text-amber-500 transition-colors">{t("동행인�� 추가하시려면 클릭하세요", "Click to add a companion")}</span>
+                      <span className="text-base font-bold group-hover:text-amber-500 transition-colors">{t("동행인을 추가하시려면 클릭하세요", "Click to add a companion")}</span>
                     </Button>
                   </div>
                 )}
