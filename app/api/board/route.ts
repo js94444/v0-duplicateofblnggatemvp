@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server"
-import { DB } from "@/lib/db/azure-sql"
+import { AzureSqlDB } from "@/lib/db/azure-sql"
 
 // 게시물 목록 조회
 export async function GET() {
   try {
-    const posts = await DB.getBoardPosts()
+    const posts = await AzureSqlDB.getBoardPosts()
     return NextResponse.json({ success: true, posts })
   } catch (error: any) {
     console.error("Board GET error:", error)
@@ -29,7 +29,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const result = await DB.createBoardPost({
+    const result = await AzureSqlDB.createBoardPost({
       title,
       content,
       author,

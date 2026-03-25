@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
-import { DB } from "@/lib/db/azure-sql"
+import { AzureSqlDB } from "@/lib/db/azure-sql"
 
 // 어드민용 게시물 삭제 (비밀번호 불필요)
 export async function DELETE(
@@ -16,7 +16,7 @@ export async function DELETE(
       )
     }
 
-    const result = await DB.deleteBoardPostAdmin(parseInt(id))
+    const result = await AzureSqlDB.deleteBoardPostAdmin(parseInt(id))
 
     if (!result.success) {
       return NextResponse.json(
