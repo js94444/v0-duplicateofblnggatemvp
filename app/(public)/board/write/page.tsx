@@ -30,11 +30,32 @@ export default function BoardWritePage() {
     e.preventDefault()
     setIsSubmitting(true)
 
-    // TODO: API 연동
-    await new Promise((resolve) => setTimeout(resolve, 1000))
+    try {
+      const res = await fetch("/api/board", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          category: categories.find(c => c.value === formData.category)?.label || "건의사항",
+          title: formData.title,
+          content: formData.content,
+          author: formData.name,
+          contact: formData.phone,
+          email: formData.email,
+        }),
+      })
 
-    setIsSubmitting(false)
-    setSubmitted(true)
+      const data = await res.json()
+      if (data.success) {
+        setSubmitted(true)
+      } else {
+        alert(data.error || "등록에 실패했습니다.")
+      }
+    } catch (error) {
+      console.error("Submit error:", error)
+      alert("등록 중 오류가 발생했습니다.")
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   const categories = [

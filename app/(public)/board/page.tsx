@@ -8,13 +8,12 @@ import { MessageSquare, ChevronLeft, PenSquare, Eye, Calendar, User } from "luci
 import Link from "next/link"
 
 interface BoardPost {
-  id: number
+  id: string
   category: string
   title: string
-  name: string
-  created_at: string
-  views: number
-  status: "pending" | "answered"
+  author: string
+  createdAt: string
+  status: string
 }
 
 export default function BoardListPage() {
@@ -25,37 +24,38 @@ export default function BoardListPage() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    // TODO: API 연동
-    // 임시 더미 데이터
-    setTimeout(() => {
-      setPosts([
-        { id: 1, category: "suggestion", title: "시스템 개선 건의", name: "홍*동", created_at: "2026-03-25", views: 12, status: "answered" },
-        { id: 2, category: "bug", title: "로그인 오류 발생", name: "김*수", created_at: "2026-03-24", views: 8, status: "pending" },
-        { id: 3, category: "inquiry", title: "방문 신청 절차 문의", name: "이*영", created_at: "2026-03-23", views: 25, status: "answered" },
-      ])
-      setLoading(false)
-    }, 500)
+    const fetchPosts = async () => {
+      try {
+        const res = await fetch("/api/board")
+        const data = await res.json()
+        if (data.success) {
+          setPosts(data.posts)
+        }
+      } catch (error) {
+        console.error("Failed to fetch posts:", error)
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchPosts()
   }, [])
 
-  const categoryLabels: Record<string, { ko: string; en: string }> = {
-    suggestion: { ko: "건의사항", en: "Suggestion" },
-    bug: { ko: "오류 신고", en: "Bug Report" },
-    inquiry: { ko: "문의사항", en: "Inquiry" },
-    other: { ko: "기타", en: "Other" },
-  }
-
   const getCategoryLabel = (category: string) => {
-    const cat = categoryLabels[category]
-    return cat ? t(cat.ko, cat.en) : category
+    return category || t("기타", "Other")
   }
 
   const getCategoryColor = (category: string) => {
     switch (category) {
-      case "suggestion": return "bg-amber-500/20 text-amber-400"
-      case "bug": return "bg-red-500/20 text-red-400"
-      case "inquiry": return "bg-blue-500/20 text-blue-400"
+      case "건의사항": return "bg-amber-500/20 text-amber-400"
+      case "오류신고": return "bg-red-500/20 text-red-400"
+      case "문의": return "bg-blue-500/20 text-blue-400"
       default: return "bg-white/10 text-white/60"
     }
+  }
+
+  const maskName = (name: string) => {
+    if (!name || name.length < 2) return name
+    return name[0] + "*" + name.slice(2)
   }
 
   return (
@@ -147,10 +147,10 @@ export default function BoardListPage() {
                         {post.title}
                       </div>
                       <div className="col-span-2 text-white/60 text-sm">
-                        {post.name}
+                        {maskName(post.author)}
                       </div>
                       <div className="col-span-2 text-white/40 text-sm">
-                        {post.created_at}
+                        {post.createdAt?.split("T")[0]}
                       </div>
                       <div className="col-span-1 text-center">
                         <span className={`inline-block px-2 py-1 rounded-lg text-xs font-bold ${
@@ -181,11 +181,11 @@ export default function BoardListPage() {
                       <div className="flex items-center gap-4 text-white/40 text-xs">
                         <span className="flex items-center gap-1">
                           <User size={12} />
-                          {post.name}
+                          {maskName(post.author)}
                         </span>
                         <span className="flex items-center gap-1">
                           <Calendar size={12} />
-                          {post.created_at}
+                          {post.createdAt?.split("T")[0]}
                         </span>
                       </div>
                     </div>
