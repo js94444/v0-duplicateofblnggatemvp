@@ -1301,7 +1301,7 @@ export class AzureSqlDB {
       .query(`DELETE FROM admin_accounts WHERE account_id = @account_id`)
   }
 
-  /** 마지막 로그인 시각 업데이트 */
+  /** 마지막 로그인 시각 업��이트 */
   static async updateLastLogin(accountId: number): Promise<void> {
     const dbPool = await getPool()
     await dbPool.request()
@@ -1886,7 +1886,7 @@ export class AzureSqlDB {
         ),
         -- 5. 입장/퇴장 사이클 매칭 (N번째 입장 - N번째 퇴장)
         EntryCycles AS (
-          -- 입장 기록이 있는 경우 (입장 기준으로 퇴장 매��)
+          -- 입장 기록이 있는 경우 (입장 기준으로 퇴장 매���)
           SELECT 
             e.pass_id,
             e.entry_scan_id,
@@ -1933,7 +1933,7 @@ export class AzureSqlDB {
           FROM FilteredScans
           GROUP BY pass_id
         )
-        -- 스캔 기록이 있는 방문자 (각 사이클별로 별도 행)
+        -- 스��� 기록이 있는 방문자 (각 사이클별로 별도 행)
         SELECT TOP (@limit)
           ap.pass_id,
           ap.application_id,
@@ -2419,17 +2419,23 @@ export class AzureSqlDB {
   }): Promise<{ id: number }> {
     const dbPool = await getPool()
     
-    const result = await dbPool.request()
+    // 새 ID 생성 (기존 최대 ID + 1)
+    const maxIdResult = await dbPool.request().query(`
+      SELECT ISNULL(MAX(id), 0) + 1 as newId FROM board_posts
+    `)
+    const newId = maxIdResult.recordset[0].newId
+    
+    await dbPool.request()
+      .input('id', sql.Int, newId)
       .input('title', sql.NVarChar(200), data.title)
       .input('content', sql.NVarChar(sql.MAX), data.content)
       .input('author', sql.NVarChar(100), data.author)
       .query(`
-        INSERT INTO board_posts (title, content, author, created_at)
-        OUTPUT INSERTED.id
-        VALUES (@title, @content, @author, GETDATE())
+        INSERT INTO board_posts (id, title, content, author, created_at)
+        VALUES (@id, @title, @content, @author, GETDATE())
       `)
     
-    return { id: result.recordset[0].id }
+    return { id: newId }
   }
 
   /** 게시물 삭제 (어드민용) */
