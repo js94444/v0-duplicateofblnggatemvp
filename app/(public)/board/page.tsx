@@ -1,53 +1,69 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { PublicHeader } from "@/components/public/public-header"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
 import { useLang } from "@/lib/language-context"
-import { MessageSquare, Send, ChevronLeft } from "lucide-react"
+import { MessageSquare, ChevronLeft, PenSquare, Eye, Calendar, User } from "lucide-react"
 import Link from "next/link"
 
-export default function BoardPage() {
+interface BoardPost {
+  id: number
+  category: string
+  title: string
+  name: string
+  created_at: string
+  views: number
+  status: "pending" | "answered"
+}
+
+export default function BoardListPage() {
   const { lang } = useLang()
   const t = (ko: string, en: string) => (lang === "ko" ? ko : en)
 
-  const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    phone: "",
-    category: "suggestion",
-    title: "",
-    content: "",
-  })
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [submitted, setSubmitted] = useState(false)
+  const [posts, setPosts] = useState<BoardPost[]>([])
+  const [loading, setLoading] = useState(true)
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsSubmitting(true)
-
+  useEffect(() => {
     // TODO: API 연동
-    await new Promise((resolve) => setTimeout(resolve, 1000))
+    // 임시 더미 데이터
+    setTimeout(() => {
+      setPosts([
+        { id: 1, category: "suggestion", title: "시스템 개선 건의", name: "홍*동", created_at: "2026-03-25", views: 12, status: "answered" },
+        { id: 2, category: "bug", title: "로그인 오류 발생", name: "김*수", created_at: "2026-03-24", views: 8, status: "pending" },
+        { id: 3, category: "inquiry", title: "방문 신청 절차 문의", name: "이*영", created_at: "2026-03-23", views: 25, status: "answered" },
+      ])
+      setLoading(false)
+    }, 500)
+  }, [])
 
-    setIsSubmitting(false)
-    setSubmitted(true)
+  const categoryLabels: Record<string, { ko: string; en: string }> = {
+    suggestion: { ko: "건의사항", en: "Suggestion" },
+    bug: { ko: "오류 신고", en: "Bug Report" },
+    inquiry: { ko: "문의사항", en: "Inquiry" },
+    other: { ko: "기타", en: "Other" },
   }
 
-  const categories = [
-    { value: "suggestion", label: t("건의사항", "Suggestion") },
-    { value: "bug", label: t("오류 신고", "Bug Report") },
-    { value: "inquiry", label: t("문의사항", "Inquiry") },
-    { value: "other", label: t("기타", "Other") },
-  ]
+  const getCategoryLabel = (category: string) => {
+    const cat = categoryLabels[category]
+    return cat ? t(cat.ko, cat.en) : category
+  }
+
+  const getCategoryColor = (category: string) => {
+    switch (category) {
+      case "suggestion": return "bg-amber-500/20 text-amber-400"
+      case "bug": return "bg-red-500/20 text-red-400"
+      case "inquiry": return "bg-blue-500/20 text-blue-400"
+      default: return "bg-white/10 text-white/60"
+    }
+  }
 
   return (
     <div className="min-h-screen bg-zinc-950">
       <PublicHeader initialScrolled />
 
       <main className="pt-24 pb-16 px-6 md:px-12">
-        <div className="max-w-2xl mx-auto">
+        <div className="max-w-4xl mx-auto">
           {/* Back link */}
           <Link
             href="/"
@@ -58,173 +74,126 @@ export default function BoardPage() {
           </Link>
 
           {/* Header */}
-          <div className="flex items-center gap-3 mb-8">
-            <div className="p-3 bg-amber-500/20 rounded-2xl">
-              <MessageSquare className="w-6 h-6 text-amber-500" />
+          <div className="flex items-center justify-between mb-8">
+            <div className="flex items-center gap-3">
+              <div className="p-3 bg-amber-500/20 rounded-2xl">
+                <MessageSquare className="w-6 h-6 text-amber-500" />
+              </div>
+              <div>
+                <h1 className="text-2xl font-black text-white">
+                  {t("건의사항 게시판", "Suggestion Board")}
+                </h1>
+                <p className="text-white/50 text-sm mt-1">
+                  {t(
+                    "시스템 이용 중 건의사항이나 문의사항을 남겨주세요.",
+                    "Please leave your suggestions or inquiries about the system."
+                  )}
+                </p>
+              </div>
             </div>
-            <div>
-              <h1 className="text-2xl font-black text-white">
-                {t("건의사항 게시판", "Suggestion Board")}
-              </h1>
-              <p className="text-white/50 text-sm mt-1">
-                {t(
-                  "시스템 이용 중 건의사항이나 문의사항을 남겨주세요.",
-                  "Please leave your suggestions or inquiries about the system."
-                )}
-              </p>
-            </div>
+
+            {/* 작성하기 버튼 */}
+            <Link href="/board/write">
+              <Button className="bg-amber-500 hover:bg-amber-600 text-black font-bold rounded-xl flex items-center gap-2">
+                <PenSquare size={16} />
+                {t("작성하기", "Write")}
+              </Button>
+            </Link>
           </div>
 
-          {submitted ? (
-            <div className="bg-white/5 border border-white/10 rounded-3xl p-8 text-center">
-              <div className="w-16 h-16 bg-emerald-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                <MessageSquare className="w-8 h-8 text-emerald-500" />
-              </div>
-              <h2 className="text-xl font-bold text-white mb-2">
-                {t("제출이 완료되었습니다", "Submission Complete")}
-              </h2>
-              <p className="text-white/60 mb-6">
-                {t(
-                  "소중한 의견 감사합니다. 검토 후 필요시 연락드리겠습니다.",
-                  "Thank you for your feedback. We will contact you if necessary."
-                )}
-              </p>
-              <Button
-                onClick={() => {
-                  setSubmitted(false)
-                  setFormData({
-                    name: "",
-                    email: "",
-                    phone: "",
-                    category: "suggestion",
-                    title: "",
-                    content: "",
-                  })
-                }}
-                className="bg-amber-500 hover:bg-amber-600 text-black font-bold rounded-xl"
-              >
-                {t("새 글 작성", "Write New")}
-              </Button>
+          {/* 게시물 목록 */}
+          <div className="bg-white/5 border border-white/10 rounded-3xl overflow-hidden">
+            {/* 테이블 헤더 */}
+            <div className="hidden md:grid grid-cols-12 gap-4 px-6 py-4 border-b border-white/10 text-sm font-bold text-white/50">
+              <div className="col-span-2">{t("분류", "Category")}</div>
+              <div className="col-span-5">{t("제목", "Title")}</div>
+              <div className="col-span-2">{t("작성자", "Author")}</div>
+              <div className="col-span-2">{t("작성일", "Date")}</div>
+              <div className="col-span-1 text-center">{t("상태", "Status")}</div>
             </div>
-          ) : (
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <div className="bg-white/5 border border-white/10 rounded-3xl p-6 space-y-5">
-                {/* 작성자 정보 */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-white/70 mb-2">
-                      {t("이름", "Name")} <span className="text-red-400">*</span>
-                    </label>
-                    <Input
-                      required
-                      value={formData.name}
-                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                      placeholder={t("이름을 입력하세요", "Enter your name")}
-                      className="bg-white/5 border-white/10 text-white placeholder:text-white/30 rounded-xl"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-white/70 mb-2">
-                      {t("연락처", "Phone")}
-                    </label>
-                    <Input
-                      value={formData.phone}
-                      onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                      placeholder={t("010-0000-0000", "010-0000-0000")}
-                      className="bg-white/5 border-white/10 text-white placeholder:text-white/30 rounded-xl"
-                    />
-                  </div>
-                </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-white/70 mb-2">
-                    {t("이메일", "Email")}
-                  </label>
-                  <Input
-                    type="email"
-                    value={formData.email}
-                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    placeholder={t("example@email.com", "example@email.com")}
-                    className="bg-white/5 border-white/10 text-white placeholder:text-white/30 rounded-xl"
-                  />
-                </div>
-
-                {/* 카테고리 */}
-                <div>
-                  <label className="block text-sm font-medium text-white/70 mb-2">
-                    {t("분류", "Category")} <span className="text-red-400">*</span>
-                  </label>
-                  <div className="flex flex-wrap gap-2">
-                    {categories.map((cat) => (
-                      <button
-                        key={cat.value}
-                        type="button"
-                        onClick={() => setFormData({ ...formData, category: cat.value })}
-                        className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${
-                          formData.category === cat.value
-                            ? "bg-amber-500 text-black"
-                            : "bg-white/5 text-white/60 hover:bg-white/10"
-                        }`}
-                      >
-                        {cat.label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* 제목 */}
-                <div>
-                  <label className="block text-sm font-medium text-white/70 mb-2">
-                    {t("제목", "Title")} <span className="text-red-400">*</span>
-                  </label>
-                  <Input
-                    required
-                    value={formData.title}
-                    onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                    placeholder={t("제목을 입력하세요", "Enter title")}
-                    className="bg-white/5 border-white/10 text-white placeholder:text-white/30 rounded-xl"
-                  />
-                </div>
-
-                {/* 내용 */}
-                <div>
-                  <label className="block text-sm font-medium text-white/70 mb-2">
-                    {t("내용", "Content")} <span className="text-red-400">*</span>
-                  </label>
-                  <Textarea
-                    required
-                    value={formData.content}
-                    onChange={(e) => setFormData({ ...formData, content: e.target.value })}
-                    placeholder={t(
-                      "건의사항이나 문의 내용을 상세히 작성해주세요.",
-                      "Please describe your suggestion or inquiry in detail."
-                    )}
-                    rows={6}
-                    className="bg-white/5 border-white/10 text-white placeholder:text-white/30 rounded-xl resize-none"
-                  />
-                </div>
+            {/* 게시물 리스트 */}
+            {loading ? (
+              <div className="py-16 text-center text-white/40">
+                <div className="w-8 h-8 border-2 border-white/20 border-t-amber-500 rounded-full animate-spin mx-auto mb-4" />
+                {t("불러오는 중...", "Loading...")}
               </div>
+            ) : posts.length === 0 ? (
+              <div className="py-16 text-center text-white/40">
+                <MessageSquare className="w-12 h-12 mx-auto mb-4 opacity-30" />
+                <p>{t("등록된 게시물이 없습니다.", "No posts yet.")}</p>
+                <Link href="/board/write">
+                  <Button className="mt-4 bg-amber-500/20 hover:bg-amber-500/30 text-amber-400 font-bold rounded-xl">
+                    {t("첫 글 작성하기", "Write the first post")}
+                  </Button>
+                </Link>
+              </div>
+            ) : (
+              <div className="divide-y divide-white/5">
+                {posts.map((post) => (
+                  <Link
+                    key={post.id}
+                    href={`/board/${post.id}`}
+                    className="block px-6 py-4 hover:bg-white/5 transition-colors"
+                  >
+                    {/* Desktop */}
+                    <div className="hidden md:grid grid-cols-12 gap-4 items-center">
+                      <div className="col-span-2">
+                        <span className={`inline-block px-2 py-1 rounded-lg text-xs font-bold ${getCategoryColor(post.category)}`}>
+                          {getCategoryLabel(post.category)}
+                        </span>
+                      </div>
+                      <div className="col-span-5 text-white font-medium truncate">
+                        {post.title}
+                      </div>
+                      <div className="col-span-2 text-white/60 text-sm">
+                        {post.name}
+                      </div>
+                      <div className="col-span-2 text-white/40 text-sm">
+                        {post.created_at}
+                      </div>
+                      <div className="col-span-1 text-center">
+                        <span className={`inline-block px-2 py-1 rounded-lg text-xs font-bold ${
+                          post.status === "answered" 
+                            ? "bg-emerald-500/20 text-emerald-400" 
+                            : "bg-white/10 text-white/50"
+                        }`}>
+                          {post.status === "answered" ? t("답변완료", "Answered") : t("대기중", "Pending")}
+                        </span>
+                      </div>
+                    </div>
 
-              {/* Submit */}
-              <Button
-                type="submit"
-                disabled={isSubmitting}
-                className="w-full bg-amber-500 hover:bg-amber-600 text-black font-bold rounded-xl py-6 text-base"
-              >
-                {isSubmitting ? (
-                  <span className="flex items-center gap-2">
-                    <span className="w-4 h-4 border-2 border-black/30 border-t-black rounded-full animate-spin" />
-                    {t("제출 중...", "Submitting...")}
-                  </span>
-                ) : (
-                  <span className="flex items-center gap-2">
-                    <Send size={18} />
-                    {t("제출하기", "Submit")}
-                  </span>
-                )}
-              </Button>
-            </form>
-          )}
+                    {/* Mobile */}
+                    <div className="md:hidden space-y-2">
+                      <div className="flex items-center gap-2">
+                        <span className={`inline-block px-2 py-1 rounded-lg text-xs font-bold ${getCategoryColor(post.category)}`}>
+                          {getCategoryLabel(post.category)}
+                        </span>
+                        <span className={`inline-block px-2 py-1 rounded-lg text-xs font-bold ${
+                          post.status === "answered" 
+                            ? "bg-emerald-500/20 text-emerald-400" 
+                            : "bg-white/10 text-white/50"
+                        }`}>
+                          {post.status === "answered" ? t("답변완료", "Answered") : t("대기중", "Pending")}
+                        </span>
+                      </div>
+                      <h3 className="text-white font-medium">{post.title}</h3>
+                      <div className="flex items-center gap-4 text-white/40 text-xs">
+                        <span className="flex items-center gap-1">
+                          <User size={12} />
+                          {post.name}
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <Calendar size={12} />
+                          {post.created_at}
+                        </span>
+                      </div>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       </main>
     </div>
