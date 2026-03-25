@@ -66,7 +66,6 @@ async function createIndexesIfNotExists(p: sql.ConnectionPool): Promise<void> {
     // 기존 테이블에 password 컬럼 추가 (없으면)
     `IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('board_posts') AND name = 'password')
      ALTER TABLE board_posts ADD password NVARCHAR(100)`,
-  ]
     `IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_visit_applications_status') 
      CREATE NONCLUSTERED INDEX IX_visit_applications_status ON visit_applications(status) INCLUDE (application_number, visitor_name, created_at)`,
     `IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_visit_applications_visitor_phone') 
