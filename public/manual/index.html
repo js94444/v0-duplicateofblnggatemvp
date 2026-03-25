@@ -661,7 +661,7 @@
 ════════════════════════════════════ -->
 <nav id="main-nav">
   <div class="nav-brand">
-    <img src="logo-transparent.png" alt="보령LNG터미널" class="nav-logo-img" />
+    <img src="/manual/logo-transparent.png" alt="보령LNG터미널" class="nav-logo-img" />
   </div>
   <div class="nav-menu">
     <a href="#flow">이용 흐름</a>
@@ -679,7 +679,7 @@
   <div class="hero-sticky">
 
     <!-- Video fallback (plays until canvas is ready) -->
-    <video id="hero-video" src="hero.mp4" autoplay muted loop playsinline></video>
+    <video id="hero-video" src="/manual/hero.mp4" autoplay muted loop playsinline></video>
 
     <!-- Canvas: scroll-driven frame playback -->
     <canvas id="hero-canvas"></canvas>
@@ -1096,7 +1096,7 @@
               <div class="gstep-num gn-a">02</div>
               <div class="gstep-body">
                 <h4>신청 승인 처리</h4>
-                <p><strong>신청 관리</strong>에서 대기중(PENDING) 또는 검토중(UNDER_REVIEW) 신청서를 선택하고 <strong>"승인" 버튼</strong>을 클릭합니다.</p>
+                <p><strong>신청 관리</strong>에서 ���기중(PENDING) 또는 검토중(UNDER_REVIEW) 신청서를 선택하고 <strong>"승인" 버튼</strong>을 클릭합니다.</p>
                 <div class="gtip gt-a">승인 시 자동 수행: 방문자 및 동반자별 <strong>QR 패스 생성</strong> → 방문자에게 <strong>QR 코드 링크 SMS 발송</strong> → 동반 방문자에게 개별 SMS → 담당자에게 SMS → <strong>이메일 알림</strong> 발송</div>
               </div>
             </div>
@@ -1265,7 +1265,7 @@
 <footer>
   <div class="footer-top">
     <div class="footer-brand">
-      <img src="logo-transparent.png" alt="보령LNG터미널" />
+      <img src="/manual/logo-transparent.png" alt="보령LNG터미널" />
       <p>보령LNG터미널 방문자 출입 관리 시스템. 방문 신청부터 현장 출입까지 온라인으로 처리합니다.</p>
     </div>
     <div class="footer-contacts">
@@ -1388,7 +1388,7 @@ function pad(n, len) { return String(n).padStart(len, '0'); }
   const loadPromises = Array.from({ length: FRAME_COUNT }, (_, i) => {
     return new Promise(resolve => {
       const img = new Image();
-      img.src = `frames/frame_${pad(i, 4)}.webp`;
+      img.src = `/manual/frames/frame_${pad(i, 4)}.webp`;
       img.onload = () => {
         frames[i] = img;
         loadedCount++;
