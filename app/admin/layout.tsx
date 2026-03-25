@@ -20,6 +20,10 @@ const ALL_PAGES = [
   { path: "/admin/accounts",  name: "계정 관리",   icon: Users },
 ]
 
+const bgStyle = {
+  backgroundImage: "url('/images/hero-bg.jpg')",
+}
+
 function AdminLayoutContent({ children }: { children: React.ReactNode }) {
   const { user, logout, isLoading, token } = useAdminAuth()
   const router = useRouter()
