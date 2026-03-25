@@ -160,6 +160,24 @@ export default function AdminQrScanPage() {
       return
     }
 
+    // 체크인 시 이미 입장+퇴장 완료된 행이 있으면 재입장 안내
+    if (action === 'checkin') {
+      const completedRows = targetRows.filter(r => r.lastEntryAt && r.lastExitAt)
+      if (completedRows.length > 0) {
+        alert("이미 입장/퇴장이 완료된 방문자입니다.\n재입장 버튼을 눌러주세요.")
+        return
+      }
+    }
+
+    // 체크아웃 시 입장 기록이 없는 행이 있으면 안내
+    if (action === 'checkout') {
+      const noEntryRows = targetRows.filter(r => !r.lastEntryAt)
+      if (noEntryRows.length > 0) {
+        alert("입장 기록이 없는 방문자가 있습니다.\n먼저 체크인을 해주세요.")
+        return
+      }
+    }
+
     setManualActionLoading(true)
     try {
       // 체크인: entry_scan_id로 UPDATE, 체크아웃: exit_scan_id로 UPDATE

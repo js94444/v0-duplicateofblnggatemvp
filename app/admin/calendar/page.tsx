@@ -111,7 +111,7 @@ export default function AdminCalendarPage() {
   const [selectedApp, setSelectedApp] = useState<Application | null>(null)
   const [statusFilter, setStatusFilter] = useState<ApplicationStatus | "ALL">("ALL")
 
-  const { data: applications = [], isLoading, mutate } = useSWR<Application[]>(
+  const { data: applications = [], isLoading, isValidating, mutate } = useSWR<Application[]>(
     "/api/admin/requests",
     fetcher,
     { revalidateOnFocus: false, dedupingInterval: 30000 }
@@ -265,9 +265,9 @@ export default function AdminCalendarPage() {
             </SelectContent>
           </Select>
           <Button onClick={() => setCurrentDate(new Date())} size="sm" className="bg-white/5 hover:bg-white/10 border border-white/10 text-white">오늘</Button>
-          <Button onClick={() => mutate()} size="sm" className="bg-white/10 hover:bg-white/20 border border-white/20 text-white font-bold px-5 py-2 rounded-xl transition-all">
-            <RefreshCw className="w-4 h-4 mr-2" />
-            새로고침
+        <Button onClick={() => mutate()} size="sm" className="bg-white/10 hover:bg-white/20 border border-white/20 text-white font-bold px-5 py-2 rounded-xl transition-all">
+          <RefreshCw className={`w-4 h-4 mr-2 ${isValidating ? "animate-spin" : ""}`} />
+          새로고침
           </Button>
         </div>
       </div>
