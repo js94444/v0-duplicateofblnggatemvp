@@ -134,7 +134,6 @@ export type Application = GroupVisitApplication | PortAccessApplication | GoodsI
 
 export const APPLICATION_STATUS_LABELS = {
   [ApplicationStatus.PENDING]: "접수 대기",
-  [ApplicationStatus.UNDER_REVIEW]: "검토 중",
   [ApplicationStatus.APPROVED]: "승인",
   [ApplicationStatus.REJECTED]: "반려",
   [ApplicationStatus.CANCELLED]: "신청취소",
