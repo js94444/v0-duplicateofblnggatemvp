@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
-import { UserCircle, Menu, X, Globe } from "lucide-react"
+import { UserCircle, Menu, X, Globe, BookOpen, MessageSquare } from "lucide-react"
 import { useLang } from "@/lib/language-context"
 
 interface PublicHeaderProps {
@@ -58,6 +58,30 @@ export function PublicHeader({ initialScrolled = false }: PublicHeaderProps) {
               {link.label}
             </Link>
           ))}
+
+          {/* 메뉴얼 버튼 */}
+          <button
+            type="button"
+            onClick={() => {/* 추후 메뉴얼 페이지 연결 */}}
+            className="flex items-center gap-1.5 text-white/60 hover:text-amber-500 transition-colors"
+            aria-label="메뉴얼"
+          >
+            <BookOpen size={14} />
+            <span className="text-[12px] font-extrabold tracking-[0.15em]">
+              {lang === "ko" ? "메뉴얼" : "Manual"}
+            </span>
+          </button>
+
+          {/* 게시판 버튼 */}
+          <Link
+            href="/board"
+            className="flex items-center gap-1.5 text-white/60 hover:text-amber-500 transition-colors"
+          >
+            <MessageSquare size={14} />
+            <span className="text-[12px] font-extrabold tracking-[0.15em]">
+              {lang === "ko" ? "게시판" : "Board"}
+            </span>
+          </Link>
 
           {/* 한영 전환 버튼 */}
           <button
@@ -133,6 +157,26 @@ export function PublicHeader({ initialScrolled = false }: PublicHeaderProps) {
                 {link.label}
               </Link>
             ))}
+
+            {/* 메뉴얼 */}
+            <button
+              type="button"
+              onClick={() => {/* 추후 메뉴얼 페이지 연결 */ setIsMenuOpen(false);}}
+              className="flex items-center gap-2 text-white/60 hover:text-amber-500 transition-colors text-sm mt-2 font-bold"
+            >
+              <BookOpen size={16} />
+              {lang === "ko" ? "메뉴얼" : "Manual"}
+            </button>
+
+            {/* 게시판 */}
+            <Link
+              href="/board"
+              onClick={() => setIsMenuOpen(false)}
+              className="flex items-center gap-2 text-white/60 hover:text-amber-500 transition-colors text-sm mt-2 font-bold"
+            >
+              <MessageSquare size={16} />
+              {lang === "ko" ? "게시판" : "Board"}
+            </Link>
 
             <button
               type="button"

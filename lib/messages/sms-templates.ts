@@ -174,6 +174,7 @@ export function getRejectionSmsText(payload: RejectionSmsPayload, recipientType:
   if (payload.rejection_reason?.trim()) {
     lines.push("", `반려 사유 : ${payload.rejection_reason.trim()}`)
   }
+  lines.push("", `URL : https://v0-lng-tml.vercel.app`)
   return lines.join("\n")
 }
 
