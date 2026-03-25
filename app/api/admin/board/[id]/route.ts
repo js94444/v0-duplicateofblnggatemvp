@@ -16,7 +16,7 @@ export async function DELETE(
       )
     }
 
-    const result = await DB.deleteBoardPostAdmin(id)
+    const result = await DB.deleteBoardPostAdmin(parseInt(id))
 
     if (!result.success) {
       return NextResponse.json(

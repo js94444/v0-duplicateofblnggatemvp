@@ -1886,7 +1886,7 @@ export class AzureSqlDB {
         ),
         -- 5. 입장/퇴장 사이클 매칭 (N번째 입장 - N번째 퇴장)
         EntryCycles AS (
-          -- 입장 기록이 있는 경우 (입장 기준으로 퇴장 매칭)
+          -- 입장 기록이 있는 경우 (입장 기준으로 퇴장 매��)
           SELECT 
             e.pass_id,
             e.entry_scan_id,
@@ -2404,70 +2404,40 @@ export class AzureSqlDB {
   static async getBoardPosts(): Promise<any[]> {
     const dbPool = await getPool()
     const result = await dbPool.request().query(`
-      SELECT id, category, title, content, author, contact, email, status, created_at
+      SELECT id, title, content, author, created_at
       FROM board_posts
       ORDER BY created_at DESC
     `)
     return result.recordset
   }
 
-  /** 게시물 등록 */
+  /** 게시물 등록 (이름, 제목, 내용만) */
   static async createBoardPost(data: {
-    category: string
     title: string
     content: string
     author: string
-    contact: string
-    email?: string
-    password: string
-  }): Promise<{ id: string }> {
-    const dbPool = await getPool()
-    const postId = `board-${Date.now()}`
-    
-    await dbPool.request()
-      .input('id', sql.NVarChar(50), postId)
-      .input('category', sql.NVarChar(50), data.category)
-      .input('title', sql.NVarChar(255), data.title)
-      .input('content', sql.NVarChar(sql.MAX), data.content)
-      .input('author', sql.NVarChar(100), data.author)
-      .input('contact', sql.NVarChar(20), data.contact)
-      .input('email', sql.NVarChar(255), data.email || null)
-      .input('password', sql.NVarChar(100), data.password)
-      .query(`
-        INSERT INTO board_posts (id, category, title, content, author, contact, email, password, status, created_at, updated_at)
-        VALUES (@id, @category, @title, @content, @author, @contact, @email, @password, '접수', GETDATE(), GETDATE())
-      `)
-    
-    return { id: postId }
-  }
-
-  /** 게시물 삭제 (비밀번호 확인) */
-  static async deleteBoardPost(id: string, password: string): Promise<{ success: boolean; message: string }> {
-    const dbPool = await getPool()
-    
-    // 비밀번호 확인
-    const checkResult = await dbPool.request()
-      .input('id', sql.NVarChar(50), id)
-      .input('password', sql.NVarChar(100), password)
-      .query(`SELECT id FROM board_posts WHERE id = @id AND password = @password`)
-    
-    if (checkResult.recordset.length === 0) {
-      return { success: false, message: "비밀번호가 일치하지 않습니다." }
-    }
-    
-    await dbPool.request()
-      .input('id', sql.NVarChar(50), id)
-      .query(`DELETE FROM board_posts WHERE id = @id`)
-    
-    return { success: true, message: "삭제되었습니다." }
-  }
-
-  /** 게시물 삭제 (어드민용 - 비밀번호 불필요) */
-  static async deleteBoardPostAdmin(id: string): Promise<{ success: boolean; message: string }> {
+  }): Promise<{ id: number }> {
     const dbPool = await getPool()
     
     const result = await dbPool.request()
-      .input('id', sql.NVarChar(50), id)
+      .input('title', sql.NVarChar(200), data.title)
+      .input('content', sql.NVarChar(sql.MAX), data.content)
+      .input('author', sql.NVarChar(100), data.author)
+      .query(`
+        INSERT INTO board_posts (title, content, author, created_at)
+        OUTPUT INSERTED.id
+        VALUES (@title, @content, @author, GETDATE())
+      `)
+    
+    return { id: result.recordset[0].id }
+  }
+
+  /** 게시물 삭제 (어드민용) */
+  static async deleteBoardPostAdmin(id: number): Promise<{ success: boolean; message: string }> {
+    const dbPool = await getPool()
+    
+    const result = await dbPool.request()
+      .input('id', sql.Int, id)
       .query(`DELETE FROM board_posts WHERE id = @id`)
     
     if (result.rowsAffected[0] === 0) {
