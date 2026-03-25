@@ -23,7 +23,7 @@ export async function getBoardPosts(): Promise<BoardPost[]> {
   try {
     const response = await notion.databases.query({
       database_id: DATABASE_ID,
-      sorts: [{ property: "작성일", direction: "descending" }],
+      sorts: [{ timestamp: "created_time", direction: "descending" }],
     })
 
     return response.results.map((page: any) => {
@@ -37,7 +37,7 @@ export async function getBoardPosts(): Promise<BoardPost[]> {
         contact: props["연락처"]?.phone_number || "",
         email: props["이메일"]?.email || "",
         status: props["상태"]?.select?.name || "접수",
-        createdAt: props["작성일"]?.date?.start || page.created_time,
+        createdAt: page.created_time,
       }
     })
   } catch (error) {
@@ -79,9 +79,6 @@ export async function createBoardPost(data: {
         },
         "상태": {
           select: { name: "접수" },
-        },
-        "작성일": {
-          date: { start: new Date().toISOString().split("T")[0] },
         },
       },
     })
