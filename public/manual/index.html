@@ -53,20 +53,6 @@
       z-index: 9999;
     }
 
-    /* ═══ CUSTOM CURSOR ═══════════════════════════════════════ */
-    body { cursor: none; }
-    #cursor {
-      position: fixed; width: 10px; height: 10px;
-      border-radius: 50%; background: var(--lime);
-      pointer-events: none; z-index: 99999;
-      transition: transform .15s var(--ease), width .3s var(--ease), height .3s var(--ease), border-radius .3s var(--ease);
-    }
-    #cursor.hovering {
-      width: 48px; height: 48px;
-      background: var(--lime-glow);
-      border: 1.5px solid var(--lime);
-    }
-
     /* ═══ SCROLLBAR ═══════════════════════════════════════════ */
     ::-webkit-scrollbar { width: 4px; }
     ::-webkit-scrollbar-track { background: var(--bg); }
@@ -105,7 +91,7 @@
       background: var(--lime); color: #0a0a0a;
       border: none; border-radius: 8px;
       padding: 9px 20px; font-size: .83rem; font-weight: 700;
-      cursor: none; transition: all .3s var(--ease);
+      cursor: pointer; transition: all .3s var(--ease);
       font-family: 'Pretendard Variable', sans-serif;
     }
     .nav-cta:hover { background: #fff; transform: translateY(-1px); }
@@ -652,9 +638,6 @@
   </style>
 </head>
 <body>
-
-<!-- Custom cursor -->
-<div id="cursor"></div>
 
 <!-- ════════════════════════════════════
      NAV
@@ -1226,7 +1209,7 @@
         </div>
         <div class="faq-item">
           <button class="faq-q"><span>경비대가 방문 신청을 승인할 수 있나요?</span><span class="faq-icon">+</span></button>
-          <div class="faq-a">공휴일 및 근무시간 외(평일 18:00~익일 09:00, 주말/공휴일)에는 특수경비대가 슈퍼어드민을 대신하여 승인·반려를 수행할 수 있습니다. 근무시간 내(평일 09:00~18:00)에는 슈퍼어드민만 가능합니다. 승인/반려 이력은 모두 시스템에 기록됩니다.</div>
+          <div class="faq-a">공휴일 및 근무시간 외(평일 18:00~익일 09:00, 주말/공휴일)에는 특수경비대가 슈퍼어드민을 대신하여 승인·반려를 수행할 수 있습니다. 근무시간 내(평일 09:00~18:00)에는 슈퍼어드민만 가능합니다. 승인/반려 이력은 모두 시스템에 기���됩니다.</div>
         </div>
         <div class="faq-item">
           <button class="faq-q"><span>슈퍼어드민과 매니저의 차이는 무엇인가요?</span><span class="faq-icon">+</span></button>
@@ -1296,20 +1279,6 @@
 </footer>
 
 <script>
-/* ════════════════════════════════════════
-   CURSOR
-════════════════════════════════════════ */
-const cursor = document.getElementById('cursor');
-let curX = 0, curY = 0;
-document.addEventListener('mousemove', e => {
-  curX = e.clientX; curY = e.clientY;
-  cursor.style.transform = `translate(${curX - 5}px, ${curY - 5}px)`;
-});
-document.querySelectorAll('a, button, .bento-card, .fb, .gstep').forEach(el => {
-  el.addEventListener('mouseenter', () => cursor.classList.add('hovering'));
-  el.addEventListener('mouseleave', () => cursor.classList.remove('hovering'));
-});
-
 /* ════════════════════════════════════════
    SCROLL-DRIVEN HERO FRAME ANIMATION
 ════════════════════════════════════════ */
