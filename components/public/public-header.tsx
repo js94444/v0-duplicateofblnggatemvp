@@ -60,18 +60,15 @@ export function PublicHeader({ initialScrolled = false }: PublicHeaderProps) {
           ))}
 
           {/* 메뉴얼 버튼 */}
-          <a
+          <Link
             href="/manual"
-            target="_blank"
-            rel="noopener noreferrer"
             className="flex items-center gap-1.5 text-white/60 hover:text-amber-500 transition-colors"
-            aria-label="메뉴얼"
           >
             <BookOpen size={14} />
             <span className="text-[12px] font-extrabold tracking-[0.15em]">
               {lang === "ko" ? "메뉴얼" : "Manual"}
             </span>
-          </a>
+          </Link>
 
           {/* 게시판 버튼 */}
           <Link
@@ -160,16 +157,14 @@ export function PublicHeader({ initialScrolled = false }: PublicHeaderProps) {
             ))}
 
             {/* 메뉴얼 */}
-            <a
+            <Link
               href="/manual"
-              target="_blank"
-              rel="noopener noreferrer"
               onClick={() => setIsMenuOpen(false)}
               className="flex items-center gap-2 text-white/60 hover:text-amber-500 transition-colors text-sm mt-2 font-bold"
             >
               <BookOpen size={16} />
               {lang === "ko" ? "메뉴얼" : "Manual"}
-            </a>
+            </Link>
 
             {/* 게시판 */}
             <Link
