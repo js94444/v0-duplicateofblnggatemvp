@@ -280,25 +280,3 @@ export default function BoardPage() {
     </div>
   )
 }
-                disabled={isSubmitting}
-                className="w-full bg-amber-500 hover:bg-amber-600 text-black font-bold rounded-xl py-6 text-base"
-              >
-                {isSubmitting ? (
-                  <span className="flex items-center gap-2">
-                    <span className="w-4 h-4 border-2 border-black/30 border-t-black rounded-full animate-spin" />
-                    {t("제출 중...", "Submitting...")}
-                  </span>
-                ) : (
-                  <span className="flex items-center gap-2">
-                    <Send size={18} />
-                    {t("제출하기", "Submit")}
-                  </span>
-                )}
-              </Button>
-            </form>
-          )}
-        </div>
-      </main>
-    </div>
-  )
-}
