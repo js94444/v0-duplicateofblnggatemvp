@@ -21,6 +21,11 @@ export interface BoardPost {
 // 게시물 목록 조회
 export async function getBoardPosts(): Promise<BoardPost[]> {
   try {
+    if (!process.env.NOTION_API_KEY || !DATABASE_ID) {
+      console.warn("Notion API 키 또는 데이터베이스 ID가 설정되지 않았습니다.")
+      return []
+    }
+
     const response = await notion.databases.query({
       database_id: DATABASE_ID,
       sorts: [{ timestamp: "created_time", direction: "descending" }],
@@ -54,8 +59,12 @@ export async function createBoardPost(data: {
   author: string
   contact: string
   email: string
-}): Promise<{ id: string }> {
+}): Promise<boolean> {
   try {
+    if (!process.env.NOTION_API_KEY || !DATABASE_ID) {
+      console.warn("Notion API 키 또는 데이터베이스 ID가 설정되지 않았습니다.")
+      return false
+    }
     const response = await notion.pages.create({
       parent: { database_id: DATABASE_ID },
       properties: {
