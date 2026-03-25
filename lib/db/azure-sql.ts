@@ -48,6 +48,21 @@ async function createIndexesIfNotExists(p: sql.ConnectionPool): Promise<void> {
     // visit_applications - 실제 DB 컬럼명 사용
     `IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_visit_applications_number') 
      CREATE NONCLUSTERED INDEX IX_visit_applications_number ON visit_applications(application_number)`,
+    // board_posts 테이블 생성 (없으면 자동 생성)
+    `IF NOT EXISTS (SELECT 1 FROM sys.tables WHERE name = 'board_posts')
+     CREATE TABLE board_posts (
+       id NVARCHAR(50) PRIMARY KEY,
+       category NVARCHAR(50) NOT NULL,
+       title NVARCHAR(255) NOT NULL,
+       content NVARCHAR(MAX) NOT NULL,
+       author NVARCHAR(100) NOT NULL,
+       contact NVARCHAR(20) NOT NULL,
+       email NVARCHAR(255),
+       status NVARCHAR(50) DEFAULT '접수',
+       created_at DATETIME DEFAULT GETDATE(),
+       updated_at DATETIME DEFAULT GETDATE()
+     )`,
+  ]
     `IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_visit_applications_status') 
      CREATE NONCLUSTERED INDEX IX_visit_applications_status ON visit_applications(status) INCLUDE (application_number, visitor_name, created_at)`,
     `IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_visit_applications_visitor_phone') 
@@ -349,7 +364,7 @@ export class AzureSqlDB {
     if (uploadedFiles && uploadedFiles.length > 0) {
       console.log('[v0] Processing', uploadedFiles.length, 'uploaded files')
       for (const file of uploadedFiles) {
-        // 일명과 키가 유효한 경우에만 ����������장
+        // 일명과 키가 유효한 경우에만 �����������장
         if (file && file.filename && file.fileKey && file.filename.trim() !== '' && file.fileKey.trim() !== '') {
           console.log('[v0] Saving file attachment:', {
             filename: file.filename,
@@ -2282,7 +2297,7 @@ export class AzureSqlDB {
     let affected = 0
 
     if (action === 'checkin' && scanIds && scanIds.length > 0) {
-      // 기존 스캔 행이 있으면 입장시각 업데이트, 없으면 아래 INSERT 경로로
+      // 기존 스캔 행이 있으면 입장시각 업데이트, ��으면 아래 INSERT 경로로
       for (const scanId of scanIds) {
         const req = dbPool.request()
           .input('scan_id', sql.BigInt, scanId)
@@ -2380,4 +2395,45 @@ export class AzureSqlDB {
     }
     return { success: true }
   }
+
+  // ═══ 게시판 (Board Posts) ═══
+  /** 게시물 목록 조회 */
+  static async getBoardPosts(): Promise<any[]> {
+    const dbPool = await getPool()
+    const result = await dbPool.request().query(`
+      SELECT id, category, title, content, author, contact, email, status, created_at
+      FROM board_posts
+      ORDER BY created_at DESC
+    `)
+    return result.recordset
+  }
+
+  /** 게시물 등록 */
+  static async createBoardPost(data: {
+    category: string
+    title: string
+    content: string
+    author: string
+    contact: string
+    email?: string
+  }): Promise<{ id: string }> {
+    const dbPool = await getPool()
+    const postId = `board-${Date.now()}`
+    
+    await dbPool.request()
+      .input('id', sql.NVarChar(50), postId)
+      .input('category', sql.NVarChar(50), data.category)
+      .input('title', sql.NVarChar(255), data.title)
+      .input('content', sql.NVarChar(sql.MAX), data.content)
+      .input('author', sql.NVarChar(100), data.author)
+      .input('contact', sql.NVarChar(20), data.contact)
+      .input('email', sql.NVarChar(255), data.email || null)
+      .query(`
+        INSERT INTO board_posts (id, category, title, content, author, contact, email, status, created_at, updated_at)
+        VALUES (@id, @category, @title, @content, @author, @contact, @email, '접수', GETDATE(), GETDATE())
+      `)
+    
+    return { id: postId }
+  }
 }
+

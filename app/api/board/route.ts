@@ -1,26 +1,11 @@
 import { NextRequest, NextResponse } from "next/server"
-
-// 임시 메모리 캐시 (서버 메모리에만 저장, 재배포 시 초기화)
-let boardPosts: Array<{
-  id: string
-  category: string
-  title: string
-  content: string
-  author: string
-  contact: string
-  email: string
-  createdAt: string
-  status: string
-}> = []
+import { DB } from "@/lib/db/azure-sql"
 
 // 게시물 목록 조회
 export async function GET() {
   try {
-    return NextResponse.json({ 
-      success: true, 
-      posts: boardPosts,
-      note: "임시 메모리 캐시 (페이지 새로고침 시 초기화됨)"
-    })
+    const posts = await DB.getBoardPosts()
+    return NextResponse.json({ success: true, posts })
   } catch (error: any) {
     console.error("Board GET error:", error)
     return NextResponse.json(
@@ -44,24 +29,19 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const newPost = {
-      id: `board-${Date.now()}`,
+    const result = await DB.createBoardPost({
       category: category || "건의사항",
       title,
       content,
       author,
       contact,
       email: email || "",
-      createdAt: new Date().toISOString(),
-      status: "접수",
-    }
-
-    boardPosts.unshift(newPost) // 최신순으로 맨 앞에 추가
+    })
 
     return NextResponse.json({ 
       success: true, 
       message: "게시물이 등록되었습니다.",
-      id: newPost.id 
+      id: result.id 
     })
   } catch (error: any) {
     console.error("Board POST error:", error)
