@@ -349,7 +349,7 @@ export class AzureSqlDB {
     if (uploadedFiles && uploadedFiles.length > 0) {
       console.log('[v0] Processing', uploadedFiles.length, 'uploaded files')
       for (const file of uploadedFiles) {
-        // 일명과 키가 유효한 경우에만 ���������장
+        // 일명과 키가 유효한 경우에만 ����������장
         if (file && file.filename && file.fileKey && file.filename.trim() !== '' && file.fileKey.trim() !== '') {
           console.log('[v0] Saving file attachment:', {
             filename: file.filename,
@@ -1103,7 +1103,7 @@ export class AzureSqlDB {
 
     console.log('[v0] Updating application status:', { id, status, rejectionReason })
 
-    // DB에는 소문자�� ����
+    // DB���는 소문자�� ����
     const dbStatus = status.toLowerCase()
     const now = getKoreaTime()
 
@@ -1637,22 +1637,29 @@ export class AzureSqlDB {
 
     const lastDirection = lastScanResult.recordset[0]?.direction || null
 
-    // 입장(ENTRY) 시 - 이미 입장 중이면 MISMATCH
+    // 입장(ENTRY) 시 - 이미 입장 중이면 재입장으로 처리 (새 사이클)
+    // 단, 정확히 같은 시각(100ms 이내) 중복 스캔은 무시
     if (direction === 'ENTRY' && lastDirection === 'ENTRY') {
+      // 재입장으로 처리 - 그냥 새로운 ENTRY 기록을 추가하면 됨
+      // 아래 로직에서 자동으로 새 ENTRY가 INSERT됨
+    }
+
+    // 퇴장(EXIT) 시 - 입장 기록이 없거나 이미 퇴장 완료면 재입장 안내
+    if (direction === 'EXIT' && lastDirection === null) {
       return {
         result: "MISMATCH",
-        message: "이미 입장 처리된 상태입니다. (중복 스캔)",
+        message: "입장 기록이 없습니다. 먼저 입장해 주세요.",
         visitor_name: displayName,
         visitor_org: app.visitor_org,
         is_companion: !!app.companion_id
       }
     }
 
-    // 퇴장(EXIT) 시 - 입장 기록이 없거나 이미 퇴장 완료면 MISMATCH
-    if (direction === 'EXIT' && (lastDirection === null || lastDirection === 'EXIT')) {
+    // 이미 퇴장 완료된 상태에서 다시 퇴장 시도 - 재입장 안내
+    if (direction === 'EXIT' && lastDirection === 'EXIT') {
       return {
         result: "MISMATCH",
-        message: "입장 기록이 없습니다. 먼저 입장해 주세요.",
+        message: "이미 퇴장 처리된 상태입니다. 재입장이 필요합니다.",
         visitor_name: displayName,
         visitor_org: app.visitor_org,
         is_companion: !!app.companion_id
@@ -1702,7 +1709,7 @@ export class AzureSqlDB {
 
     return {
       result: "ALLOW",
-      message: `${direction === 'ENTRY' ? '입장' : '퇴��'} 처����었습니다`,
+      message: direction === 'ENTRY' ? '입장 처리되었습니다' : '퇴장 처리되었습니다',
       visitor_name: displayName,
       visitor_org: app.visitor_org,
       access_area: app.access_area,
@@ -1899,7 +1906,7 @@ export class AzureSqlDB {
             SELECT 1 FROM EntryScans e WHERE e.pass_id = x.pass_id
           )
         ),
-        -- 6. 입장/퇴장 총 횟수
+        -- 6. 입장/퇴�� 총 횟수
         ScanCounts AS (
           SELECT 
             pass_id,

@@ -50,8 +50,6 @@ export default function VerifyReceiptPage() {
         setLoading(true)
         setError(null)
 
-        console.log("[v0] Verify page - calling API for receipt:", receipt, "direction:", direction, "gate:", gate)
-
         // API 호출 - 스캔 기록 저장 및 검증
         const res = await fetch(`/api/qr/verify/${encodeURIComponent(receipt)}?direction=${direction}&gate=${gate}`, {
           method: "GET",
@@ -62,7 +60,6 @@ export default function VerifyReceiptPage() {
         if (isCancelled) return
 
         const json = await res.json()
-        console.log("[v0] Verify page - API response:", json)
 
         if (!res.ok) {
           setResult({
