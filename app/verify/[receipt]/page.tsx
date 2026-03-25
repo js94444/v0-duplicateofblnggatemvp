@@ -50,8 +50,10 @@ export default function VerifyReceiptPage() {
         setLoading(true)
         setError(null)
 
+        console.log("[v0] Verify page - calling API for receipt:", receipt, "direction:", direction, "gate:", gate)
+
         // API 호출 - 스캔 기록 저장 및 검증
-        const res = await fetch(`/api/qr/verify/${receipt}?direction=${direction}&gate=${gate}`, {
+        const res = await fetch(`/api/qr/verify/${encodeURIComponent(receipt)}?direction=${direction}&gate=${gate}`, {
           method: "GET",
           headers: { "Cache-Control": "no-cache" },
         })
@@ -60,6 +62,7 @@ export default function VerifyReceiptPage() {
         if (isCancelled) return
 
         const json = await res.json()
+        console.log("[v0] Verify page - API response:", json)
 
         if (!res.ok) {
           setResult({
@@ -67,9 +70,15 @@ export default function VerifyReceiptPage() {
             message: json.message || "출입권 검증에 실패했습니다.",
           })
         } else {
+          // 입장/퇴장 메시지 설정
+          let displayMessage = json.message || ""
+          if (json.result === "ALLOW") {
+            displayMessage = direction === "ENTRY" ? "입장 처리되었습니다." : "퇴장 처리되었습니다."
+          }
+          
           setResult({
             result: json.result || "ALLOW",
-            message: json.message || "처리되었습니다.",
+            message: displayMessage,
             visitor_name: json.visitor_name,
             visitor_org: json.visitor_org,
             access_area: json.access_area,
