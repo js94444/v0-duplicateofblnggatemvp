@@ -8,12 +8,7 @@ import { useRouter, usePathname } from "next/navigation"
 import useSWR from "swr"
 import { AdminAuthProvider, useAdminAuth } from "@/hooks/use-admin-auth"
 import { Button } from "@/components/ui/button"
-import { Home, LogOut, LayoutDashboard, FileText, Calendar, Users, QrCode } from "lucide-react"
-
-const bgStyle = {
-  backgroundImage: "url('/images/lng-terminal-bg.jpg')",
-  filter: "brightness(0.3) blur(5px)",
-}
+import { Home, LogOut, LayoutDashboard, FileText, Calendar, Users, QrCode, MessageSquare } from "lucide-react"
 
 // 전체 페이지 목록 (아이콘, 경로, 이름 정의)
 const ALL_PAGES = [
@@ -21,6 +16,7 @@ const ALL_PAGES = [
   { path: "/admin/requests",  name: "신청 관리",   icon: FileText },
   { path: "/admin/calendar",  name: "방문 캘린더", icon: Calendar },
   { path: "/admin/qr",        name: "출입현황", icon: QrCode },
+  { path: "/admin/board",     name: "게시판",     icon: MessageSquare },
   { path: "/admin/accounts",  name: "계정 관리",   icon: Users },
 ]
 
