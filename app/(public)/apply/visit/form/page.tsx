@@ -801,7 +801,7 @@ export default function VisitFormPage() {
                     className={formData.has_no_vehicle ? "opacity-50 pointer-events-none h-14 w-full" : "h-14 w-full"}
                   />
                   <FormSelect
-                    placeholder={t("불꽃방지망", "Spark Arrestor")}
+                    placeholder={t("불꽃방지망보유", "Spark Arrestor")}
                     required={!formData.has_no_vehicle}
                     options={[
                       { value: "Y", label: t("Y", "Y") },
