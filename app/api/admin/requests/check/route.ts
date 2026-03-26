@@ -43,6 +43,11 @@ export async function GET(request: NextRequest) {
 
   // 현재 로그인 유저의 체크 여부도 함께 반환
   const myCheck = await AzureSqlDB.getApplicationCheck(Number(application_id), Number(user.id))
+  
+  // checked 값을 명시적으로 boolean으로 변환
+  if (myCheck && typeof myCheck.checked !== 'boolean') {
+    myCheck.checked = myCheck.checked ? true : false
+  }
 
   return NextResponse.json({ checks, my_check: myCheck })
 }
