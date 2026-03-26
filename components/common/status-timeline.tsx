@@ -7,6 +7,21 @@ interface StatusTimelineProps {
   rejectionReason?: string
 }
 
+// DB에 KST로 저장되어 있으므로 UTC 필드를 그대로 사용
+const formatDateTimeKST = (date: Date | null) => {
+  if (!date) return ""
+  const d = new Date(date)
+  if (Number.isNaN(d.getTime())) return ""
+  const year = d.getUTCFullYear()
+  const month = d.getUTCMonth() + 1
+  const day = d.getUTCDate()
+  const hour = d.getUTCHours()
+  const minute = d.getUTCMinutes().toString().padStart(2, '0')
+  const ampm = hour < 12 ? '오전' : '오후'
+  const hour12 = hour % 12 || 12
+  return `${year}. ${month}. ${day}. ${ampm} ${hour12}:${minute}`
+}
+
 export function StatusTimeline({ status, createdAt, updatedAt, rejectionReason }: StatusTimelineProps) {
   const steps = [
     {
@@ -95,7 +110,7 @@ export function StatusTimeline({ status, createdAt, updatedAt, rejectionReason }
                   {step.title}
                 </h4>
                 {step.date && (
-                  <span className="text-sm font-bold text-white/60 whitespace-nowrap">{new Date(step.date).toLocaleString("ko-KR")}</span>
+                  <span className="text-sm font-bold text-white/60 whitespace-nowrap">{formatDateTimeKST(step.date)}</span>
                 )}
               </div>
               <p
