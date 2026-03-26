@@ -294,7 +294,7 @@ export function ApplicationDetailModal({ application, open, loading = false, sca
                       <InfoField label="회사주소" value={app.visitor_address} />
                       <InfoField label="차량번호" value={app.vehicle_number} />
                       <InfoField label="차량유종" value={app.vehicle_model} />
-                      <InfoField label="불꽃방지망" value={app.spark_arrestor || "-"} />
+                      <InfoField label="불꽃방지망보유" value={app.spark_arrestor || "-"} />
                     </div>
 
                     {/* 본인 전자기기 */}

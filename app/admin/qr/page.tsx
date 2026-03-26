@@ -796,14 +796,14 @@ export default function AdminQrScanPage() {
                       <TableHead className="text-white/70 min-w-[90px] cursor-pointer select-none" onClick={() => handleSort("visitor_name")}>방문자<SortIcon col="visitor_name" /></TableHead>
                       <TableHead className="text-white/70 min-w-[100px] cursor-pointer select-none" onClick={() => handleSort("visitor_birth_date")}>생년월일<SortIcon col="visitor_birth_date" /></TableHead>
                       <TableHead className="text-white/70 min-w-[120px] cursor-pointer select-none" onClick={() => handleSort("visitor_organization")}>소속<SortIcon col="visitor_organization" /></TableHead>
-                      <TableHead className="text-white/70 min-w-[100px]">카드번호</TableHead>
+                      <TableHead className="text-white/70 min-w-[80px]">카드번호</TableHead>
                       <TableHead className="text-white/70 min-w-[140px] cursor-pointer select-none" onClick={() => handleSort("contact_name")}>담당자<SortIcon col="contact_name" /></TableHead>
                       <TableHead className="text-white/70 min-w-[100px] cursor-pointer select-none" onClick={() => handleSort("access_area")}>출입구역<SortIcon col="access_area" /></TableHead>
                       <TableHead className="text-white/70 min-w-[140px] cursor-pointer select-none" onClick={() => handleSort("lastEntryAt")}>입장시각<SortIcon col="lastEntryAt" /></TableHead>
                       <TableHead className="text-white/70 min-w-[140px] cursor-pointer select-none" onClick={() => handleSort("lastExitAt")}>퇴장시각<SortIcon col="lastExitAt" /></TableHead>
                       <TableHead className="text-white/70 min-w-[90px]">차량번호</TableHead>
                       <TableHead className="text-white/70 min-w-[70px]">차량유종</TableHead>
-                      <TableHead className="text-white/70 min-w-[70px]">불꽃방지망</TableHead>
+                      <TableHead className="text-white/70 min-w-[70px] text-center">불꽃방지망<br />보유</TableHead>
                       <TableHead className="text-white/70 min-w-[120px]">방문일</TableHead>
                       <TableHead className="text-white/70 min-w-[70px]">상세</TableHead>
                     </TableRow>
@@ -1023,14 +1023,14 @@ export default function AdminQrScanPage() {
                       <TableHead className="text-white/70 min-w-[90px] cursor-pointer select-none" onClick={() => handleSort("visitor_name")}>방문자<SortIcon col="visitor_name" /></TableHead>
                       <TableHead className="text-white/70 min-w-[100px] cursor-pointer select-none" onClick={() => handleSort("visitor_birth_date")}>생년월일<SortIcon col="visitor_birth_date" /></TableHead>
                       <TableHead className="text-white/70 min-w-[120px] cursor-pointer select-none" onClick={() => handleSort("visitor_organization")}>소속<SortIcon col="visitor_organization" /></TableHead>
-                      <TableHead className="text-white/70 min-w-[100px]">카드번호</TableHead>
+                      <TableHead className="text-white/70 min-w-[80px]">카드번호</TableHead>
                       <TableHead className="text-white/70 min-w-[140px] cursor-pointer select-none" onClick={() => handleSort("contact_name")}>담당자<SortIcon col="contact_name" /></TableHead>
                       <TableHead className="text-white/70 min-w-[100px] cursor-pointer select-none" onClick={() => handleSort("access_area")}>출입구역<SortIcon col="access_area" /></TableHead>
                       <TableHead className="text-white/70 min-w-[140px] cursor-pointer select-none" onClick={() => handleSort("lastEntryAt")}>입장시각<SortIcon col="lastEntryAt" /></TableHead>
                       <TableHead className="text-white/70 min-w-[140px] cursor-pointer select-none" onClick={() => handleSort("lastExitAt")}>퇴장시각<SortIcon col="lastExitAt" /></TableHead>
                       <TableHead className="text-white/70 min-w-[90px]">차량번호</TableHead>
                       <TableHead className="text-white/70 min-w-[70px]">차량유종</TableHead>
-                      <TableHead className="text-white/70 min-w-[70px]">불꽃방지망</TableHead>
+                      <TableHead className="text-white/70 min-w-[70px] text-center">불꽃방지망<br />보유</TableHead>
                       <TableHead className="text-white/70 min-w-[120px]">방문일</TableHead>
                       <TableHead className="text-white/70 min-w-[70px]">상세</TableHead>
                     </TableRow>
