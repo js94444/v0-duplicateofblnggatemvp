@@ -280,7 +280,7 @@ export function ApplicationDetailModal({ application, open, loading = false, sca
                   기본정보
                 </h3>
 
-                {/* 2�� 구성: 좌측 텍스트 필드 2열 / 우측 항만이수증 썸네일 */}
+                {/* 2구성: 좌측 텍스트 필드 2열 / 우측 항만이수증 썸네일 */}
                 <div className={`flex gap-8 items-start`}>
                   {/* 좌측: 텍스트 필드 2열 */}
                   <div className="flex-1 min-w-0">

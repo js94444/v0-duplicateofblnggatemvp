@@ -367,7 +367,7 @@ export class AzureSqlDB {
     if (uploadedFiles && uploadedFiles.length > 0) {
       console.log('[v0] Processing', uploadedFiles.length, 'uploaded files')
       for (const file of uploadedFiles) {
-        // 일명과 키가 유효한 경우에만 �����������장
+        // 일명과 키가 유효한 경우에만 장
         if (file && file.filename && file.fileKey && file.filename.trim() !== '' && file.fileKey.trim() !== '') {
           console.log('[v0] Saving file attachment:', {
             filename: file.filename,
@@ -1121,7 +1121,7 @@ export class AzureSqlDB {
 
     console.log('[v0] Updating application status:', { id, status, rejectionReason })
 
-    // DB���는 소문자�� ����
+    // DB는 소문자
     const dbStatus = status.toLowerCase()
     const now = getKoreaTime()
 
@@ -1301,7 +1301,7 @@ export class AzureSqlDB {
       .query(`DELETE FROM admin_accounts WHERE account_id = @account_id`)
   }
 
-  /** 마지막 로그인 시각 업���이트 */
+  /** 마지막 로그인 시각 업데이트 */
   static async updateLastLogin(accountId: number): Promise<void> {
     const dbPool = await getPool()
     await dbPool.request()
@@ -1888,7 +1888,7 @@ export class AzureSqlDB {
         ),
         -- 5. 입장/퇴장 사이클 매칭 (N번째 입장 - N번째 퇴장)
         EntryCycles AS (
-          -- 입장 기록이 있는 경우 (입장 기준으로 퇴장 �����)
+          -- 입장 기록이 있는 경우 (입장 기준으로 퇴장)
           SELECT 
             e.pass_id,
             e.entry_scan_id,
@@ -1926,7 +1926,7 @@ export class AzureSqlDB {
             SELECT 1 FROM EntryScans e WHERE e.pass_id = x.pass_id
           )
         ),
-        -- 6. 입장/퇴�� 총 횟수
+        -- 6. 입장/퇴장 총 횟수
         ScanCounts AS (
           SELECT 
             pass_id,
@@ -2128,7 +2128,7 @@ export class AzureSqlDB {
     }
   }
 
-  /** 보���담당자 계정의 전화번호 목록 조회 (is_security_contact = 1) */
+  /** 보안담당자 계정의 전화번호 목록 조회 (is_security_contact = 1) */
   static async getSecurityAccountPhones(): Promise<string[]> {
     const dbPool = await getPool()
     const result = await dbPool.request()
@@ -2279,7 +2279,7 @@ export class AzureSqlDB {
    * 수동 체크인/체크아웃 처리
    * - action: 'checkin' | 'checkout' | 'reentry'
    * - scanIds: 기존 scan_id 배열 (reentry 제외)
-   * - passRows: pass 정보 배열 (reentry �� 새 행 INSERT에 필요)
+   * - passRows: pass 정보 배열 (reentry  새 행 INSERT에 필요)
    * - scan_site: 현재 탭 기준 (main | pier_1 | pier_2)
    * - adminName: 처리한 관리자명
    */
@@ -2304,7 +2304,7 @@ export class AzureSqlDB {
     let affected = 0
 
     if (action === 'checkin' && scanIds && scanIds.length > 0) {
-      // 기존 스캔 행이 있으면 입장시각 업데이트, ��으면 아래 INSERT 경로로
+      // 기존 스캔 행이 있으면 입장시각 업데이트, 으면 아래 INSERT 경로로
       for (const scanId of scanIds) {
         const req = dbPool.request()
           .input('scan_id', sql.BigInt, scanId)
@@ -2422,13 +2422,13 @@ export class AzureSqlDB {
     author: string
   }): Promise<{ id: number }> {
     const dbPool = await getPool()
-    
+
     // 새 ID 생성 (기존 최대 ID + 1)
     const maxIdResult = await dbPool.request().query(`
       SELECT ISNULL(MAX(id), 0) + 1 as newId FROM board_posts
     `)
     const newId = maxIdResult.recordset[0].newId
-    
+
     await dbPool.request()
       .input('id', sql.Int, newId)
       .input('title', sql.NVarChar(200), data.title)
@@ -2438,22 +2438,22 @@ export class AzureSqlDB {
         INSERT INTO board_posts (id, title, content, author, created_at)
         VALUES (@id, @title, @content, @author, GETDATE())
       `)
-    
+
     return { id: newId }
   }
 
   /** 게시물 삭제 (어드민용) */
   static async deleteBoardPostAdmin(id: number): Promise<{ success: boolean; message: string }> {
     const dbPool = await getPool()
-    
+
     const result = await dbPool.request()
       .input('id', sql.Int, id)
       .query(`DELETE FROM board_posts WHERE id = @id`)
-    
+
     if (result.rowsAffected[0] === 0) {
       return { success: false, message: "게시물을 찾을 수 없습니다." }
     }
-    
+
     return { success: true, message: "삭제되었습니다." }
   }
 }
