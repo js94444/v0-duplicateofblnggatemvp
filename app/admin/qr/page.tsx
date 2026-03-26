@@ -174,7 +174,7 @@ export default function AdminQrScanPage() {
     if (action === 'checkout') {
       const noEntryRows = targetRows.filter(r => !r.lastEntryAt)
       if (noEntryRows.length > 0) {
-        alert("입장 기록이 없는 방문자가 있습니다.\n먼저 체크인을 해주세���.")
+        alert("입장 기록이 없는 방문자가 있습니다.\n먼저 체크인을 해주세주요.")
         return
       }
     }
@@ -277,7 +277,7 @@ export default function AdminQrScanPage() {
       setRangeEndDate(null)
       setUseRangeSearch(false)
 
-      // 2. 초기화될 URL을 직접 계산���서 mutate에 전달
+      // 2. 초기화될 URL을 직접 mutate에 전달
       // 이렇게 하면 현재 state와 상관없이 즉시 해당 API를 호출합니다.
       const defaultDateParam = `date=${format(selectedDate, "yyyy-MM-dd")}`
       const targetUrl = `/api/admin/qr-scans?scan_site=${scanSiteParam}&${defaultDateParam}`
