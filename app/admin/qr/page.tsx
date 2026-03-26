@@ -25,6 +25,7 @@ interface ScanRow {
   companion_id: number | null
   card_number: string | null
   visitor_name: string | null
+  visitor_phone: string | null
   visitor_organization: string | null
   contact_name: string | null
   access_area: string | null
@@ -173,7 +174,7 @@ export default function AdminQrScanPage() {
     if (action === 'checkout') {
       const noEntryRows = targetRows.filter(r => !r.lastEntryAt)
       if (noEntryRows.length > 0) {
-        alert("입장 기록이 없는 방문자가 있습니다.\n먼저 체크인을 해주세요.")
+        alert("입장 기록이 없는 방문자가 있습니다.\n먼저 체크인을 해주세���.")
         return
       }
     }
@@ -325,6 +326,7 @@ export default function AdminQrScanPage() {
       companion_id: row.companion_id,
       card_number: row.card_number,
       visitor_name: row.visitor_name,
+      visitor_phone: row.visitor_phone,
       visitor_organization: row.visitor_organization,
       contact_name: row.contact_name,
       access_area: row.access_area,
@@ -405,6 +407,18 @@ export default function AdminQrScanPage() {
     const hour = d.getUTCHours().toString().padStart(2, '0')
     const minute = d.getUTCMinutes().toString().padStart(2, '0')
     return `${year}. ${month}. ${day}. ${hour}:${minute}`
+  }
+
+  // 전화번호 포맷팅 (000-0000-0000 형식)
+  const formatPhone = (phone: string | null) => {
+    if (!phone) return "-"
+    const cleaned = phone.replace(/[^0-9]/g, '')
+    if (cleaned.length === 11) {
+      return `${cleaned.slice(0, 3)}-${cleaned.slice(3, 7)}-${cleaned.slice(7)}`
+    } else if (cleaned.length === 10) {
+      return `${cleaned.slice(0, 3)}-${cleaned.slice(3, 6)}-${cleaned.slice(6)}`
+    }
+    return phone
   }
   // 방문일 포맷: YY.MM.DD~MM.DD
   const formatVisitPeriod = (startDate: string | null, endDate: string | null) => {
@@ -819,13 +833,18 @@ export default function AdminQrScanPage() {
                               }
                             }}
                           >
-                            <div className="flex items-center gap-1.5">
-                              <span>{row.visitor_name || "-"}</span>
-                              {row.cycleNum && row.cycleNum > 1 && (
-                                <span className="text-[10px] px-1.5 py-0.5 rounded bg-purple-500/20 text-purple-400 font-medium">
-                                  {row.cycleNum}회차
-                                </span>
-                              )}
+                            <div className="flex flex-col gap-0.5">
+                              <div className="flex items-center gap-1.5">
+                                <span>{row.visitor_name || "-"}</span>
+                                {row.cycleNum && row.cycleNum > 1 && (
+                                  <span className="text-[10px] px-1.5 py-0.5 rounded bg-purple-500/20 text-purple-400 font-medium">
+                                    {row.cycleNum}회차
+                                  </span>
+                                )}
+                              </div>
+                              <span className="text-xs text-white/40">
+                                {formatPhone(row.visitor_phone)}
+                              </span>
                             </div>
                           </TableCell>
                           <TableCell className="text-sm text-white/80">

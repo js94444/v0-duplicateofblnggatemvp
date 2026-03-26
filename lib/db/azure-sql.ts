@@ -1301,7 +1301,7 @@ export class AzureSqlDB {
       .query(`DELETE FROM admin_accounts WHERE account_id = @account_id`)
   }
 
-  /** 마지막 로그인 시각 업��이트 */
+  /** 마지막 로그인 시각 업���이트 */
   static async updateLastLogin(accountId: number): Promise<void> {
     const dbPool = await getPool()
     await dbPool.request()
@@ -1827,6 +1827,7 @@ export class AzureSqlDB {
             p.issued_at,
             p.card_number,
             a.visitor_name,
+            a.visitor_phone,
             a.visitor_organization,
             a.contact_name,
             a.contact_mobile,
@@ -1838,7 +1839,8 @@ export class AzureSqlDB {
             a.visit_end_date,
             a.access_area,
             c.name as companion_name,
-            c.birth_date as companion_birth_date
+            c.birth_date as companion_birth_date,
+            c.phone as companion_phone
           FROM visit_passes p
           LEFT JOIN visit_applications a ON p.application_id = a.application_id
           LEFT JOIN visit_companions c ON p.companion_id = c.companion_id
@@ -1886,7 +1888,7 @@ export class AzureSqlDB {
         ),
         -- 5. 입장/퇴장 사이클 매칭 (N번째 입장 - N번째 퇴장)
         EntryCycles AS (
-          -- 입장 기록이 있는 경우 (입장 기준으로 퇴장 매���)
+          -- 입장 기록이 있는 경우 (입장 기준으로 퇴장 �����)
           SELECT 
             e.pass_id,
             e.entry_scan_id,
@@ -1933,13 +1935,14 @@ export class AzureSqlDB {
           FROM FilteredScans
           GROUP BY pass_id
         )
-        -- 스��� 기록이 있는 방문자 (각 사이클별로 별도 행)
+        -- 스캔 기록이 있는 방문자 (각 사이클별로 별도 행)
         SELECT TOP (@limit)
           ap.pass_id,
           ap.application_id,
           ap.companion_id,
           ap.card_number,
           COALESCE(ap.companion_name, ap.visitor_name) as visitor_name,
+          COALESCE(ap.companion_phone, ap.visitor_phone) as visitor_phone,
           ap.visitor_organization,
           ap.contact_name,
           ap.contact_mobile,
@@ -1977,6 +1980,7 @@ export class AzureSqlDB {
           ap.companion_id,
           ap.card_number,
           COALESCE(ap.companion_name, ap.visitor_name) as visitor_name,
+          COALESCE(ap.companion_phone, ap.visitor_phone) as visitor_phone,
           ap.visitor_organization,
           ap.contact_name,
           ap.contact_mobile,
@@ -2124,7 +2128,7 @@ export class AzureSqlDB {
     }
   }
 
-  /** 보안담당자 계정의 전화번호 목록 조회 (is_security_contact = 1) */
+  /** 보���담당자 계정의 전화번호 목록 조회 (is_security_contact = 1) */
   static async getSecurityAccountPhones(): Promise<string[]> {
     const dbPool = await getPool()
     const result = await dbPool.request()
@@ -2275,7 +2279,7 @@ export class AzureSqlDB {
    * 수동 체크인/체크아웃 처리
    * - action: 'checkin' | 'checkout' | 'reentry'
    * - scanIds: 기존 scan_id 배열 (reentry 제외)
-   * - passRows: pass 정보 배열 (reentry 시 새 행 INSERT에 필요)
+   * - passRows: pass 정보 배열 (reentry �� 새 행 INSERT에 필요)
    * - scan_site: 현재 탭 기준 (main | pier_1 | pier_2)
    * - adminName: 처리한 관리자명
    */
