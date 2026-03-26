@@ -21,6 +21,7 @@ const ALL_PAGES = [
   { path: "/admin/requests", name: "신청 관리" },
   { path: "/admin/calendar", name: "방문 캘린더" },
   { path: "/admin/qr", name: "출입현황" },
+  { path: "/admin/board", name: "게시판" },
   { path: "/admin/accounts", name: "계정 관리" },
 ]
 
