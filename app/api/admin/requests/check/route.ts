@@ -41,13 +41,13 @@ export async function GET(request: NextRequest) {
 
   const checks = await AzureSqlDB.getApplicationChecks(Number(application_id))
 
-  // 현재 로그인 유저의 체크 여부도 함께 반환
-  const myCheck = await AzureSqlDB.getApplicationCheck(Number(application_id), Number(user.id))
+  // 모든 계정이 공유하는 체크 상태 반환 (담당자가 체크하면 슈퍼어드민/특수경비대도 동일하게 보임)
+  const sharedCheck = await AzureSqlDB.getApplicationCheck(Number(application_id))
   
   // checked 값을 명시적으로 boolean으로 변환
-  if (myCheck && typeof myCheck.checked !== 'boolean') {
-    myCheck.checked = myCheck.checked ? true : false
+  if (sharedCheck && typeof sharedCheck.checked !== 'boolean') {
+    sharedCheck.checked = sharedCheck.checked ? true : false
   }
 
-  return NextResponse.json({ checks, my_check: myCheck })
+  return NextResponse.json({ checks, my_check: sharedCheck })
 }

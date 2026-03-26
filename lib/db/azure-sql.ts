@@ -1312,16 +1312,17 @@ export class AzureSqlDB {
 
   // ─── 신청서 확인 체크──────────────
 
-  /** 확인 체크 조회 */
-  static async getApplicationCheck(applicationId: number, accountId: number): Promise<{ checked: boolean; checked_at: Date | null; note: string | null } | null> {
+  /** 확인 체크 조회 (application_id 기준, 모든 계정 공유) */
+  static async getApplicationCheck(applicationId: number): Promise<{ checked: boolean; checked_at: Date | null; note: string | null; checked_by?: string } | null> {
     const dbPool = await getPool()
     const result = await dbPool.request()
       .input('application_id', sql.BigInt, applicationId)
-      .input('account_id', sql.Int, accountId)
       .query(`
-        SELECT checked, checked_at, note
-        FROM application_checks
-        WHERE application_id = @application_id AND account_id = @account_id
+        SELECT TOP 1 ac.checked, ac.checked_at, ac.note, aa.name as checked_by
+        FROM application_checks ac
+        LEFT JOIN admin_accounts aa ON ac.account_id = aa.account_id
+        WHERE ac.application_id = @application_id
+        ORDER BY ac.checked_at DESC
       `)
     return result.recordset[0] || null
   }
@@ -1888,7 +1889,7 @@ export class AzureSqlDB {
         ),
         -- 5. 입장/퇴장 사이클 매칭 (N번째 입장 - N번째 퇴장)
         EntryCycles AS (
-          -- 입장 기록이 있는 경우 (입장 기준으로 퇴장)
+          -- 입장 기록이 있는 경우 (입장 기준으로 ��장)
           SELECT 
             e.pass_id,
             e.entry_scan_id,
@@ -1935,7 +1936,7 @@ export class AzureSqlDB {
           FROM FilteredScans
           GROUP BY pass_id
         )
-        -- 스캔 기록이 있는 방문자 (각 사이클별로 별도 행)
+        -- 스캔 ���록이 있는 방문자 (각 사이클별로 별도 행)
         SELECT TOP (@limit)
           ap.pass_id,
           ap.application_id,
