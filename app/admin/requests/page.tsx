@@ -577,7 +577,7 @@ export default function AdminRequestsPage() {
                           </div>
 
                           {/* 슈퍼어드민: 승인/반려 버튼 */}
-                          {user?.role === "super_admin" && (() => {
+                          {(user?.role === "super_admin" || user?.role === "security") && (() => {
                             const statusUpper = String(application.status).toUpperCase()
                             return statusUpper === "PENDING" || statusUpper === "UNDER_REVIEW" ? (
                               <div className="flex items-center gap-2 px-4 py-3 border-t border-white/5">
@@ -683,7 +683,7 @@ export default function AdminRequestsPage() {
                                     👁️ 보기
                                   </Button>
                                   {(() => {
-                                    if (user?.role !== "super_admin") return null
+                                    if (user?.role !== "super_admin" && user?.role !== "security") return null
                                     const statusUpper = String(application.status).toUpperCase()
                                     return statusUpper === "PENDING" || statusUpper === "UNDER_REVIEW" ? (
                                       <>
