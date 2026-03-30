@@ -3,9 +3,11 @@ import { AzureSqlDB } from "@/lib/db/azure-sql"
 
 export const runtime = "nodejs"
 
+type RouteParams = Promise<{ id: string }>
+
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: RouteParams }
 ) {
   try {
     const { id } = await params
@@ -33,6 +35,33 @@ export async function GET(
     console.error("Failed to fetch application:", error)
     return NextResponse.json(
       { error: "서버 오류가 발생했습니다." },
+      { status: 500 }
+    )
+  }
+}
+
+export async function PUT(
+  request: NextRequest,
+  { params }: { params: RouteParams }
+) {
+  try {
+    const { id } = await params
+
+    if (!id) {
+      return NextResponse.json(
+        { error: "ID가 필요합니다." },
+        { status: 400 }
+      )
+    }
+
+    const body = await request.json()
+    const updated = await AzureSqlDB.updateApplication(id, body)
+
+    return NextResponse.json(updated)
+  } catch (error) {
+    console.error("Failed to update application:", error)
+    return NextResponse.json(
+      { error: "수정 중 오류가 발생했습니다." },
       { status: 500 }
     )
   }

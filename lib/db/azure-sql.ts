@@ -1165,34 +1165,39 @@ export class AzureSqlDB {
       .input('visitor_address', sql.NVarChar(500), data.visitor_address || null)
       .input('visitor_email', sql.NVarChar(100), data.visitor_email || null)
       .input('contact_name', sql.NVarChar(100), data.contact_name)
+      .input('contact_mobile', sql.NVarChar(20), data.contact_mobile || null)
       .input('visit_start_date', sql.Date, new Date(data.visit_start_date))
       .input('visit_end_date', sql.Date, data.visit_end_date ? new Date(data.visit_end_date) : new Date(data.visit_start_date))
       .input('access_area', sql.NVarChar(100), data.access_area)
       .input('vehicle_number', sql.NVarChar(20), data.vehicle_number || null)
       .input('vehicle_model', sql.NVarChar(50), data.vehicle_model || null)
+      .input('spark_arrestor', sql.NVarChar(10), data.spark_arrestor || null)
       .input('visit_purpose', sql.NVarChar(500), data.visit_purpose)
-      .input('status', sql.NVarChar(20), data.status || 'pending')
+      .input('detailed_purpose', sql.NVarChar(1000), data.detailed_purpose || null)
       .input('updated_at', sql.DateTime, now).query(`
-        UPDATE visit_applications
-        SET 
-          visitor_name = @visitor_name,
-          visitor_phone = @visitor_phone,
-          visitor_birth_date = @visitor_birth_date,
-          visitor_organization = @visitor_organization,
-          visitor_position = @visitor_position,
-          visitor_address = @visitor_address,
-          visitor_email = @visitor_email,
-          contact_name = @contact_name,
-          visit_start_date = @visit_start_date,
-          visit_end_date = @visit_end_date,
-          access_area = @access_area,
-          vehicle_number = @vehicle_number,
-          vehicle_model = @vehicle_model,
-          visit_purpose = @visit_purpose,
-          status = @status,
-          updated_at = @updated_at
-        WHERE application_id = @id
-      `)
+      UPDATE visit_applications
+      SET 
+        visitor_name = @visitor_name,
+        visitor_phone = @visitor_phone,
+        visitor_birth_date = @visitor_birth_date,
+        visitor_organization = @visitor_organization,
+        visitor_position = @visitor_position,
+        visitor_address = @visitor_address,
+        visitor_email = @visitor_email,
+        contact_name = @contact_name,
+        contact_mobile = @contact_mobile,
+        visit_start_date = @visit_start_date,
+        visit_end_date = @visit_end_date,
+        access_area = @access_area,
+        vehicle_number = @vehicle_number,
+        vehicle_model = @vehicle_model,
+        spark_arrestor = @spark_arrestor,
+        visit_purpose = @visit_purpose,
+        detailed_purpose = @detailed_purpose,
+        updated_at = @updated_at
+      WHERE application_id = @id
+    `)
+
 
     const updated = await this.getApplicationById(id)
     if (!updated) {
