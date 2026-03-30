@@ -10,7 +10,7 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { RefreshCw, ChevronLeft, ChevronRight, Calendar, ChevronUp, ChevronDown, ChevronsUpDown } from "lucide-react"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Calendar as CalendarComponent } from "@/components/ui/calendar"
-import { format, addDays, subDays } from "date-fns"
+import { format, addDays, subDays, startOfMonth, endOfMonth, subMonths } from "date-fns"
 import { ko } from "date-fns/locale"
 import { useAdminAuth } from "@/hooks/use-admin-auth"
 import { ApplicationDetailModal } from "@/components/admin/application-detail-modal"
@@ -551,7 +551,34 @@ export default function AdminQrScanPage() {
       </div>
 
       {/* 날짜 범위 검색 */}
-      <div className="mb-6 flex items-center justify-end gap-2">
+      <div className="mb-6 flex items-center justify-end gap-2 flex-wrap">
+        {/* 월 단위 빠른 선택 */}
+        {(() => {
+          const now = new Date()
+          const months = [0, 1, 2, 3, 4, 5].map(i => subMonths(now, i))
+          return months.map((m) => (
+            <button
+              key={m.toISOString()}
+              type="button"
+              onClick={() => {
+                const start = startOfMonth(m)
+                const end = endOfMonth(m)
+                setRangeStartDate(start)
+                setRangeEndDate(end)
+                setUseRangeSearch(true)
+              }}
+              className={`h-7 px-2.5 rounded-lg text-xs font-bold transition-all ${rangeStartDate && rangeEndDate
+                  && format(startOfMonth(m), "yyyy-MM") === format(rangeStartDate, "yyyy-MM")
+                  && format(endOfMonth(m), "yyyy-MM-dd") === format(rangeEndDate, "yyyy-MM-dd")
+                  ? "bg-amber-500 text-black"
+                  : "text-white/50 hover:text-white hover:bg-white/10 border border-white/10"
+                }`}
+            >
+              {format(m, "M")}월
+            </button>
+          ))
+        })()}
+        <span className="text-white/20 mx-1">|</span>
         <span className="text-sm text-white/50">범위 검색</span>
         {/* 시작날짜 */}
         <div className="flex items-center gap-1 bg-white/5 border border-white/10 rounded-xl px-2 py-1">
