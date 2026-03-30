@@ -286,7 +286,8 @@ export function ApplicationDetailModal({ application, open, loading = false, sca
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="w-[95vw] max-w-[95vw] sm:w-auto sm:max-w-[60vw] xl:max-w-[1200px] max-h-[95vh] sm:max-h-[92vh] overflow-hidden flex flex-col bg-black/95 border border-white/20 text-white p-0 shadow-2xl backdrop-blur-2xl rounded-2xl sm:rounded-3xl">
+      {/* shadcn DialogContent가 우측 상단 기본 X를 렌더링하므로 숨김(헤더 닫기만 사용) */}
+      <DialogContent className="w-[95vw] max-w-[95vw] sm:w-auto sm:max-w-[60vw] xl:max-w-[1200px] max-h-[95vh] sm:max-h-[92vh] overflow-hidden flex flex-col bg-black/95 border border-white/20 text-white p-0 shadow-2xl backdrop-blur-2xl rounded-2xl sm:rounded-3xl [&>button]:hidden">
 
         {/* 헤더 */}
         <DialogHeader className="flex-shrink-0 border-b border-white/10 p-4 sm:p-8 bg-white/5">
