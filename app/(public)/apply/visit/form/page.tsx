@@ -145,25 +145,6 @@ export default function VisitFormPage() {
   const { toast } = useToast()
   const router = useRouter()
 
-  useEffect(() => {
-    const handleScroll = () => setScrolled(window.scrollY > 20)
-    window.addEventListener('scroll', handleScroll)
-    return () => window.removeEventListener('scroll', handleScroll)
-  }, [])
-
-  const PremiumLogo = () => (
-    <Link href="/" className="flex items-center group cursor-pointer">
-      <Image
-        src="/images/boryeong-lng-ci.png"
-        alt="보령LNG터미널"
-        width={200}
-        height={40}
-        className="h-8 md:h-10 w-auto group-hover:opacity-90 transition-opacity"
-        priority
-      />
-    </Link>
-  )
-
   // 수정 모드 체크 및 데이터 로드
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
