@@ -326,7 +326,7 @@ export default function AdminRequestsPage() {
 
   if (loading) {
     return (
-      <div className="container mx-auto px-6 py-10">
+      <div className="container mx-auto px-4 sm:px-6 py-6 sm:py-10">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-4 border-amber-500 border-t-transparent mx-auto mb-4"></div>
           <p className="text-white/60">데이터를 불러오는 중...</p>
@@ -336,32 +336,32 @@ export default function AdminRequestsPage() {
   }
 
   return (
-    <div className="container mx-auto px-6 py-10">
-      <div className="space-y-8">
+    <div className="container mx-auto px-4 sm:px-6 py-6 sm:py-10">
+      <div className="space-y-6 sm:space-y-8">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-black text-white tracking-tight">신청 관리</h1>
+            <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">신청 관리</h1>
             <p className="text-white/40 text-sm mt-1 font-medium">출입 신청 목록 및 승인 처리</p>
           </div>
           <Button
             onClick={() => refreshApplications()}
-            disabled={loading || isValidating} // 로딩 중이거나 검증 중일 때 버튼 비활성화
-            className="bg-white/10 hover:bg-white/20 border border-white/20 text-white font-bold px-5 py-2 rounded-xl transition-all active:scale-95"
+            disabled={loading || isValidating}
+            className="bg-white/10 hover:bg-white/20 border border-white/20 text-white font-bold px-3 sm:px-5 py-2 rounded-xl transition-all active:scale-95"
           >
             <RefreshCw
               size={15}
               className={`mr-2 ${(loading || isValidating) ? "animate-spin" : ""}`}
             />
-            {isValidating ? "업데이트 중..." : "새로고침"}
+            <span className="hidden sm:inline">{isValidating ? "업데이트 중..." : "새로고침"}</span>
           </Button>
         </div>
 
         {/* Filters */}
-        <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-[40px] p-8 shadow-2xl">
-          <h3 className="text-xl font-black text-white mb-6">🔍 필터 및 검색</h3>
+        <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl sm:rounded-[40px] p-4 sm:p-8 shadow-2xl">
+          <h3 className="text-lg sm:text-xl font-black text-white mb-4 sm:mb-6">🔍 필터 및 검색</h3>
           <div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4">
               <div className="space-y-2">
                 <label className="text-sm font-bold text-white/60">상태</label>
                 <Select
@@ -426,17 +426,17 @@ export default function AdminRequestsPage() {
 
         {/* Applications Table */}
         <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as ApplicationType | "ALL")}>
-          <TabsList className="grid w-full grid-cols-4 bg-white/5 border border-white/10 p-1 rounded-2xl h-auto">
-            <TabsTrigger value="ALL" className="data-[state=active]:bg-amber-500 data-[state=active]:text-black text-white/60 font-bold rounded-xl py-3">전체 ({tabCounts.ALL})</TabsTrigger>
-            <TabsTrigger value="GROUP_VISIT" className="data-[state=active]:bg-amber-500 data-[state=active]:text-black text-white/60 font-bold rounded-xl py-3">단체방문 ({tabCounts.GROUP_VISIT})</TabsTrigger>
-            <TabsTrigger value="PORT_ACCESS" className="data-[state=active]:bg-amber-500 data-[state=active]:text-black text-white/60 font-bold rounded-xl py-3">항만출입 ({tabCounts.PORT_ACCESS})</TabsTrigger>
-            <TabsTrigger value="VISIT_R3" className="data-[state=active]:bg-amber-500 data-[state=active]:text-black text-white/60 font-bold rounded-xl py-3">개인방문 ({tabCounts.VISIT_R3})</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 bg-white/5 border border-white/10 p-1 rounded-2xl h-auto gap-1">
+            <TabsTrigger value="ALL" className="data-[state=active]:bg-amber-500 data-[state=active]:text-black text-white/60 font-bold rounded-xl py-2 sm:py-3 text-xs sm:text-sm">전체 ({tabCounts.ALL})</TabsTrigger>
+            <TabsTrigger value="GROUP_VISIT" className="data-[state=active]:bg-amber-500 data-[state=active]:text-black text-white/60 font-bold rounded-xl py-2 sm:py-3 text-xs sm:text-sm">단체 ({tabCounts.GROUP_VISIT})</TabsTrigger>
+            <TabsTrigger value="PORT_ACCESS" className="data-[state=active]:bg-amber-500 data-[state=active]:text-black text-white/60 font-bold rounded-xl py-2 sm:py-3 text-xs sm:text-sm">항만 ({tabCounts.PORT_ACCESS})</TabsTrigger>
+            <TabsTrigger value="VISIT_R3" className="data-[state=active]:bg-amber-500 data-[state=active]:text-black text-white/60 font-bold rounded-xl py-2 sm:py-3 text-xs sm:text-sm">개인 ({tabCounts.VISIT_R3})</TabsTrigger>
           </TabsList>
 
           <TabsContent value={activeTab} className="space-y-4">
-            <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-[40px] p-8 shadow-2xl">
-              <div className="mb-6">
-                <h3 className="text-2xl font-black text-white">신청 목록 ({filteredApplications.length}건)</h3>
+            <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl sm:rounded-[40px] p-4 sm:p-8 shadow-2xl">
+              <div className="mb-4 sm:mb-6">
+                <h3 className="text-xl sm:text-2xl font-black text-white">신청 목록 ({filteredApplications.length}건)</h3>
                 <p className="text-sm text-white/40 mt-1">
                   {filteredApplications.length > 0
                     ? `총 ${filteredApplications.length}건의 신청이 있습니다`
@@ -529,7 +529,7 @@ export default function AdminRequestsPage() {
                               )}
                             </button>
                           </TableHead>
-                          <TableHead className="min-w-[80px] text-white/80 font-bold"> 담당자 확인</TableHead>
+                          <TableHead className="min-w-[80px] text-white/80 font-bold">담당자 확인</TableHead>
                           <TableHead className="min-w-[120px] text-white/80 font-bold">상세보기</TableHead>
                         </TableRow>
                       </TableHeader>

@@ -3,21 +3,21 @@
 import type React from "react"
 import Link from "next/link"
 import Image from "next/image"
-import { useEffect, useMemo } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { useRouter, usePathname } from "next/navigation"
 import useSWR from "swr"
 import { AdminAuthProvider, useAdminAuth } from "@/hooks/use-admin-auth"
 import { Button } from "@/components/ui/button"
-import { Home, LogOut, LayoutDashboard, FileText, Calendar, Users, QrCode, MessageSquare } from "lucide-react"
+import { Home, LogOut, LayoutDashboard, FileText, Calendar, Users, QrCode, MessageSquare, Menu, X } from "lucide-react"
 
 // 전체 페이지 목록 (아이콘, 경로, 이름 정의)
 const ALL_PAGES = [
-  { path: "/admin/dashboard", name: "대시보드",    icon: LayoutDashboard },
-  { path: "/admin/requests",  name: "신청 관리",   icon: FileText },
-  { path: "/admin/calendar",  name: "방문 캘린더", icon: Calendar },
-  { path: "/admin/qr",        name: "출입현황", icon: QrCode },
-  { path: "/admin/board",     name: "게시판",     icon: MessageSquare },
-  { path: "/admin/accounts",  name: "계정 관리",   icon: Users },
+  { path: "/admin/dashboard", name: "대시보드", icon: LayoutDashboard },
+  { path: "/admin/requests", name: "신청 관리", icon: FileText },
+  { path: "/admin/calendar", name: "방문 캘린더", icon: Calendar },
+  { path: "/admin/qr", name: "출입현황", icon: QrCode },
+  { path: "/admin/board", name: "게시판", icon: MessageSquare },
+  { path: "/admin/accounts", name: "계정 관리", icon: Users },
 ]
 
 const bgStyle = {
@@ -28,6 +28,12 @@ function AdminLayoutContent({ children }: { children: React.ReactNode }) {
   const { user, logout, isLoading, token } = useAdminAuth()
   const router = useRouter()
   const pathname = usePathname()
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+
+  // 페이지 이동 시 모바일 메뉴 닫기
+  useEffect(() => {
+    setMobileMenuOpen(false)
+  }, [pathname])
 
   // 권한 목록 조회 (로그인 상태일 때만)
   const { data: permData } = useSWR(
@@ -90,46 +96,46 @@ function AdminLayoutContent({ children }: { children: React.ReactNode }) {
 
       {/* Header */}
       <header className="relative z-10 border-b border-white/10 bg-black/40 backdrop-blur-xl">
-        <div className="container mx-auto px-6 flex h-20 items-center justify-between">
-          <div className="flex items-center gap-8">
+        <div className="container mx-auto px-4 sm:px-6 flex h-14 sm:h-20 items-center justify-between">
+          <div className="flex items-center gap-4 sm:gap-8">
             <Image
               src="/images/boryeong-lng-ci.png"
               alt="보령LNG터미널"
               width={160}
               height={32}
-              className="h-8 w-auto"
+              className="h-6 sm:h-8 w-auto"
               priority
             />
-            <div className="border-l border-white/20 pl-6 hidden md:block">
+            <div className="border-l border-white/20 pl-4 sm:pl-6 hidden md:block">
               <h1 className="text-lg font-black text-white">관리자 시스템</h1>
               <p className="text-[10px] uppercase tracking-[0.2em] text-white/40 font-bold">Admin Dashboard</p>
             </div>
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 sm:gap-4">
             <div className="text-right hidden sm:block">
               <p className="text-sm font-bold text-white">{user?.name}</p>
               <p className="text-xs text-white/40">
                 {user?.role === "super_admin"
                   ? "슈퍼어드민"
                   : user?.role === "security"
-                  ? "특수경비대"
-                  : "담당자"}
+                    ? "특수경비대"
+                    : "담당자"}
               </p>
             </div>
             <Button
               onClick={logout}
-              className="bg-white/10 hover:bg-white/20 border border-white/20 text-white font-bold px-4 py-2 rounded-xl transition-all"
+              className="bg-white/10 hover:bg-white/20 border border-white/20 text-white font-bold px-3 sm:px-4 py-2 rounded-xl transition-all text-sm"
             >
-              <LogOut size={16} className="mr-2" />
-              로그아웃
+              <LogOut size={16} className="sm:mr-2" />
+              <span className="hidden sm:inline">로그아웃</span>
             </Button>
           </div>
         </div>
       </header>
 
-      {/* Navigation */}
-      <nav className="relative z-10 border-b border-white/5 bg-black/20 backdrop-blur-lg">
-        <div className="container mx-auto px-6">
+      {/* Navigation — 데스크탑 */}
+      <nav className="relative z-10 border-b border-white/5 bg-black/20 backdrop-blur-lg hidden md:block">
+        <div className="container mx-auto px-4 sm:px-6">
           <div className="flex items-center justify-between py-3">
             <div className="flex gap-2">
               <Link href="/">
@@ -145,11 +151,10 @@ function AdminLayoutContent({ children }: { children: React.ReactNode }) {
                 <Link key={path} href={path}>
                   <Button
                     variant="ghost"
-                    className={`font-bold rounded-lg transition-all ${
-                      pathname === path || pathname.startsWith(path + "/")
+                    className={`font-bold rounded-lg transition-all ${pathname === path || pathname.startsWith(path + "/")
                         ? "bg-amber-500 text-black hover:bg-amber-600 hover:text-black"
                         : "text-white/60 hover:text-white hover:bg-white/10"
-                    }`}
+                      }`}
                   >
                     <Icon size={16} className="mr-2" />
                     {name}
@@ -168,6 +173,66 @@ function AdminLayoutContent({ children }: { children: React.ReactNode }) {
             </Link>
           </div>
         </div>
+      </nav>
+
+      {/* Navigation — 모바일 햄버거 바 */}
+      <nav className="relative z-10 border-b border-white/5 bg-black/20 backdrop-blur-lg md:hidden">
+        <div className="container mx-auto px-4">
+          <div className="flex items-center justify-between py-2">
+            <button
+              type="button"
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="flex items-center gap-2 text-white/70 hover:text-white px-3 py-2 rounded-lg hover:bg-white/10 transition-all"
+            >
+              {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
+              <span className="text-sm font-bold">메뉴</span>
+            </button>
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-white/40 sm:hidden">{user?.name}</span>
+              <Link href="/scanner">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-white/60 hover:text-amber-500 hover:bg-white/10 font-bold rounded-lg transition-all border border-white/10 text-xs px-3 py-1.5"
+                >
+                  <QrCode size={14} className="mr-1" />
+                  QR
+                </Button>
+              </Link>
+            </div>
+          </div>
+        </div>
+
+        {/* 모바일 드롭다운 메뉴 */}
+        {mobileMenuOpen && (
+          <div className="border-t border-white/5 bg-black/60 backdrop-blur-xl">
+            <div className="container mx-auto px-4 py-3 space-y-1">
+              <Link href="/">
+                <button
+                  type="button"
+                  className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-white/60 hover:text-white hover:bg-white/10 transition-all text-sm font-bold"
+                >
+                  <Home size={18} />
+                  메인으로
+                </button>
+              </Link>
+              {visiblePages.map(({ path, name, icon: Icon }) => (
+                <Link key={path} href={path}>
+                  <button
+                    type="button"
+                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-sm font-bold ${pathname === path || pathname.startsWith(path + "/")
+                        ? "bg-amber-500 text-black"
+                        : "text-white/60 hover:text-white hover:bg-white/10"
+                      }`}
+                  >
+                    <Icon size={18} />
+                    {name}
+                  </button>
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
       </nav>
 
       <main className="relative z-10">{children}</main>
