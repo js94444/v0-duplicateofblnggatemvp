@@ -976,7 +976,7 @@ export class AzureSqlDB {
                visitor_organization, visitor_position, visitor_email, visitor_birth_date,
                visitor_address, visit_start_date, visit_end_date,
                visit_purpose, detailed_purpose, contact_name, contact_mobile, access_area,
-               vehicle_number, vehicle_model, rejection_reason, created_at, updated_at
+               vehicle_number, vehicle_model, spark_arrestor, rejection_reason, created_at, updated_at
         FROM visit_applications WITH (NOLOCK)
         ORDER BY created_at DESC
       `),
