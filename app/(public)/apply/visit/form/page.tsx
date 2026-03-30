@@ -1270,9 +1270,6 @@ export default function VisitFormPage() {
               </CardContent>
             </Card>
 
-            {/* 파일 첨부 Card */}
-
-
             <div className="flex justify-end space-x-4">
               <Button
                 type="button"
