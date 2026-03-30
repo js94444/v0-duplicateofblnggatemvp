@@ -508,9 +508,10 @@ export default function AdminQrScanPage() {
                   {format(selectedDate, "yyyy-MM-dd")}
                 </button>
               </PopoverTrigger>
-              <PopoverContent className="w-auto p-0 bg-zinc-900 border-white/10 z-[100]" align="end" sideOffset={8}>
+              <PopoverContent className="w-auto p-0 bg-zinc-900 border-white/10 z-[100] text-white [&_button]:text-white [&_.rdp-weekday]:text-white/50 [&_.rdp-caption_label]:text-white [&_.rdp-day_outside]:text-white/20 [&_select]:text-white [&_select]:bg-zinc-800 [&_option]:bg-zinc-800" align="end" sideOffset={8}>
                 <CalendarComponent
                   mode="single"
+                  captionLayout="dropdown"
                   selected={selectedDate}
                   onSelect={(date) => {
                     if (date) {
@@ -520,6 +521,8 @@ export default function AdminQrScanPage() {
                   }}
                   locale={ko}
                   className="rounded-md"
+                  startMonth={new Date(2024, 0)}
+                  endMonth={new Date(2030, 11)}
                   initialFocus
                 />
               </PopoverContent>
@@ -562,9 +565,10 @@ export default function AdminQrScanPage() {
                 {rangeStartDate ? format(rangeStartDate, "yyyy-MM-dd") : "시작날짜"}
               </button>
             </PopoverTrigger>
-            <PopoverContent className="w-auto p-0 bg-zinc-900 border-white/10 z-[100]" align="end" sideOffset={4}>
+            <PopoverContent className="w-auto p-0 bg-zinc-900 border-white/10 z-[100] text-white [&_button]:text-white [&_.rdp-weekday]:text-white/50 [&_.rdp-caption_label]:text-white [&_.rdp-day_outside]:text-white/20 [&_select]:text-white [&_select]:bg-zinc-800 [&_option]:bg-zinc-800" align="end" sideOffset={4}>
               <CalendarComponent
                 mode="single"
+                captionLayout="dropdown"
                 selected={rangeStartDate ?? undefined}
                 onSelect={(date) => {
                   if (date) {
@@ -575,6 +579,8 @@ export default function AdminQrScanPage() {
                 }}
                 locale={ko}
                 className="rounded-md"
+                startMonth={new Date(2024, 0)}
+                endMonth={new Date(2030, 11)}
                 initialFocus
               />
             </PopoverContent>
@@ -595,9 +601,10 @@ export default function AdminQrScanPage() {
                 {rangeEndDate ? format(rangeEndDate, "yyyy-MM-dd") : "종료날짜"}
               </button>
             </PopoverTrigger>
-            <PopoverContent className="w-auto p-0 bg-zinc-900 border-white/10 z-[100]" align="end" sideOffset={4}>
+            <PopoverContent className="w-auto p-0 bg-zinc-900 border-white/10 z-[100] text-white [&_button]:text-white [&_.rdp-weekday]:text-white/50 [&_.rdp-caption_label]:text-white [&_.rdp-day_outside]:text-white/20 [&_select]:text-white [&_select]:bg-zinc-800 [&_option]:bg-zinc-800" align="end" sideOffset={4}>
               <CalendarComponent
                 mode="single"
+                captionLayout="dropdown"
                 selected={rangeEndDate ?? undefined}
                 onSelect={(date) => {
                   if (date) {
@@ -608,6 +615,8 @@ export default function AdminQrScanPage() {
                 }}
                 locale={ko}
                 className="rounded-md"
+                startMonth={new Date(2024, 0)}
+                endMonth={new Date(2030, 11)}
                 initialFocus
               />
             </PopoverContent>
