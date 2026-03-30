@@ -65,11 +65,10 @@ function FileThumbnail({ file, onLightbox }: { file: any; onLightbox: (url: stri
 
   if (isImage && previewUrl) {
     return (
-      <div className="group relative flex flex-col rounded-2xl overflow-hidden border border-white/10 bg-black/40 hover:border-amber-500/50 transition-all cursor-pointer" style={{ width: 200 }}>
+      <div className="group relative flex flex-col rounded-2xl overflow-hidden border border-white/10 bg-black/40 hover:border-amber-500/50 transition-all cursor-pointer w-full sm:w-[200px]">
         {/* 썸네일 이미지 */}
         <div
-          className="relative overflow-hidden"
-          style={{ height: 280 }}
+          className="relative overflow-hidden h-[200px] sm:h-[280px]"
           onClick={() => onLightbox(previewUrl, file.filename || "이수증")}
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -196,10 +195,7 @@ function AttachmentSection({ title, files }: { title: string; files: any[] }) {
 }
 
 export function ApplicationDetailModal({ application, open, loading = false, scanHistory = [], onClose }: ApplicationDetailModalProps) {
-  // application이 null일 때 로딩 상태로 처리
   const app = application as any
-
-  // 모달이 열리고 데이터 로딩 중이면 로딩 UI 표시
   const isLoading = loading
 
   const getStatusColor = (status: string) => {
@@ -224,67 +220,66 @@ export function ApplicationDetailModal({ application, open, loading = false, sca
 
   const InfoField = ({ label, value }: { label: string; value: any }) => (
     <div className="space-y-1">
-      <p className="text-xs text-white/40 font-bold uppercase tracking-wider">{label}</p>
-      <p className="text-base text-white font-semibold break-words">{value || "-"}</p>
+      <p className="text-[11px] sm:text-xs text-white/40 font-bold uppercase tracking-wider">{label}</p>
+      <p className="text-sm sm:text-base text-white font-semibold break-words">{value || "-"}</p>
     </div>
   )
 
-  // 신청자 본인 항만이수증 - isLoading 후에 정의
   const applicantPortCerts: any[] = !isLoading && app ? (app.portCertFiles || []) : []
-  // 일반 첨부파일 (기존 GENERAL 타입)
   const generalFiles: any[] = !isLoading && app ? ((app.files || []).filter((f: any) => f.attachment_type !== 'PORT_CERT')) : []
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-[60vw] xl:max-w-[1200px] max-h-[92vh] overflow-hidden flex flex-col bg-black/95 border border-white/20 text-white p-0 shadow-2xl backdrop-blur-2xl">
+      <DialogContent className="w-[95vw] max-w-[95vw] sm:w-auto sm:max-w-[60vw] xl:max-w-[1200px] max-h-[95vh] sm:max-h-[92vh] overflow-hidden flex flex-col bg-black/95 border border-white/20 text-white p-0 shadow-2xl backdrop-blur-2xl rounded-2xl sm:rounded-3xl">
 
         {/* 헤더 */}
-        <DialogHeader className="flex-shrink-0 border-b border-white/10 p-8 bg-white/5">
-          <div className="flex items-center justify-between">
-            <div className="space-y-1">
-              <div className="flex items-center gap-3">
-                <DialogTitle className="text-3xl font-black text-white tracking-tight">신청 상세정보</DialogTitle>
+        <DialogHeader className="flex-shrink-0 border-b border-white/10 p-4 sm:p-8 bg-white/5">
+          <div className="flex items-center justify-between gap-2">
+            <div className="space-y-1 min-w-0">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <DialogTitle className="text-xl sm:text-3xl font-black text-white tracking-tight">신청 상세정보</DialogTitle>
               </div>
-              <p className="text-sm font-mono text-white/40">RECEIPT NO: {app?.receipt || "-"}</p>
+              <p className="text-xs sm:text-sm font-mono text-white/40 truncate">RECEIPT: {app?.receipt || "-"}</p>
             </div>
-            <div className="flex items-center gap-4">
-              <Badge className={`${app ? getStatusColor(app.status) : 'bg-white/10'} font-black px-6 py-2.5 text-sm border-2 rounded-full shadow-lg`}>
+            <div className="flex items-center gap-2 sm:gap-4 shrink-0">
+              <Badge className={`${app ? getStatusColor(app.status) : 'bg-white/10'} font-black px-3 sm:px-6 py-1.5 sm:py-2.5 text-xs sm:text-sm border-2 rounded-full shadow-lg`}>
                 {app ? (APPLICATION_STATUS_LABELS[app.status] || app.status) : "로딩 중"}
               </Badge>
               <Button
                 onClick={onClose}
                 variant="ghost"
                 size="icon"
-                className="text-white/40 hover:text-white hover:bg-white/10 rounded-full w-12 h-12 transition-all"
+                className="text-white/40 hover:text-white hover:bg-white/10 rounded-full w-9 h-9 sm:w-12 sm:h-12 transition-all"
               >
-                <X size={28} />
+                <X size={20} className="sm:hidden" />
+                <X size={28} className="hidden sm:block" />
               </Button>
             </div>
           </div>
         </DialogHeader>
 
         {/* 본문 */}
-        <div className="flex-1 overflow-y-auto p-8 space-y-8 custom-scrollbar">
+        <div className="flex-1 overflow-y-auto p-4 sm:p-8 space-y-6 sm:space-y-8 custom-scrollbar">
           {isLoading ? (
-            <div className="space-y-6">
-              <Skeleton className="h-48 w-full rounded-3xl bg-white/5" />
-              <Skeleton className="h-48 w-full rounded-3xl bg-white/5" />
-              <Skeleton className="h-48 w-full rounded-3xl bg-white/5" />
+            <div className="space-y-4 sm:space-y-6">
+              <Skeleton className="h-36 sm:h-48 w-full rounded-2xl sm:rounded-3xl bg-white/5" />
+              <Skeleton className="h-36 sm:h-48 w-full rounded-2xl sm:rounded-3xl bg-white/5" />
+              <Skeleton className="h-36 sm:h-48 w-full rounded-2xl sm:rounded-3xl bg-white/5" />
             </div>
           ) : (
             <>
               {/* 01. 기본정보 */}
-              <div className="bg-white/5 border border-white/10 rounded-[32px] p-8 hover:bg-white/[0.07] transition-colors">
-                <h3 className="text-xl font-black text-white mb-8 flex items-center gap-3">
-                  <span className="p-2 bg-amber-500/20 rounded-xl text-amber-500 text-sm">01</span>
+              <div className="bg-white/5 border border-white/10 rounded-2xl sm:rounded-[32px] p-4 sm:p-8 hover:bg-white/[0.07] transition-colors">
+                <h3 className="text-lg sm:text-xl font-black text-white mb-5 sm:mb-8 flex items-center gap-2 sm:gap-3">
+                  <span className="p-1.5 sm:p-2 bg-amber-500/20 rounded-lg sm:rounded-xl text-amber-500 text-xs sm:text-sm">01</span>
                   기본정보
                 </h3>
 
-                {/* 2구성: 좌측 텍스트 필드 2열 / 우측 항만이수증 썸네일 */}
-                <div className={`flex gap-8 items-start`}>
-                  {/* 좌측: 텍스트 필드 2열 */}
-                  <div className="flex-1 min-w-0">
-                    <div className="grid grid-cols-2 gap-x-8 gap-y-8">
+                {/* 모바일: 세로 / 데스크탑: 가로 레이아웃 */}
+                <div className="flex flex-col md:flex-row gap-6 md:gap-8 items-start">
+                  {/* 텍스트 필드 */}
+                  <div className="flex-1 min-w-0 w-full">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 sm:gap-x-8 gap-y-5 sm:gap-y-8">
                       <InfoField label="이름" value={app.visitor_name} />
                       <InfoField label="휴대전화번호" value={app.visitor_phone} />
                       <InfoField label="생년월일" value={formatDate(app.visitor_birth_date)} />
@@ -299,11 +294,11 @@ export function ApplicationDetailModal({ application, open, loading = false, sca
 
                     {/* 본인 전자기기 */}
                     {app.electronicDevices && app.electronicDevices.length > 0 && (
-                      <div className="mt-8 pt-6 border-t border-white/10 space-y-4">
+                      <div className="mt-6 sm:mt-8 pt-4 sm:pt-6 border-t border-white/10 space-y-4">
                         <p className="text-xs font-black text-amber-500/80 uppercase tracking-widest">PERSONAL DEVICES</p>
                         <div className="grid grid-cols-1 gap-4">
                           {app.electronicDevices.map((device: any, idx: number) => (
-                            <div key={idx} className="bg-black/40 border border-white/5 rounded-2xl p-5 grid grid-cols-2 lg:grid-cols-4 gap-4">
+                            <div key={idx} className="bg-black/40 border border-white/5 rounded-2xl p-4 sm:p-5 grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
                               <InfoField label="품명" value={device.item_name} />
                               <InfoField label="모델명" value={device.model_name} />
                               <InfoField label="시리얼" value={device.serial_number} />
@@ -318,9 +313,9 @@ export function ApplicationDetailModal({ application, open, loading = false, sca
                     <AttachmentSection title="첨부파일" files={generalFiles} />
                   </div>
 
-                  {/* 우측: 항만이수증 썸네일 (이수증 있을 때만) */}
+                  {/* 항만이수증 썸네일 */}
                   {applicantPortCerts.length > 0 && (
-                    <div className="flex-shrink-0 space-y-3">
+                    <div className="w-full md:w-auto flex-shrink-0 space-y-3">
                       <p className="text-xs font-black text-amber-500/80 uppercase tracking-widest">항만이수증</p>
                       <PortCertThumbnails files={applicantPortCerts} />
                     </div>
@@ -329,12 +324,12 @@ export function ApplicationDetailModal({ application, open, loading = false, sca
               </div>
 
               {/* 02. 방문정보 */}
-              <div className="bg-white/5 border border-white/10 rounded-[32px] p-8 hover:bg-white/[0.07] transition-colors">
-                <h3 className="text-xl font-black text-white mb-8 flex items-center gap-3">
-                  <span className="p-2 bg-blue-500/20 rounded-xl text-blue-400 text-sm">02</span>
+              <div className="bg-white/5 border border-white/10 rounded-2xl sm:rounded-[32px] p-4 sm:p-8 hover:bg-white/[0.07] transition-colors">
+                <h3 className="text-lg sm:text-xl font-black text-white mb-5 sm:mb-8 flex items-center gap-2 sm:gap-3">
+                  <span className="p-1.5 sm:p-2 bg-blue-500/20 rounded-lg sm:rounded-xl text-blue-400 text-xs sm:text-sm">02</span>
                   방문정보
                 </h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-x-8 gap-y-8">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-x-6 sm:gap-x-8 gap-y-5 sm:gap-y-8">
                   <InfoField label="담당자" value={app.contact_name} />
                   <InfoField label="담당자 연락처" value={app.contact_mobile} />
                   <InfoField label="방문목적" value={app.visit_purpose || app.access_purpose} />
@@ -343,29 +338,29 @@ export function ApplicationDetailModal({ application, open, loading = false, sca
                   <InfoField label="방문종료일" value={formatDate(app.visit_end_date || app.access_end_datetime)} />
                 </div>
                 {app.detailed_purpose && (
-                  <div className="mt-8 pt-6 border-t border-white/10">
+                  <div className="mt-6 sm:mt-8 pt-4 sm:pt-6 border-t border-white/10">
                     <p className="text-xs font-bold text-white/40 mb-3 uppercase tracking-wider">상세 방문 사유</p>
-                    <p className="text-base text-white/90 leading-relaxed bg-black/20 p-5 rounded-2xl border border-white/5">{app.detailed_purpose}</p>
+                    <p className="text-sm sm:text-base text-white/90 leading-relaxed bg-black/20 p-4 sm:p-5 rounded-2xl border border-white/5">{app.detailed_purpose}</p>
                   </div>
                 )}
               </div>
 
               {/* 03. 동행인 정보 */}
               {app.companions && app.companions.length > 0 && (
-                <div className="bg-white/5 border border-white/10 rounded-[32px] p-8 transition-colors">
-                  <h3 className="text-xl font-black text-white mb-8 flex items-center gap-3">
-                    <span className="p-2 bg-purple-500/20 rounded-xl text-purple-400 text-sm">03</span>
+                <div className="bg-white/5 border border-white/10 rounded-2xl sm:rounded-[32px] p-4 sm:p-8 transition-colors">
+                  <h3 className="text-lg sm:text-xl font-black text-white mb-5 sm:mb-8 flex items-center gap-2 sm:gap-3">
+                    <span className="p-1.5 sm:p-2 bg-purple-500/20 rounded-lg sm:rounded-xl text-purple-400 text-xs sm:text-sm">03</span>
                     동행인 정보 ({app.companions.length}명)
                   </h3>
-                  <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+                  <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 sm:gap-6">
                     {app.companions.map((companion: any, idx: number) => {
                       const companionPortCerts = companion.portCertFiles || []
                       return (
-                        <div key={idx} className="bg-black/40 border border-white/10 rounded-3xl p-6">
-                          <div className="flex gap-6 items-start">
-                            {/* 좌측: 텍스트 필드 2열 */}
-                            <div className="flex-1 min-w-0 space-y-5">
-                              <div className="grid grid-cols-2 gap-x-6 gap-y-5">
+                        <div key={idx} className="bg-black/40 border border-white/10 rounded-2xl sm:rounded-3xl p-4 sm:p-6">
+                          <div className="flex flex-col md:flex-row gap-4 md:gap-6 items-start">
+                            {/* 텍스트 필드 */}
+                            <div className="flex-1 min-w-0 w-full space-y-4 sm:space-y-5">
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 sm:gap-x-6 gap-y-4 sm:gap-y-5">
                                 <InfoField label="이름" value={companion.name} />
                                 <InfoField label="연락처" value={companion.phone} />
                                 <InfoField label="생년월일" value={formatDate(companion.birth_date)} />
@@ -378,18 +373,18 @@ export function ApplicationDetailModal({ application, open, loading = false, sca
                                 <div className="pt-4 border-t border-white/10">
                                   <p className="text-[10px] font-black text-white/40 mb-3 uppercase tracking-widest">Device List</p>
                                   {companion.electronicDevices.map((d: any, dIdx: number) => (
-                                    <div key={dIdx} className="bg-white/5 rounded-xl p-3 grid grid-cols-2 gap-2 text-sm mb-2">
+                                    <div key={dIdx} className="bg-white/5 rounded-xl p-3 grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm mb-2">
                                       <span className="text-white/60">{d.item_name} ({d.model_name})</span>
-                                      <span className="text-white/40 text-right font-mono">{d.serial_number}</span>
+                                      <span className="text-white/40 sm:text-right font-mono">{d.serial_number}</span>
                                     </div>
                                   ))}
                                 </div>
                               )}
                             </div>
 
-                            {/* 우측: 동행인 항만이수증 썸네일 (있을 때만) */}
+                            {/* 동행인 항만이수증 썸네일 */}
                             {companionPortCerts.length > 0 && (
-                              <div className="flex-shrink-0 space-y-3">
+                              <div className="w-full md:w-auto flex-shrink-0 space-y-3">
                                 <p className="text-xs font-black text-amber-500/80 uppercase tracking-widest">항만이수증</p>
                                 <PortCertThumbnails files={companionPortCerts} />
                               </div>
@@ -404,9 +399,9 @@ export function ApplicationDetailModal({ application, open, loading = false, sca
 
               {/* 출입 이력 */}
               {scanHistory.length > 0 && (
-                <div className="bg-white/5 border border-white/10 rounded-[32px] p-8 transition-colors">
-                  <h3 className="text-xl font-black text-white mb-6 flex items-center gap-3">
-                    <span className="p-2 bg-emerald-500/20 rounded-xl text-emerald-400 text-sm">
+                <div className="bg-white/5 border border-white/10 rounded-2xl sm:rounded-[32px] p-4 sm:p-8 transition-colors">
+                  <h3 className="text-lg sm:text-xl font-black text-white mb-4 sm:mb-6 flex items-center gap-2 sm:gap-3">
+                    <span className="p-1.5 sm:p-2 bg-emerald-500/20 rounded-lg sm:rounded-xl text-emerald-400 text-xs sm:text-sm">
                       {app.companions && app.companions.length > 0 ? "04" : "03"}
                     </span>
                     출입 이력
@@ -415,8 +410,8 @@ export function ApplicationDetailModal({ application, open, loading = false, sca
                     <table className="w-full text-sm">
                       <thead>
                         <tr className="border-b border-white/10">
-                          <th className="text-left text-xs font-black text-white/40 uppercase tracking-wider pb-3 pr-6">구분</th>
-                          <th className="text-left text-xs font-black text-white/40 uppercase tracking-wider pb-3 pr-6">시각 (KST)</th>
+                          <th className="text-left text-xs font-black text-white/40 uppercase tracking-wider pb-3 pr-4 sm:pr-6">구분</th>
+                          <th className="text-left text-xs font-black text-white/40 uppercase tracking-wider pb-3 pr-4 sm:pr-6">시각</th>
                           <th className="text-left text-xs font-black text-white/40 uppercase tracking-wider pb-3">출입구</th>
                         </tr>
                       </thead>
@@ -425,32 +420,29 @@ export function ApplicationDetailModal({ application, open, loading = false, sca
                           const GATE_LABELS: Record<string, string> = { main: "정문", pier_1: "제1부두", pier_2: "제2부두" }
                           const formatDT = (dt: string) => {
                             try {
-                              // DB에 KST로 저장되어 있으므로 UTC 필드 그대로 사용
                               const d = new Date(dt)
                               const yy = d.getUTCFullYear().toString().slice(-2)
                               const mm = (d.getUTCMonth() + 1).toString().padStart(2, '0')
                               const dd = d.getUTCDate().toString().padStart(2, '0')
                               const hh = d.getUTCHours().toString().padStart(2, '0')
                               const min = d.getUTCMinutes().toString().padStart(2, '0')
-                              return `${yy}. ${mm}. ${dd}. ${hh}:${min}`
+                              return `${yy}.${mm}.${dd} ${hh}:${min}`
                             } catch { return dt }
                           }
-                          // 부두 스캔(pier_1, pier_2)만 필터링
                           const pierScans = scanHistory.filter(item =>
                             item.scan_site === 'pier_1' || item.scan_site === 'pier_2'
                           )
-                          // 표시할 이력이 없으면 전체 표시 (정문만 있는 경우 대비)
                           const displayScans = pierScans.length > 0 ? pierScans : scanHistory
                           return displayScans.map((item) => (
                             <tr key={item.scan_id} className="border-b border-white/5">
-                              <td className="py-3 pr-6">
+                              <td className="py-3 pr-4 sm:pr-6">
                                 {item.direction === "ENTRY"
                                   ? <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 text-xs font-black">입장</span>
                                   : <span className="px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-400 text-xs font-black">퇴장</span>
                                 }
                               </td>
-                              <td className="py-3 pr-6 text-white font-mono">{formatDT(item.scanned_at)}</td>
-                              <td className="py-3 text-white/60">{GATE_LABELS[item.scan_site] || item.scan_site}</td>
+                              <td className="py-3 pr-4 sm:pr-6 text-white font-mono text-xs sm:text-sm">{formatDT(item.scanned_at)}</td>
+                              <td className="py-3 text-white/60 text-xs sm:text-sm">{GATE_LABELS[item.scan_site] || item.scan_site}</td>
                             </tr>
                           ))
                         })()}
@@ -462,9 +454,9 @@ export function ApplicationDetailModal({ application, open, loading = false, sca
 
               {/* 반려 사유 */}
               {app.rejection_reason && (
-                <div className="bg-red-500/10 border-2 border-red-500/30 rounded-[32px] p-8">
-                  <h3 className="text-xl font-black text-red-400 mb-4">반려 사유 안내</h3>
-                  <div className="bg-black/20 p-6 rounded-2xl border border-red-500/10 text-white/90 leading-relaxed whitespace-pre-wrap">
+                <div className="bg-red-500/10 border-2 border-red-500/30 rounded-2xl sm:rounded-[32px] p-4 sm:p-8">
+                  <h3 className="text-lg sm:text-xl font-black text-red-400 mb-4">반려 사유 안내</h3>
+                  <div className="bg-black/20 p-4 sm:p-6 rounded-2xl border border-red-500/10 text-white/90 text-sm sm:text-base leading-relaxed whitespace-pre-wrap">
                     {app.rejection_reason}
                   </div>
                 </div>
