@@ -14,7 +14,6 @@ import { useRouter } from "next/navigation"
 import { ApplicationCache } from "@/lib/utils/cache"
 import Link from "next/link"
 import Image from "next/image"
-import { cn } from "@/lib/utils"
 import { ContactSelector } from "@/components/contact-selector"
 import { ArrowLeft, Plus, Trash2 } from "lucide-react"
 import { PublicHeader } from "@/components/public/public-header"
@@ -99,7 +98,7 @@ interface CompanionErrors {
 
 export default function VisitFormPage() {
   const { t } = useLang()
-  const [scrolled, setScrolled] = useState(false)
+  const [setScrolled] = useState(false)
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isEditMode, setIsEditMode] = useState(false)
