@@ -414,6 +414,7 @@ export default function AdminRequestsPage() {
                   </SelectTrigger>
                   <SelectContent className="bg-black/95 border-white/20 text-white">
                     <SelectItem value="ALL">전체</SelectItem>
+                    <SelectItem value="전체지역">전체지역</SelectItem>
                     <SelectItem value="정문">정문</SelectItem>
                     <SelectItem value="본관동(1층)">본관동(1층)</SelectItem>
                     <SelectItem value="본관동(3층)">본관동(3층)</SelectItem>

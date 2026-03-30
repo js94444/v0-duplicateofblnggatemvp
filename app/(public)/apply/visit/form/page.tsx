@@ -236,7 +236,7 @@ export default function VisitFormPage() {
   }, [])
 
   const accessAreaOptions = [
-    { value: "전체", label: t("전체", "All areas") },
+    { value: "전체지역", label: t("전체지역", "All areas") },
     { value: "정문", label: t("정문", "Main Gate") },
     { value: "본관동(1층)", label: t("본관동(1층)", "Main Building (1F)") },
     { value: "본관동(3층)", label: t("본관동(3층)", "Main Building (3F)") },
