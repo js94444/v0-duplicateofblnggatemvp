@@ -25,6 +25,7 @@ import { ArrowLeft, Plus, Trash2 } from "lucide-react"
 import { PublicHeader } from "@/components/public/public-header"
 import { PublicFooter } from "@/components/public/public-footer"
 import { useLang } from "@/lib/language-context"
+import { BirthDateInput } from "@/components/common/birth-date-input"
 
 interface ElectronicDevice {
   item_name: string
@@ -717,12 +718,11 @@ export default function VisitFormPage() {
                   />
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                  <FormInput
+                  <BirthDateInput
                     label={t("생년월일", "Date of Birth")}
                     required
-                    type="date"
                     value={formData.visitor_birth_date}
-                    onChange={(e) => updateField("visitor_birth_date", e.target.value)}
+                    onChange={(value) => updateField("visitor_birth_date", value)}
                     error={errors.visitor_birth_date}
                   />
                   <FormInput
@@ -1096,14 +1096,12 @@ export default function VisitFormPage() {
                         />
                       </div>
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                        <FormInput
+                        <BirthDateInput
                           label={t("생년월일", "Date of Birth")}
                           required
-                          type="date"
                           value={companion.birth_date}
-                          onChange={(e) => updateCompanion(companionIndex, "birth_date", e.target.value)}
+                          onChange={(value) => updateCompanion(companionIndex, "birth_date", value)}
                           error={companionErrors[companionIndex]?.birth_date}
-
                         />
                         <FormInput
                           label={t("소속", "Organization")}
