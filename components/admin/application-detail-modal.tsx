@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import { type Application, APPLICATION_STATUS_LABELS } from "@/lib/types"
-import { X, Download, FileText, ZoomIn } from "lucide-react"
+import { X, Download, FileText, ZoomIn, Loader2 } from "lucide-react"
 
 interface ScanHistoryItem {
   scan_id: number
@@ -194,9 +194,65 @@ function AttachmentSection({ title, files }: { title: string; files: any[] }) {
   )
 }
 
+function ModalBodySkeleton() {
+  return (
+    <div className="space-y-6 sm:space-y-8">
+      <div
+        className="flex items-center gap-3 rounded-2xl border border-amber-500/20 bg-amber-500/5 px-4 py-3 sm:px-5 sm:py-4"
+        role="status"
+        aria-live="polite"
+        aria-busy="true"
+      >
+        <Loader2 className="h-5 w-5 shrink-0 animate-spin text-amber-400" aria-hidden />
+        <p className="text-sm font-semibold text-white/90">
+          신청 정보를 불러오는 중입니다<span className="inline-block w-6 animate-pulse text-amber-400">…</span>
+        </p>
+      </div>
+
+      {/* 01 기본정보 카드 형태 */}
+      <div className="rounded-2xl sm:rounded-[32px] border border-white/10 bg-white/5 p-4 sm:p-8 space-y-6">
+        <div className="flex items-center gap-3">
+          <Skeleton className="h-9 w-11 rounded-lg bg-white/10 sm:h-10 sm:w-12 sm:rounded-xl" />
+          <Skeleton className="h-7 w-28 rounded-md bg-white/10 sm:h-8 sm:w-36" />
+        </div>
+        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 sm:gap-8">
+          {Array.from({ length: 8 }).map((_, i) => (
+            <div key={i} className="space-y-2">
+              <Skeleton className="h-3 w-20 rounded bg-white/10" />
+              <Skeleton className="h-5 w-full max-w-[220px] rounded-md bg-white/10" />
+            </div>
+          ))}
+        </div>
+        <div className="flex flex-wrap gap-3 pt-2">
+          <Skeleton className="h-[200px] w-full rounded-2xl bg-white/10 sm:h-[220px] sm:w-[180px]" />
+          <Skeleton className="h-[200px] w-full rounded-2xl bg-white/10 sm:h-[220px] sm:w-[180px]" />
+        </div>
+      </div>
+
+      {/* 02 방문정보 카드 형태 */}
+      <div className="rounded-2xl sm:rounded-[32px] border border-white/10 bg-white/5 p-4 sm:p-8 space-y-6">
+        <div className="flex items-center gap-3">
+          <Skeleton className="h-9 w-11 rounded-lg bg-white/10 sm:h-10 sm:w-12 sm:rounded-xl" />
+          <Skeleton className="h-7 w-24 rounded-md bg-white/10 sm:h-8 sm:w-32" />
+        </div>
+        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 md:grid-cols-3 sm:gap-8">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} className="space-y-2">
+              <Skeleton className="h-3 w-16 rounded bg-white/10" />
+              <Skeleton className="h-5 w-full rounded-md bg-white/10" />
+            </div>
+          ))}
+        </div>
+        <Skeleton className="h-24 w-full rounded-2xl bg-white/10" />
+      </div>
+    </div>
+  )
+}
+
 export function ApplicationDetailModal({ application, open, loading = false, scanHistory = [], onClose }: ApplicationDetailModalProps) {
   const app = application as any
-  const isLoading = loading
+  /** 부모에서 fetch 중일 때 true로 넘기면 스켈레톤·로딩 문구가 표시됩니다 */
+  const isLoading = Boolean(loading)
 
   const getStatusColor = (status: string) => {
     const statusUpper = status?.toUpperCase() || ""
@@ -239,7 +295,14 @@ export function ApplicationDetailModal({ application, open, loading = false, sca
               <div className="flex items-center gap-2 sm:gap-3">
                 <DialogTitle className="text-xl sm:text-3xl font-black text-white tracking-tight">신청 상세정보</DialogTitle>
               </div>
-              <p className="text-xs sm:text-sm font-mono text-white/40 truncate">RECEIPT: {app?.receipt || "-"}</p>
+              <p className="text-xs sm:text-sm font-mono text-white/40 truncate flex items-center gap-2 min-h-[1.25rem]">
+                RECEIPT:{" "}
+                {isLoading ? (
+                  <Skeleton className="inline-block h-4 w-28 rounded bg-white/10 align-middle sm:w-36" />
+                ) : (
+                  app?.receipt || "-"
+                )}
+              </p>
             </div>
             <div className="flex items-center gap-2 sm:gap-4 shrink-0">
               <Badge className={`${app ? getStatusColor(app.status) : 'bg-white/10'} font-black px-3 sm:px-6 py-1.5 sm:py-2.5 text-xs sm:text-sm border-2 rounded-full shadow-lg`}>
@@ -251,9 +314,9 @@ export function ApplicationDetailModal({ application, open, loading = false, sca
                 size="icon"
                 className="text-white/40 hover:text-white hover:bg-white/10 rounded-full w-9 h-9 sm:w-12 sm:h-12 transition-all"
               >
-                <X className="w-5 h-5 sm:w-7 sm:h-7" />
+                <X size={20} className="sm:hidden" />
+                <X size={28} className="hidden sm:block" />
               </Button>
-
             </div>
           </div>
         </DialogHeader>
@@ -261,10 +324,12 @@ export function ApplicationDetailModal({ application, open, loading = false, sca
         {/* 본문 */}
         <div className="flex-1 overflow-y-auto p-4 sm:p-8 space-y-6 sm:space-y-8 custom-scrollbar">
           {isLoading ? (
-            <div className="space-y-4 sm:space-y-6">
-              <Skeleton className="h-36 sm:h-48 w-full rounded-2xl sm:rounded-3xl bg-white/5" />
-              <Skeleton className="h-36 sm:h-48 w-full rounded-2xl sm:rounded-3xl bg-white/5" />
-              <Skeleton className="h-36 sm:h-48 w-full rounded-2xl sm:rounded-3xl bg-white/5" />
+            <ModalBodySkeleton />
+          ) : !application ? (
+            <div className="rounded-2xl border border-white/10 bg-white/5 px-6 py-12 sm:px-10 sm:py-16 text-center">
+              <p className="text-sm sm:text-base text-white/50">
+                표시할 신청 정보가 없습니다. 목록에서 다시 선택하거나 조회를 시도해 주세요.
+              </p>
             </div>
           ) : (
             <>
