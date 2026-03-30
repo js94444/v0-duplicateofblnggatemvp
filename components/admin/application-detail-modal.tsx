@@ -251,9 +251,9 @@ export function ApplicationDetailModal({ application, open, loading = false, sca
                 size="icon"
                 className="text-white/40 hover:text-white hover:bg-white/10 rounded-full w-9 h-9 sm:w-12 sm:h-12 transition-all"
               >
-                <X size={20} className="sm:hidden" />
-                <X size={28} className="hidden sm:block" />
+                <X className="w-5 h-5 sm:w-7 sm:h-7" />
               </Button>
+
             </div>
           </div>
         </DialogHeader>
