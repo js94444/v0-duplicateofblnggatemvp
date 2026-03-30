@@ -313,7 +313,7 @@ export function ApplicationDetailModal({ application, open, loading = false, sca
       visitor_address: app.visitor_address || "",
       vehicle_number: app.vehicle_number || "",
       vehicle_model: app.vehicle_model || "",
-      spark_arrestor: normalizeSparkArrestor(app.spark_arrestor),
+      spark_arrestor: app.spark_arrestor || "",
       contact_name: app.contact_name || "",
       contact_mobile: app.contact_mobile || "",
       visit_purpose: app.visit_purpose || app.access_purpose || "",
