@@ -1,10 +1,5 @@
 "use client"
 
-import { SelectItem } from "@/components/ui/select"
-import { SelectContent } from "@/components/ui/select"
-import { SelectValue } from "@/components/ui/select"
-import { SelectTrigger } from "@/components/ui/select"
-import { Select } from "@/components/ui/select"
 import type React from "react"
 import { useState, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -19,12 +14,12 @@ import { useRouter } from "next/navigation"
 import { ApplicationCache } from "@/lib/utils/cache"
 import Link from "next/link"
 import Image from "next/image"
-import { cn } from "@/lib/utils"
 import { ContactSelector } from "@/components/contact-selector"
 import { ArrowLeft, Plus, Trash2 } from "lucide-react"
 import { PublicHeader } from "@/components/public/public-header"
 import { PublicFooter } from "@/components/public/public-footer"
 import { useLang } from "@/lib/language-context"
+import { BirthDateInput } from "@/components/common/birth-date-input"
 
 interface ElectronicDevice {
   item_name: string
@@ -103,7 +98,7 @@ interface CompanionErrors {
 
 export default function VisitFormPage() {
   const { t } = useLang()
-  const [scrolled, setScrolled] = useState(false)
+  const [setScrolled] = useState(false)
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isEditMode, setIsEditMode] = useState(false)
@@ -149,25 +144,6 @@ export default function VisitFormPage() {
   const [portCertFiles, setPortCertFiles] = useState<UploadedFileData[]>([])
   const { toast } = useToast()
   const router = useRouter()
-
-  useEffect(() => {
-    const handleScroll = () => setScrolled(window.scrollY > 20)
-    window.addEventListener('scroll', handleScroll)
-    return () => window.removeEventListener('scroll', handleScroll)
-  }, [])
-
-  const PremiumLogo = () => (
-    <Link href="/" className="flex items-center group cursor-pointer">
-      <Image
-        src="/images/boryeong-lng-ci.png"
-        alt="보령LNG터미널"
-        width={200}
-        height={40}
-        className="h-8 md:h-10 w-auto group-hover:opacity-90 transition-opacity"
-        priority
-      />
-    </Link>
-  )
 
   // 수정 모드 체크 및 데이터 로드
   useEffect(() => {
@@ -236,6 +212,7 @@ export default function VisitFormPage() {
   }, [])
 
   const accessAreaOptions = [
+    { value: "전체지역", label: t("전체지역", "All areas") },
     { value: "정문", label: t("정문", "Main Gate") },
     { value: "본관동(1층)", label: t("본관동(1층)", "Main Building (1F)") },
     { value: "본관동(3층)", label: t("본관동(3층)", "Main Building (3F)") },
@@ -243,7 +220,8 @@ export default function VisitFormPage() {
     { value: "제1부두", label: t("제1부두", "Berth No.1") },
     { value: "제2부두", label: t("제2부두", "Berth No.2") },
     { value: "제1,2부두", label: t("제1,2부두", "Berth No.1 & 2") },
-    { value: "정비동", label: t("정비동", "Maintenance Building") },
+    { value: "정비동 앞", label: t("정비동 앞", "Front of maintenance building") },
+    { value: "정비동 뒤", label: t("정비동 뒤", "Rear of maintenance building") },
   ]
 
   const vehicleTypeOptions = [
@@ -715,12 +693,11 @@ export default function VisitFormPage() {
                   />
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                  <FormInput
+                  <BirthDateInput
                     label={t("생년월일", "Date of Birth")}
                     required
-                    type="date"
                     value={formData.visitor_birth_date}
-                    onChange={(e) => updateField("visitor_birth_date", e.target.value)}
+                    onChange={(value) => updateField("visitor_birth_date", value)}
                     error={errors.visitor_birth_date}
                   />
                   <FormInput
@@ -1094,14 +1071,12 @@ export default function VisitFormPage() {
                         />
                       </div>
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                        <FormInput
+                        <BirthDateInput
                           label={t("생년월일", "Date of Birth")}
                           required
-                          type="date"
                           value={companion.birth_date}
-                          onChange={(e) => updateCompanion(companionIndex, "birth_date", e.target.value)}
+                          onChange={(value) => updateCompanion(companionIndex, "birth_date", value)}
                           error={companionErrors[companionIndex]?.birth_date}
-
                         />
                         <FormInput
                           label={t("소속", "Organization")}
@@ -1294,9 +1269,6 @@ export default function VisitFormPage() {
                 )}
               </CardContent>
             </Card>
-
-            {/* 파일 첨부 Card */}
-
 
             <div className="flex justify-end space-x-4">
               <Button

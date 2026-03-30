@@ -414,6 +414,7 @@ export default function AdminRequestsPage() {
                   </SelectTrigger>
                   <SelectContent className="bg-black/95 border-white/20 text-white">
                     <SelectItem value="ALL">전체</SelectItem>
+                    <SelectItem value="전체지역">전체지역</SelectItem>
                     <SelectItem value="정문">정문</SelectItem>
                     <SelectItem value="본관동(1층)">본관동(1층)</SelectItem>
                     <SelectItem value="본관동(3층)">본관동(3층)</SelectItem>
@@ -421,7 +422,8 @@ export default function AdminRequestsPage() {
                     <SelectItem value="제1부두">제1부두</SelectItem>
                     <SelectItem value="제2부두">제2부두</SelectItem>
                     <SelectItem value="제1,2부두">제1,2부두</SelectItem>
-                    <SelectItem value="정비동">정비동</SelectItem>
+                    <SelectItem value="정비동 앞">정비동 앞</SelectItem>
+                    <SelectItem value="정비동 뒤">정비동 뒤</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -508,8 +510,8 @@ export default function AdminRequestsPage() {
                           {/* 담당자 확인 체크 — 별도 강조 영역 */}
                           <div
                             className={`flex items-center justify-between px-4 py-2.5 transition-all ${checkStates[String(application.id)]
-                                ? "bg-amber-500/15 border-b border-amber-500/20"
-                                : "bg-white/[0.02] border-b border-white/5"
+                              ? "bg-amber-500/15 border-b border-amber-500/20"
+                              : "bg-white/[0.02] border-b border-white/5"
                               }`}
                           >
                             <div className="flex items-center gap-2">
