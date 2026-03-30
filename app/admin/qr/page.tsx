@@ -896,7 +896,14 @@ export default function AdminQrScanPage() {
                           <TableCell>
                             <Button
                               size="sm"
-                              onClick={() => { setSelectedApplicationId(row.application_id); setSelectedPassId(row.pass_id) }}
+                              onClick={() => {
+                                // 모달을 즉시 렌더링해서 스켈레톤이 보이게 함
+                                setModalLoading(true)
+                                setSelectedApplicationId(row.application_id)
+                                setSelectedPassId(row.pass_id)
+                                setSelectedApplication(null)
+                                setScanHistory([])
+                              }}
                               className="bg-white/10 hover:bg-white/20 border border-white/20 text-white rounded-lg text-xs px-2 py-1"
                             >
                               보기
@@ -1105,7 +1112,14 @@ export default function AdminQrScanPage() {
                           <TableCell>
                             <Button
                               size="sm"
-                              onClick={() => { setSelectedApplicationId(row.application_id); setSelectedPassId(row.pass_id) }}
+                              onClick={() => {
+                                // 모달을 즉시 렌더링해서 스켈레톤이 보이게 함
+                                setModalLoading(true)
+                                setSelectedApplicationId(row.application_id)
+                                setSelectedPassId(row.pass_id)
+                                setSelectedApplication(null)
+                                setScanHistory([])
+                              }}
                               className="bg-white/10 hover:bg-white/20 border border-white/20 text-white rounded-lg text-xs px-2 py-1"
                             >
                               보기
@@ -1123,16 +1137,17 @@ export default function AdminQrScanPage() {
       </div>
 
       {/* 상세보기 모달 */}
-      {selectedApplication && (
+      {selectedApplicationId !== null && (
         <ApplicationDetailModal
           application={selectedApplication}
-          open={!!selectedApplication}
+          open={selectedApplicationId !== null}
           loading={modalLoading}
           scanHistory={scanHistory}
           onClose={() => {
             setSelectedApplicationId(null)
             setSelectedApplication(null)
             setSelectedPassId(null)
+            setModalLoading(false)
             setScanHistory([])
           }}
         />
