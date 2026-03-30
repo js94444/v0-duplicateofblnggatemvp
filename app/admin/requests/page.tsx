@@ -481,19 +481,13 @@ export default function AdminRequestsPage() {
                         <div
                           key={application.id}
                           className={`rounded-2xl border transition-all ${isMyTask
-                              ? "border-amber-500/30 bg-amber-500/5"
-                              : "border-white/10 bg-white/[0.02]"
+                            ? "border-amber-500/30 bg-amber-500/5"
+                            : "border-white/10 bg-white/[0.02]"
                             }`}
                         >
-                          {/* 카드 상단: 체크 + 유형 + 상태 + 보기 */}
+                          {/* 카드 상단: 유형 + 상태 + 보기 */}
                           <div className="flex items-center justify-between px-4 py-3 border-b border-white/5">
-                            <div className="flex items-center gap-3">
-                              <Checkbox
-                                checked={!!checkStates[String(application.id)]}
-                                disabled={!!checkLoading[String(application.id)]}
-                                onCheckedChange={(checked) => handleCheck(String(application.id), !!checked)}
-                                className="w-5 h-5 border-white/30 data-[state=checked]:bg-amber-500 data-[state=checked]:border-amber-500"
-                              />
+                            <div className="flex items-center gap-2">
                               <div className="flex items-center gap-1.5">
                                 {getTypeIcon(application.type)}
                                 <span className="text-sm font-bold text-white">{getTypeLabel(application.receipt)}</span>
@@ -510,6 +504,34 @@ export default function AdminRequestsPage() {
                               보기
                             </Button>
                           </div>
+
+                          {/* 담당자 확인 체크 — 별도 강조 영역 */}
+                          <div
+                            className={`flex items-center justify-between px-4 py-2.5 transition-all ${checkStates[String(application.id)]
+                                ? "bg-amber-500/15 border-b border-amber-500/20"
+                                : "bg-white/[0.02] border-b border-white/5"
+                              }`}
+                          >
+                            <div className="flex items-center gap-2">
+                              <Checkbox
+                                checked={!!checkStates[String(application.id)]}
+                                disabled={!!checkLoading[String(application.id)]}
+                                onCheckedChange={(checked) => handleCheck(String(application.id), !!checked)}
+                                className="w-6 h-6 border-2 border-amber-500/50 data-[state=checked]:bg-amber-500 data-[state=checked]:border-amber-500 rounded-md"
+                              />
+                              <span className={`text-sm font-bold ${checkStates[String(application.id)] ? "text-amber-400" : "text-amber-500/70"
+                                }`}>
+                                담당자 확인
+                              </span>
+                            </div>
+                            {checkStates[String(application.id)] && (
+                              <span className="text-[11px] text-amber-400/60 font-medium">확인 완료</span>
+                            )}
+                            {!checkStates[String(application.id)] && isMyTask && (
+                              <span className="text-[11px] text-amber-400 font-bold animate-pulse">확인 필요</span>
+                            )}
+                          </div>
+
 
                           {/* 카드 본문 */}
                           <div className="px-4 py-3 space-y-2 text-sm">
