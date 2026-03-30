@@ -89,14 +89,14 @@ export default function AdminDashboardPage() {
 
   if (isLoading) {
     return (
-      <div className="container mx-auto px-6 py-10 space-y-8">
+      <div className="container mx-auto px-4 sm:px-6 py-6 sm:py-10 space-y-8">
         <div className="flex items-center justify-between">
           <div className="space-y-2">
             <Skeleton className="h-8 w-40 bg-white/10 rounded-xl" />
             <Skeleton className="h-4 w-56 bg-white/10 rounded-xl" />
           </div>
         </div>
-        <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4">
           {Array.from({ length: 5 }).map((_, i) => (
             <Skeleton key={i} className="h-28 bg-white/10 rounded-2xl" />
           ))}
@@ -111,7 +111,7 @@ export default function AdminDashboardPage() {
 
   if (!stats) {
     return (
-      <div className="container mx-auto px-6 py-10">
+      <div className="container mx-auto px-4 sm:px-6 py-6 sm:py-10">
         <div className={`${glassCard} p-12 text-center`}>
           <p className="text-white/40">통계 데이터를 불러올 수 없습니다.</p>
           <Button onClick={fetchStats} className="mt-4 bg-[#0298c2] hover:bg-[#0280a8] text-white rounded-xl">
@@ -175,12 +175,12 @@ export default function AdminDashboardPage() {
   ]
 
   return (
-    <div className="container mx-auto px-6 py-10 space-y-8">
+    <div className="container mx-auto px-4 sm:px-6 py-6 sm:py-10 space-y-8">
 
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-black text-white tracking-tight">대시보드</h1>
+          <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">대시보드</h1>
           <p className="text-white/40 text-sm mt-1 font-medium">출입 신청 현황 및 통계</p>
         </div>
         <Button
@@ -194,7 +194,7 @@ export default function AdminDashboardPage() {
       </div>
 
       {/* Overview Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4">
         {overviewCards.map((card) => {
           const Icon = card.icon
           return (
@@ -206,7 +206,7 @@ export default function AdminDashboardPage() {
                 </div>
               </div>
               <div>
-                <div className={`text-3xl font-black ${card.color}`}>{card.value.toLocaleString()}</div>
+                <div className={`text-2xl sm:text-3xl font-black ${card.color}`}>{card.value.toLocaleString()}</div>
                 <p className="text-xs text-white/30 mt-1">{card.sub}</p>
               </div>
             </div>
@@ -322,7 +322,7 @@ export default function AdminDashboardPage() {
             </div>
 
             {selectedMonthData && (
-              <div className="grid grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 <div>
                   <p className="text-xs font-bold text-white/40 uppercase tracking-wider mb-3">신청 유형별</p>
                   <div className="space-y-2.5">
@@ -377,9 +377,8 @@ export default function AdminDashboardPage() {
                   </div>
                   <div className="w-full bg-white/5 rounded-full h-1.5">
                     <div
-                      className={`h-1.5 rounded-full transition-all duration-500 ${
-                        index === 0 ? "bg-amber-500" : index === 1 ? "bg-amber-500/70" : index === 2 ? "bg-amber-500/50" : "bg-white/20"
-                      }`}
+                      className={`h-1.5 rounded-full transition-all duration-500 ${index === 0 ? "bg-amber-500" : index === 1 ? "bg-amber-500/70" : index === 2 ? "bg-amber-500/50" : "bg-white/20"
+                        }`}
                       style={{ width: `${Math.min((org.count / maxOrgCount) * 100, 100)}%` }}
                     />
                   </div>
