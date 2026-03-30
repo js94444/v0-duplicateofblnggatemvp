@@ -510,7 +510,7 @@ export function ApplicationDetailModal({ application, open, loading = false, sca
                           <InfoField label="차량유종" value={app.vehicle_model} />
                           <InfoField
                             label="불꽃방지망보유"
-                            value={normalizeSparkArrestor(app.spark_arrestor) || "-"}
+                            value={app.spark_arrestor || "-"}
                           />
                         </>
                       )}
