@@ -35,12 +35,12 @@ export function isScannerAuthenticated(): boolean {
   }
 }
 
-/** 서버에서 스캐너 토큰 검증 */
+/** 스캐너 토큰 검증 (서버/클라이언트 모두 사용 가능) */
 export function validateScannerToken(token: string | null): boolean {
   if (!token) return false
 
   try {
-    const decoded = JSON.parse(Buffer.from(token, "base64").toString())
+    const decoded = JSON.parse(atob(token))
     return decoded.type === "scanner" && decoded.exp > Date.now()
   } catch {
     return false
