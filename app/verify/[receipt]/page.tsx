@@ -13,6 +13,16 @@ const GATE_LABELS: Record<string, string> = {
   pier_2: "2부두",
 }
 
+/** public/sounds/ 아래 MP3 파일명과 맞춤 */
+const VERIFY_SOUNDS = {
+  entry: "/sounds/verify-entry.mp3",
+  exit: "/sounds/verify-exit.mp3",
+  duplicate: "/sounds/verify-duplicate.mp3",
+  failure: "/sounds/verify-failure.mp3",
+} as const
+
+
+
 interface VerifyResult {
   result: "ALLOW" | "DENY" | "MISMATCH"
   message: string
@@ -23,6 +33,22 @@ interface VerifyResult {
   visit_end_date?: string
   direction?: string
 }
+
+function soundPathForVerifyOutcome(
+  outcome: VerifyResult["result"],
+  scanDirection: "ENTRY" | "EXIT"
+): string {
+  if (outcome === "ALLOW") {
+    return scanDirection === "ENTRY" ? VERIFY_SOUNDS.entry : VERIFY_SOUNDS.exit
+  }
+  if (outcome === "MISMATCH") {
+    return VERIFY_SOUNDS.duplicate
+  }
+  return VERIFY_SOUNDS.failure
+}
+
+
+
 
 export default function VerifyReceiptPage() {
   const params = useParams()
@@ -72,7 +98,7 @@ export default function VerifyReceiptPage() {
           if (json.result === "ALLOW") {
             displayMessage = direction === "ENTRY" ? "입장 처리되었습니다." : "퇴장 처리되었습니다."
           }
-          
+
           setResult({
             result: json.result || "ALLOW",
             message: displayMessage,
@@ -104,6 +130,24 @@ export default function VerifyReceiptPage() {
       isCancelled = true
     }
   }, [receipt, direction, gate])
+
+
+  // 결과 UI 표시 직후 1초 뒤, 입장/퇴장·중복·실패 비프음 재생 (QR·휴대폰 인증 동일 페이지)
+  useEffect(() => {
+    if (loading || !result) return
+
+    const src = soundPathForVerifyOutcome(result.result, direction)
+    const t = window.setTimeout(() => {
+      const audio = new Audio(src)
+      void audio.play().catch(() => {
+        /* 자동 재생 제한·파일 없음 등 */
+      })
+    }, 1000)
+
+    return () => window.clearTimeout(t)
+  }, [loading, result, direction])
+
+
 
   // 3초 후 자동으로 스캐너 페이지로 이동
   useEffect(() => {
@@ -147,10 +191,10 @@ export default function VerifyReceiptPage() {
         ) : result ? (
           <div className="w-full max-w-md">
             <div className={`rounded-2xl p-8 text-center ${isAllow
-                ? "bg-emerald-500/20 border-2 border-emerald-500/50"
-                : isMismatch
-                  ? "bg-transparent border-2 border-yellow-500/50"
-                  : "bg-red-500/20 border-2 border-red-500/50"
+              ? "bg-emerald-500/20 border-2 border-emerald-500/50"
+              : isMismatch
+                ? "bg-transparent border-2 border-yellow-500/50"
+                : "bg-red-500/20 border-2 border-red-500/50"
               }`}>
               {isAllow ? (
                 <CheckCircle className="w-20 h-20 text-emerald-400 mx-auto mb-4" />
