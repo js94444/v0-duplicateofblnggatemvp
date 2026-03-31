@@ -1278,6 +1278,20 @@ export class AzureSqlDB {
       `)
   }
 
+  /** 비밀번호 변경 강제 플래그 설정 */
+  static async setMustChangePassword(accountId: number, value: boolean): Promise<void> {
+    const dbPool = await getPool()
+    await dbPool.request()
+      .input('account_id', sql.Int, accountId)
+      .input('must_change_password', sql.Bit, value ? 1 : 0)
+      .input('updated_at', sql.DateTime, getKoreaTime())
+      .query(`
+        UPDATE admin_accounts
+        SET must_change_password = @must_change_password, updated_at = @updated_at
+        WHERE account_id = @account_id
+      `)
+  }
+
   /** 계정 수정 (역할, 이름, 활성화 여부) */
   static async updateAccount(accountId: number, data: { name?: string; role?: string; is_active?: boolean }): Promise<void> {
     const dbPool = await getPool()

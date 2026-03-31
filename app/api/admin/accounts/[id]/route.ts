@@ -25,6 +25,8 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
   if (body.reset_password) {
     const hash = await hashPassword(body.reset_password)
     await AzureSqlDB.updatePassword(accountId, hash)
+    // 초기화 후 다음 로그인 시 비밀번호 변경 강제
+    await AzureSqlDB.setMustChangePassword(accountId, true)
     return NextResponse.json({ message: "비밀번호가 초기화되었습니다" })
   }
 
