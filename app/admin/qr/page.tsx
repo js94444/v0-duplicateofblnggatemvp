@@ -568,10 +568,10 @@ export default function AdminQrScanPage() {
                 setUseRangeSearch(true)
               }}
               className={`h-7 px-2.5 rounded-lg text-xs font-bold transition-all ${rangeStartDate && rangeEndDate
-                  && format(startOfMonth(m), "yyyy-MM") === format(rangeStartDate, "yyyy-MM")
-                  && format(endOfMonth(m), "yyyy-MM-dd") === format(rangeEndDate, "yyyy-MM-dd")
-                  ? "bg-amber-500 text-black"
-                  : "text-white/50 hover:text-white hover:bg-white/10 border border-white/10"
+                && format(startOfMonth(m), "yyyy-MM") === format(rangeStartDate, "yyyy-MM")
+                && format(endOfMonth(m), "yyyy-MM-dd") === format(rangeEndDate, "yyyy-MM-dd")
+                ? "bg-amber-500 text-black"
+                : "text-white/50 hover:text-white hover:bg-white/10 border border-white/10"
                 }`}
             >
               {format(m, "M")}월
@@ -1084,7 +1084,7 @@ export default function AdminQrScanPage() {
                       const rowKey = `${row.pass_id}-${row.cycleNum ?? 0}`
                       return (
                         <TableRow
-                          key={row.pass_id}
+                          key={`${row.pass_id}-${row.cycleNum || 0}`}
                           className={`border-white/5 hover:bg-white/5 transition-colors ${recentClass} ${selectedRows.has(rowKey) ? "bg-amber-500/5" : ""}`}
                         >
                           <TableCell className="w-10">

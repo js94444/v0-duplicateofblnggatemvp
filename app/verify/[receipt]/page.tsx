@@ -6,6 +6,7 @@ import Link from "next/link"
 import { CheckCircle, XCircle, AlertTriangle, QrCode, Loader2 } from "lucide-react"
 import { PublicHeader } from "@/components/public/public-header"
 import { PublicFooter } from "@/components/public/public-footer"
+import { getScannerToken, isScannerAuthenticated } from "@/lib/scanner-auth"
 
 const GATE_LABELS: Record<string, string> = {
   main: "정문",
@@ -76,8 +77,19 @@ export default function VerifyReceiptPage() {
         setLoading(true)
         setError(null)
 
-        // API 호출 - 스캔 기록 저장 및 검증
-        const res = await fetch(`/api/qr/verify/${encodeURIComponent(receipt)}?direction=${direction}&gate=${gate}`, {
+        // 스캐너 인증 토큰 확인
+        const scannerToken = getScannerToken()
+        if (!scannerToken || !isScannerAuthenticated()) {
+          setResult({
+            result: "DENY",
+            message: "인증된 스캐너에서만 출입 처리가 가능합니다. 스캐너 인증을 먼저 진행해주세요.",
+          })
+          setLoading(false)
+          return
+        }
+
+        // API 호출 - 스캔 기록 저장 및 검증 (스캐너 토큰 포함)
+        const res = await fetch(`/api/qr/verify/${encodeURIComponent(receipt)}?direction=${direction}&gate=${gate}&scanner_token=${encodeURIComponent(scannerToken)}`, {
           method: "GET",
           headers: { "Cache-Control": "no-cache" },
         })

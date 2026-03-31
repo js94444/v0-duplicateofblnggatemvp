@@ -1,11 +1,22 @@
 import { NextRequest, NextResponse } from "next/server"
 import { AzureSqlDB } from "@/lib/db/azure-sql"
+import { validateScannerToken } from "@/lib/scanner-auth"
 
 export const runtime = "nodejs"
 
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
+
+    // 스캐너 토큰 검증
+    const scannerToken = searchParams.get("scanner_token")
+    if (!validateScannerToken(scannerToken)) {
+      return NextResponse.json(
+        { error: "인증된 스캐너에서만 조회가 가능합니다." },
+        { status: 403 }
+      )
+    }
+
     const phone = searchParams.get("phone")?.trim()
 
     if (!phone) {
