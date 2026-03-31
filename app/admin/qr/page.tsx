@@ -67,7 +67,7 @@ type PierKind = "1부두" | "2부두"
 
 export default function AdminQrScanPage() {
   const router = useRouter()
-  const { user, loading: authLoading } = useAdminAuth()
+  const { user, token, loading: authLoading } = useAdminAuth()
   const [activeTab, setActiveTab] = useState<TabKind>("main")
   const [pierTab, setPierTab] = useState<PierKind>("1부두")
   const [selectedDate, setSelectedDate] = useState<Date>(new Date())
@@ -114,7 +114,7 @@ export default function AdminQrScanPage() {
     try {
       const res = await fetch("/api/admin/card-number", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         body: JSON.stringify({ updates }),
       })
       if (!res.ok) throw new Error("저장 실패")
@@ -209,7 +209,7 @@ export default function AdminQrScanPage() {
 
       const res = await fetch("/api/admin/qr-scans/manual", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         body: JSON.stringify(body),
       })
 
@@ -233,7 +233,7 @@ export default function AdminQrScanPage() {
   }
 
   // SWR fetcher
-  const fetcher = (url: string) => fetch(url, { cache: "no-store" }).then(res => {
+  const fetcher = (url: string) => fetch(url, { cache: "no-store", headers: { Authorization: `Bearer ${token}` } }).then(res => {
     if (!res.ok) throw new Error("데이터를 불러오는데 실패했습니다.")
     return res.json()
   })
@@ -292,9 +292,10 @@ export default function AdminQrScanPage() {
     const fetchApplication = async () => {
       setModalLoading(true)
       try {
+        const authHeaders = { Authorization: `Bearer ${token}` }
         const [appRes, histRes] = await Promise.all([
-          fetch(`/api/admin/applications/${selectedApplicationId}`),
-          selectedPassId ? fetch(`/api/admin/scan-history/${encodeURIComponent(selectedPassId)}`) : Promise.resolve(null),
+          fetch(`/api/admin/applications/${selectedApplicationId}`, { headers: authHeaders }),
+          selectedPassId ? fetch(`/api/admin/scan-history/${encodeURIComponent(selectedPassId)}`, { headers: authHeaders }) : Promise.resolve(null),
         ])
         if (appRes.ok) {
           const data = await appRes.json()
@@ -568,10 +569,10 @@ export default function AdminQrScanPage() {
                 setUseRangeSearch(true)
               }}
               className={`h-7 px-2.5 rounded-lg text-xs font-bold transition-all ${rangeStartDate && rangeEndDate
-                && format(startOfMonth(m), "yyyy-MM") === format(rangeStartDate, "yyyy-MM")
-                && format(endOfMonth(m), "yyyy-MM-dd") === format(rangeEndDate, "yyyy-MM-dd")
-                ? "bg-amber-500 text-black"
-                : "text-white/50 hover:text-white hover:bg-white/10 border border-white/10"
+                  && format(startOfMonth(m), "yyyy-MM") === format(rangeStartDate, "yyyy-MM")
+                  && format(endOfMonth(m), "yyyy-MM-dd") === format(rangeEndDate, "yyyy-MM-dd")
+                  ? "bg-amber-500 text-black"
+                  : "text-white/50 hover:text-white hover:bg-white/10 border border-white/10"
                 }`}
             >
               {format(m, "M")}월
@@ -1231,7 +1232,7 @@ export default function AdminQrScanPage() {
                         e.currentTarget.style.display = "none"
                         const fallback = document.createElement("div")
                         fallback.className = "text-white/60 p-4 text-center"
-                        fallback.innerHTML = `이미지를 불러올 수 없습니다.<br/><small>${file.file_name}</small>`
+                        fallback.textContent = `이미지를 불러올 수 없습니다. ${file.file_name}`
                         e.currentTarget.parentElement?.appendChild(fallback)
                       }}
                     />

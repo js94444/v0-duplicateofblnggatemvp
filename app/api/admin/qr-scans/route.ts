@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { AzureSqlDB } from "@/lib/db/azure-sql"
+import { getAuthenticatedAdmin, isAuthError } from "@/lib/auth/require-admin"
 
 export const runtime = "nodejs"
 export const dynamic = "force-dynamic"
@@ -7,6 +8,8 @@ export const revalidate = 0
 
 export async function GET(request: NextRequest) {
   try {
+    const auth = getAuthenticatedAdmin(request)
+    if (isAuthError(auth)) return auth
     const url = new URL(request.url)
     const scanSite = url.searchParams.get("scan_site") || "main"
     const filterDate = url.searchParams.get("date") || undefined // YYYY-MM-DD 형식

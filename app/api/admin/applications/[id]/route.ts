@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { AzureSqlDB } from "@/lib/db/azure-sql"
+import { getAuthenticatedAdmin, isAuthError } from "@/lib/auth/require-admin"
 
 export const runtime = "nodejs"
 
@@ -10,6 +11,9 @@ export async function GET(
   { params }: { params: RouteParams }
 ) {
   try {
+    const auth = getAuthenticatedAdmin(request)
+    if (isAuthError(auth)) return auth
+
     const { id } = await params
 
     if (!id) {
@@ -45,6 +49,9 @@ export async function PUT(
   { params }: { params: RouteParams }
 ) {
   try {
+    const auth = getAuthenticatedAdmin(request)
+    if (isAuthError(auth)) return auth
+
     const { id } = await params
 
     if (!id) {

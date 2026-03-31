@@ -1,11 +1,13 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { AzureSqlDB } from "@/lib/db/azure-sql"
+import { getAuthenticatedAdmin, isAuthError } from "@/lib/auth/require-admin"
 
 export const runtime = 'nodejs'
 
 export async function GET(request: NextRequest) {
   try {
-    // TODO: Add proper admin authentication check
+    const auth = getAuthenticatedAdmin(request)
+    if (isAuthError(auth)) return auth
     const stats = await AzureSqlDB.getApplicationStats()
     return NextResponse.json(stats)
   } catch (error) {

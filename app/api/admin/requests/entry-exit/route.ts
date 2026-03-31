@@ -5,6 +5,7 @@ import { sendEmail } from "@/lib/email/sender"
 import { getApprovalEmailTemplate, getRejectionEmailTemplate } from "@/lib/email/templates"
 import { getApprovalSmsText, getRejectionSmsText } from "@/lib/messages/sms-templates"
 import { sendSMS } from "@/lib/services/solapi"
+import { getAuthenticatedAdmin, isAuthError } from "@/lib/auth/require-admin"
 
 // 전화번호 정규화 함수
 function normalizePhone(phone: string | null | undefined): string {
@@ -31,7 +32,8 @@ export const runtime = 'nodejs'
 
 export async function POST(request: NextRequest) {
   try {
-    // TODO: Add proper admin authentication check
+    const auth = getAuthenticatedAdmin(request)
+    if (isAuthError(auth)) return auth
     const { id, action, reason } = await request.json()
 
     console.log("[v0] Approval API called with:", { id, action, reason })

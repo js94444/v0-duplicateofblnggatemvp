@@ -30,6 +30,7 @@ import {
   Car,
   UserCheck,
 } from "lucide-react"
+import { useAdminAuth } from "@/hooks/use-admin-auth"
 
 // 이벤트 바 렌더링을 위한 타입 (주(week) 단위)
 interface EventBar {
@@ -117,13 +118,22 @@ function getApplicantInfo(app: Application) {
 }
 
 export default function AdminCalendarPage() {
+  const { token } = useAdminAuth()
   const [currentDate, setCurrentDate] = useState(new Date())
   const [selectedApp, setSelectedApp] = useState<Application | null>(null)
   const [statusFilter, setStatusFilter] = useState<ApplicationStatus | "ALL">("ALL")
 
+  const authFetcher = (url: string) =>
+    fetch(url, { headers: { Authorization: `Bearer ${token}` } })
+      .then((r) => r.json())
+      .then((d) => {
+        const raw = d.data || d
+        return raw.map((a: any) => ({ ...a, status: String(a.status ?? "").trim().toUpperCase() }))
+      })
+
   const { data: applications = [], isLoading, isValidating, mutate } = useSWR<Application[]>(
-    "/api/admin/requests",
-    fetcher,
+    token ? "/api/admin/requests" : null,
+    authFetcher,
     { revalidateOnFocus: false, dedupingInterval: 30000 }
   )
 

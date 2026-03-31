@@ -1,6 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { BlobServiceClient } from "@azure/storage-blob"
-
 export const runtime = "nodejs"
 
 const CONTAINER_NAME = "attachments"
@@ -30,6 +29,18 @@ function getContainerClient() {
 
 export async function GET(request: NextRequest, { params }: { params: { filename: string } }) {
   try {
+    // 헤더 또는 쿼리 파라미터로 인증 (img/a 태그에서는 헤더 전달 불가)
+    const { validateAdminToken } = await import("@/lib/auth/admin")
+    const headerToken = request.headers.get("authorization")?.replace("Bearer ", "")
+    const queryToken = new URL(request.url).searchParams.get("token")
+    const tokenToValidate = headerToken || queryToken
+    if (!tokenToValidate || !validateAdminToken(tokenToValidate)) {
+      return NextResponse.json(
+        { code: "UNAUTHORIZED", message: "인증이 필요합니다" },
+        { status: 401 }
+      )
+    }
+
     const { filename } = params
 
     if (!filename) {

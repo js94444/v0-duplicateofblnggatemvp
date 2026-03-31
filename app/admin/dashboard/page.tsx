@@ -16,6 +16,7 @@ import {
   TrendingUp,
   CalendarDays,
 } from "lucide-react"
+import { useAdminAuth } from "@/hooks/use-admin-auth"
 
 interface DashboardStats {
   totalApplications: number
@@ -57,6 +58,7 @@ const STATUS_COLORS: Record<string, string> = {
 }
 
 export default function AdminDashboardPage() {
+  const { token } = useAdminAuth()
   const [stats, setStats] = useState<DashboardStats | null>(null)
   const [selectedMonth, setSelectedMonth] = useState<string>("")
   const [isLoading, setIsLoading] = useState(true)
@@ -69,7 +71,9 @@ export default function AdminDashboardPage() {
   const fetchStats = async () => {
     setIsRefreshing(true)
     try {
-      const response = await fetch("/api/admin/stats")
+      const response = await fetch("/api/admin/stats", {
+        headers: { Authorization: `Bearer ${token}` },
+      })
       if (response.ok) {
         const data = await response.json()
         setStats(data)

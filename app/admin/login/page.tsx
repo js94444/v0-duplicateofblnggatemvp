@@ -59,8 +59,15 @@ export default function AdminLoginPage() {
 
   const handleChangePassword = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (newPassword.length < 6) {
-      toast({ title: "오류", description: "비밀번호는 6자 이상이어야 합니다", variant: "destructive" })
+    if (newPassword.length < 8) {
+      toast({ title: "오류", description: "비밀번호는 8자 이상이어야 합니다", variant: "destructive" })
+      return
+    }
+    const hasLetter = /[a-zA-Z]/.test(newPassword)
+    const hasNumber = /[0-9]/.test(newPassword)
+    const hasSpecial = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(newPassword)
+    if (!hasLetter || !hasNumber || !hasSpecial) {
+      toast({ title: "오류", description: "비밀번호는 영문, 숫자, 특수문자를 모두 포함해야 합니다", variant: "destructive" })
       return
     }
     if (newPassword !== confirmPassword) {
@@ -69,9 +76,9 @@ export default function AdminLoginPage() {
     }
     setIsLoading(true)
     try {
-      const ok = await changePassword(newPassword)
-      if (!ok) {
-        toast({ title: "오류", description: "비밀번호 변경에 실패했습니다", variant: "destructive" })
+      const result = await changePassword(password, newPassword)
+      if (!result.success) {
+        toast({ title: "오류", description: result.message || "비밀번호 변경에 실패했습니다", variant: "destructive" })
         return
       }
       toast({ title: "비밀번호 변경 완료", description: "관리자 페이지로 이동합니다" })

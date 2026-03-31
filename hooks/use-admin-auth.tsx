@@ -16,7 +16,7 @@ interface AdminAuthContextType {
   token: string | null
   login: (username: string, password: string) => Promise<{ success: boolean; must_change_password?: boolean }>
   logout: () => void
-  changePassword: (newPassword: string) => Promise<boolean>
+  changePassword: (currentPassword: string, newPassword: string) => Promise<{ success: boolean; message?: string }>
   isLoading: boolean
 }
 
@@ -79,23 +79,26 @@ export function AdminAuthProvider({ children }: { children: ReactNode }) {
     localStorage.removeItem(STORAGE_KEY)
   }
 
-  const changePassword = async (newPassword: string): Promise<boolean> => {
-    if (!token) return false
+  const changePassword = async (currentPassword: string, newPassword: string): Promise<{ success: boolean; message?: string }> => {
+    if (!token) return { success: false, message: "인증이 필요합니다" }
     try {
       const res = await fetch("/api/admin/change-password", {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ new_password: newPassword }),
+        body: JSON.stringify({ current_password: currentPassword, new_password: newPassword }),
       })
-      if (!res.ok) return false
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}))
+        return { success: false, message: data.message || "비밀번호 변경에 실패했습니다" }
+      }
       // 토큰 갱신: must_change_password false로 업데이트
       if (user) {
         const updated = { ...user, must_change_password: false }
         setUser(updated)
       }
-      return true
+      return { success: true }
     } catch {
-      return false
+      return { success: false, message: "서버 연결에 실패했습니다" }
     }
   }
 

@@ -1,8 +1,11 @@
 import { NextRequest, NextResponse } from "next/server"
 import { AzureSqlDB } from "@/lib/db/azure-sql"
+import { getAuthenticatedAdmin, isAuthError } from "@/lib/auth/require-admin"
 
 export async function POST(request: NextRequest) {
   try {
+    const auth = getAuthenticatedAdmin(request)
+    if (isAuthError(auth)) return auth
     const body = await request.json()
     const { updates } = body as { updates: { pass_id: string; card_number: string }[] }
 

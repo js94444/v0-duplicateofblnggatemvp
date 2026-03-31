@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { useLang } from "@/lib/language-context"
 import { MessageSquare, Trash2, RefreshCw, X, User, Calendar } from "lucide-react"
+import { useAdminAuth } from "@/hooks/use-admin-auth"
 
 interface BoardPost {
   id: number
@@ -15,6 +16,7 @@ interface BoardPost {
 
 export default function AdminBoardPage() {
   const { lang } = useLang()
+  const { token } = useAdminAuth()
   const t = (ko: string, en: string) => (lang === "ko" ? ko : en)
 
   const [posts, setPosts] = useState<BoardPost[]>([])
@@ -50,6 +52,7 @@ export default function AdminBoardPage() {
     try {
       const res = await fetch(`/api/admin/board/${id}`, {
         method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
       })
 
       const data = await res.json()

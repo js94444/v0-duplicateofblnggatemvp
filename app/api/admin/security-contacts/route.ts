@@ -1,9 +1,12 @@
 import { NextRequest, NextResponse } from "next/server"
 import { AzureSqlDB } from "@/lib/db/azure-sql"
+import { getAuthenticatedAdmin, isAuthError } from "@/lib/auth/require-admin"
 
 // 보안담당자 지정/해제 및 전화번호 저장
 export async function POST(request: NextRequest) {
   try {
+    const auth = getAuthenticatedAdmin(request)
+    if (isAuthError(auth)) return auth
     const body = await request.json()
     const { account_id, is_security_contact, phone } = body
 
@@ -21,8 +24,10 @@ export async function POST(request: NextRequest) {
 }
 
 // 보안담당자 목록 조회
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
+    const auth = getAuthenticatedAdmin(request)
+    if (isAuthError(auth)) return auth
     const contacts = await AzureSqlDB.getSecurityContacts()
     return NextResponse.json({ data: contacts })
   } catch (error: any) {
