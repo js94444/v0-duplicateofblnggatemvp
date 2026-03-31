@@ -387,11 +387,11 @@ export default function AdminQrScanPage() {
 
   // 상태별 행 색상 (데이터 기반)
   const getStatusStyle = (row: (typeof rowsByPerson)[0]) => {
-    if (!row.lastEntryAt) return { bg: "", bar: "" } // 대기: 색상 없음
-    if (row.lastScanDirection === "EXIT") return { bg: "bg-blue-500/8", bar: "border-l-2 border-l-blue-500" } // 체크아웃
-    if (row.lastScanDirection === "ENTRY" && row.cycleNum && row.cycleNum > 1) return { bg: "bg-purple-500/8", bar: "border-l-2 border-l-purple-500" } // 재입장
-    if (row.lastScanDirection === "ENTRY") return { bg: "bg-emerald-500/8", bar: "border-l-2 border-l-emerald-500" } // 체크인
-    return { bg: "", bar: "" }
+    if (!row.lastEntryAt) return { bg: "", bar: "", dot: "" } // 대기: 색상 없음
+    if (row.lastScanDirection === "EXIT") return { bg: "bg-blue-500/15", bar: "border-l-[3px] border-l-blue-500", dot: "bg-blue-500" }
+    if (row.lastScanDirection === "ENTRY" && row.cycleNum && row.cycleNum > 1) return { bg: "bg-purple-500/15", bar: "border-l-[3px] border-l-purple-500", dot: "bg-purple-500" }
+    if (row.lastScanDirection === "ENTRY") return { bg: "bg-emerald-500/15", bar: "border-l-[3px] border-l-emerald-500", dot: "bg-emerald-500" }
+    return { bg: "", bar: "", dot: "" }
   }
 
   const formatDateTime = (iso: string | null) => {
@@ -868,6 +868,7 @@ export default function AdminQrScanPage() {
                           >
                             <div className="flex flex-col gap-0.5">
                               <div className="flex items-center gap-1.5">
+                                {statusStyle.dot && <span className={`w-2 h-2 rounded-full shrink-0 ${statusStyle.dot}`} />}
                                 <span>{row.visitor_name || "-"}</span>
                                 {row.cycleNum && row.cycleNum > 1 && (
                                   <span className="text-[10px] px-1.5 py-0.5 rounded bg-purple-500/20 text-purple-400 font-medium">
@@ -1099,7 +1100,10 @@ export default function AdminQrScanPage() {
                               }
                             }}
                           >
-                            {row.visitor_name || "-"}
+                            <div className="flex items-center gap-1.5">
+                              {statusStyle.dot && <span className={`w-2 h-2 rounded-full shrink-0 ${statusStyle.dot}`} />}
+                              <span>{row.visitor_name || "-"}</span>
+                            </div>
                           </TableCell>
                           <TableCell className="text-sm text-white/80">
                             {row.visitor_birth_date ? new Date(row.visitor_birth_date).toLocaleDateString("ko-KR") : "-"}
