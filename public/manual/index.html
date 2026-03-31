@@ -1540,7 +1540,7 @@
         <!-- Stat cards -->
         <div class="bento-card bc-stat1 reveal d1">
           <div class="stat-big">3</div>
-          <div class="stat-label">출입 게이트<br>정문 · 1부두 · 2부두</div>
+          <div class="stat-label">출입 관리 시스템 적용 구역<br>정문 · 1부두 · 2부두</div>
         </div>
         <div class="bento-card bc-stat2 reveal d2">
           <div class="stat-big">QR</div>
@@ -1548,7 +1548,7 @@
         </div>
         <!-- Access gates card -->
         <div class="bento-card bc-access reveal d3">
-          <p class="section-kicker" style="margin-bottom:8px;">출입 게이트 현황</p>
+          <p class="section-kicker" style="margin-bottom:8px;">출입 관리 시스템 적용 현황</p>
           <div class="access-list">
             <div class="access-item">
               <div class="gate-dot main"></div>
@@ -1892,7 +1892,7 @@
         </div>
         <div class="fb fb3 reveal d1">
           <div class="fb-big">3</div>
-          <h3>출입 게이트</h3>
+          <h3>출입 관리 시스템 적용 구역</h3>
           <p>정문·1부두·2부두 통합 관리</p>
         </div>
         <div class="fb fb4 reveal d2">
@@ -2217,7 +2217,7 @@
       if (panelA) panelA.style.display = 'none';
 
       // 4. FAQ 중 특수경비대/슈퍼어드민 관련 항목 숨김
-      document.querySelectorAll('.faq-item').forEach(function(item) {
+      document.querySelectorAll('.faq-item').forEach(function (item) {
         var q = item.querySelector('.faq-q span');
         if (q) {
           var txt = q.textContent;
@@ -2241,7 +2241,7 @@
 
       // 7. switchGuide 재정의: s, a 선택 시 방문자로 폴백
       var origSwitch = window.switchGuide;
-      window.switchGuide = function(role) {
+      window.switchGuide = function (role) {
         if (role === 's' || role === 'a') role = 'v';
         origSwitch(role);
       };
