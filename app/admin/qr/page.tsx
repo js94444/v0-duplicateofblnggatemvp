@@ -385,16 +385,13 @@ export default function AdminQrScanPage() {
     })
   }, [rowsByPerson, cardFilter, sortKey, sortDir, activeTab, pierNameSearch])
 
-  // 최근 10분 이내 스캔 여부
-  const TEN_MINUTES_MS = 10 * 60 * 1000
-  const getRecentHighlight = (row: (typeof rowsByPerson)[0]) => {
-    const entryMs = row.lastEntryAt ? Date.now() - new Date(row.lastEntryAt).getTime() : Infinity
-    const exitMs = row.lastExitAt ? Date.now() - new Date(row.lastExitAt).getTime() : Infinity
-    const entryRecent = entryMs >= 0 && entryMs <= TEN_MINUTES_MS
-    const exitRecent = exitMs >= 0 && exitMs <= TEN_MINUTES_MS
-    if (!entryRecent && !exitRecent) return ""
-    const lastIsExit = (row.lastExitAt ? new Date(row.lastExitAt).getTime() : 0) >= (row.lastEntryAt ? new Date(row.lastEntryAt).getTime() : 0)
-    return lastIsExit ? "bg-red-500/30" : "bg-emerald-500/30"
+  // 상태별 행 색상 (데이터 기반)
+  const getStatusStyle = (row: (typeof rowsByPerson)[0]) => {
+    if (!row.lastEntryAt) return { bg: "", bar: "" } // 대기: 색상 없음
+    if (row.lastScanDirection === "EXIT") return { bg: "bg-blue-500/8", bar: "border-l-2 border-l-blue-500" } // 체크아웃
+    if (row.lastScanDirection === "ENTRY" && row.cycleNum && row.cycleNum > 1) return { bg: "bg-purple-500/8", bar: "border-l-2 border-l-purple-500" } // 재입장
+    if (row.lastScanDirection === "ENTRY") return { bg: "bg-emerald-500/8", bar: "border-l-2 border-l-emerald-500" } // 체크인
+    return { bg: "", bar: "" }
   }
 
   const formatDateTime = (iso: string | null) => {
@@ -846,12 +843,12 @@ export default function AdminQrScanPage() {
                   </TableHeader>
                   <TableBody>
                     {filteredRows.map((row) => {
-                      const recentClass = getRecentHighlight(row)
+                      const statusStyle = getStatusStyle(row)
                       const rowKey = `${row.pass_id}-${row.cycleNum ?? 0}`
                       return (
                         <TableRow
                           key={`${row.pass_id}-${row.cycleNum || 0}`}
-                          className={`border-white/5 hover:bg-white/5 transition-colors ${recentClass} ${selectedRows.has(rowKey) ? "bg-amber-500/5" : ""}`}
+                          className={`border-white/5 hover:bg-white/5 transition-colors ${statusStyle.bg} ${statusStyle.bar} ${selectedRows.has(rowKey) ? "bg-amber-500/5" : ""}`}
                         >
                           <TableCell className="w-10">
                             <Checkbox
@@ -1079,12 +1076,12 @@ export default function AdminQrScanPage() {
                   </TableHeader>
                   <TableBody>
                     {filteredRows.map((row) => {
-                      const recentClass = getRecentHighlight(row)
+                      const statusStyle = getStatusStyle(row)
                       const rowKey = `${row.pass_id}-${row.cycleNum ?? 0}`
                       return (
                         <TableRow
                           key={`${row.pass_id}-${row.cycleNum || 0}`}
-                          className={`border-white/5 hover:bg-white/5 transition-colors ${recentClass} ${selectedRows.has(rowKey) ? "bg-amber-500/5" : ""}`}
+                          className={`border-white/5 hover:bg-white/5 transition-colors ${statusStyle.bg} ${statusStyle.bar} ${selectedRows.has(rowKey) ? "bg-amber-500/5" : ""}`}
                         >
                           <TableCell className="w-10">
                             <Checkbox
