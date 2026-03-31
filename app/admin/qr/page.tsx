@@ -1212,7 +1212,7 @@ export default function AdminQrScanPage() {
                 const blobName = file.file_url.includes("/attachments/")
                   ? file.file_url.split("/attachments/")[1]?.split("?")[0]
                   : file.file_name
-                const imageUrl = `/api/files/${encodeURIComponent(blobName || file.file_name)}`
+                const imageUrl = `/api/files/${encodeURIComponent(blobName || file.file_name)}${token ? `?token=${encodeURIComponent(token)}` : ""}`
 
                 return (
                   <div
