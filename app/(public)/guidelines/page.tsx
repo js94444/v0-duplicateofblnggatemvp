@@ -124,7 +124,7 @@ export default function GuidelinesPage() {
 
           {/* 안전교육 안내 - SHE Flyer 다음 */}
           <div className="text-center mb-8">
-            <h2 className="text-4xl md:text-5xl font-black mb-3 text-white">안전 교육 안내</h2>
+            <h2 className="text-4xl md:text-5xl font-black mb-3 text-white">현장 작업 출입자 교육 안내</h2>
             <p className="text-white/40 text-sm uppercase tracking-widest font-bold">{t("현장 출입 전 필수 확인", "Safety Education Information")}</p>
           </div>
 
@@ -133,13 +133,13 @@ export default function GuidelinesPage() {
               <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-400">
                 <AlertCircle className="h-5 w-5" />
               </div>
-              <h3 className="text-2xl font-black text-white">현장 출입 전 필수 확인</h3>
+              <h3 className="text-2xl font-black text-white">현장 작업 출입 전 필수 확인</h3>
             </div>
 
             <div className="bg-black/30 rounded-2xl p-6 border border-emerald-500/10 mb-6">
               <p className="text-white/80 leading-relaxed mb-4">
-                안전한 작업을 위해 <span className="text-emerald-400 font-bold">안전교육 이수</span>가 필요합니다.<br />
-                아직 교육을 받지 않으셨나요?
+                안전한 작업을 위해 <span className="text-emerald-400 font-bold">출입자 교육 이수</span>가 필요합니다.<br />
+                아직 출입자 교육을 받지 않으셨나요?
               </p>
               <div className="flex flex-col gap-3 text-sm">
                 <div className="flex items-center gap-2 text-white/60">
