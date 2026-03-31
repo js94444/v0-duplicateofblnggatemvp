@@ -387,11 +387,11 @@ export default function AdminQrScanPage() {
 
   // 상태별 행 색상 (데이터 기반)
   const getStatusStyle = (row: (typeof rowsByPerson)[0]) => {
-    if (!row.lastEntryAt) return { bg: "", bar: "", dot: "" } // 대기: 색상 없음
-    if (row.lastScanDirection === "EXIT") return { bg: "bg-blue-500/15", bar: "border-l-[3px] border-l-blue-500", dot: "bg-blue-500" }
-    if (row.lastScanDirection === "ENTRY" && row.cycleNum && row.cycleNum > 1) return { bg: "bg-purple-500/15", bar: "border-l-[3px] border-l-purple-500", dot: "bg-purple-500" }
-    if (row.lastScanDirection === "ENTRY") return { bg: "bg-emerald-500/15", bar: "border-l-[3px] border-l-emerald-500", dot: "bg-emerald-500" }
-    return { bg: "", bar: "", dot: "" }
+    if (!row.lastEntryAt) return { bg: "", bar: "", badge: null }
+    if (row.lastScanDirection === "EXIT") return { bg: "bg-blue-500/15", bar: "border-l-[3px] border-l-blue-500", badge: { text: "OUT", color: "bg-blue-500/20 text-blue-400 border-blue-500/40" } }
+    if (row.lastScanDirection === "ENTRY" && row.cycleNum && row.cycleNum > 1) return { bg: "bg-purple-500/15", bar: "border-l-[3px] border-l-purple-500", badge: { text: "RE", color: "bg-purple-500/20 text-purple-400 border-purple-500/40" } }
+    if (row.lastScanDirection === "ENTRY") return { bg: "bg-emerald-500/15", bar: "border-l-[3px] border-l-emerald-500", badge: { text: "IN", color: "bg-emerald-500/20 text-emerald-400 border-emerald-500/40" } }
+    return { bg: "", bar: "", badge: null }
   }
 
   const formatDateTime = (iso: string | null) => {
@@ -868,7 +868,7 @@ export default function AdminQrScanPage() {
                           >
                             <div className="flex flex-col gap-0.5">
                               <div className="flex items-center gap-1.5">
-                                {statusStyle.dot && <span className={`w-2 h-2 rounded-full shrink-0 ${statusStyle.dot}`} />}
+                                {statusStyle.badge && <span className={`text-[9px] font-black px-1.5 py-0.5 rounded-full border shrink-0 ${statusStyle.badge.color}`}>{statusStyle.badge.text}</span>}
                                 <span>{row.visitor_name || "-"}</span>
                                 {row.cycleNum && row.cycleNum > 1 && (
                                   <span className="text-[10px] px-1.5 py-0.5 rounded bg-purple-500/20 text-purple-400 font-medium">
@@ -1101,7 +1101,7 @@ export default function AdminQrScanPage() {
                             }}
                           >
                             <div className="flex items-center gap-1.5">
-                              {statusStyle.dot && <span className={`w-2 h-2 rounded-full shrink-0 ${statusStyle.dot}`} />}
+                              {statusStyle.badge && <span className={`text-[9px] font-black px-1.5 py-0.5 rounded-full border shrink-0 ${statusStyle.badge.color}`}>{statusStyle.badge.text}</span>}
                               <span>{row.visitor_name || "-"}</span>
                             </div>
                           </TableCell>
