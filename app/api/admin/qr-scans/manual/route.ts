@@ -1,11 +1,14 @@
 import { NextRequest, NextResponse } from "next/server"
 import { AzureSqlDB } from "@/lib/db/azure-sql"
+import { getAuthenticatedAdmin, isAuthError } from "@/lib/auth/require-admin"
 
 export const runtime = "nodejs"
 export const dynamic = "force-dynamic"
 
 export async function POST(request: NextRequest) {
   try {
+    const auth = getAuthenticatedAdmin(request)
+    if (isAuthError(auth)) return auth
     const body = await request.json()
     const { action, scan_site, scanIds, passRows } = body
 

@@ -53,10 +53,10 @@ export default function AdminRequestsPage() {
   const { toast } = useToast()
 
   const fetcher = useCallback((url: string) =>
-    fetch(url).then(res => res.json()).then(data => {
+    fetch(url, { headers: { Authorization: `Bearer ${token}` } }).then(res => res.json()).then(data => {
       const raw = data.data || data
       return raw.map((a: any) => ({ ...a, status: String(a.status ?? "").trim().toUpperCase() }))
-    }), [])
+    }), [token])
 
   const { data: applications = [], isLoading: loading, isValidating, mutate: refreshApplications } = useSWR(
     '/api/admin/requests',
@@ -225,7 +225,7 @@ export default function AdminRequestsPage() {
     try {
       const response = await fetch("/api/admin/requests/approve", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         body: JSON.stringify({ id: application.id, action, reason }),
       })
 

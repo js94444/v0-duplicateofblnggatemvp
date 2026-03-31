@@ -60,10 +60,11 @@ function Lightbox({ src, alt, onClose }: { src: string; alt: string; onClose: ()
 }
 
 // 썸네일 카드
-function FileThumbnail({ file, onLightbox }: { file: any; onLightbox: (url: string, name: string) => void }) {
+function FileThumbnail({ file, onLightbox, authToken }: { file: any; onLightbox: (url: string, name: string) => void; authToken?: string | null }) {
   const fileUrl = file.url || file.key
   const isImage = isImageFile(file.filename || "", file.type)
-  const previewUrl = fileUrl ? `/api/files/${encodeURIComponent(fileUrl)}` : null
+  const tokenParam = authToken ? `?token=${encodeURIComponent(authToken)}` : ""
+  const previewUrl = fileUrl ? `/api/files/${encodeURIComponent(fileUrl)}${tokenParam}` : null
 
   if (isImage && previewUrl) {
     return (
@@ -121,14 +122,14 @@ function FileThumbnail({ file, onLightbox }: { file: any; onLightbox: (url: stri
   )
 }
 
-function PortCertThumbnails({ files }: { files: any[] }) {
+function PortCertThumbnails({ files, authToken }: { files: any[]; authToken?: string | null }) {
   const [lightbox, setLightbox] = useState<{ url: string; name: string } | null>(null)
   if (!files || files.length === 0) return null
   return (
     <>
       <div className="flex flex-col gap-3">
         {files.map((file, idx) => (
-          <FileThumbnail key={idx} file={file} onLightbox={(url, name) => setLightbox({ url, name })} />
+          <FileThumbnail key={idx} file={file} authToken={authToken} onLightbox={(url, name) => setLightbox({ url, name })} />
         ))}
       </div>
       {lightbox && <Lightbox src={lightbox.url} alt={lightbox.name} onClose={() => setLightbox(null)} />}
@@ -147,7 +148,7 @@ function AttachmentSection({ title, files }: { title: string; files: any[] }) {
       {imageFiles.length > 0 && (
         <div className="flex flex-wrap gap-3">
           {imageFiles.map((file, idx) => (
-            <FileThumbnail key={idx} file={file} onLightbox={(url, name) => setLightbox({ url, name })} />
+            <FileThumbnail key={idx} file={file} authToken={token} onLightbox={(url, name) => setLightbox({ url, name })} />
           ))}
         </div>
       )}
@@ -289,7 +290,7 @@ const VISIT_PURPOSE_OPTIONS = [
 ]
 
 export function ApplicationDetailModal({ application, open, loading = false, scanHistory = [], onClose, onUpdated }: ApplicationDetailModalProps) {
-  const { user } = useAdminAuth()
+  const { user, token } = useAdminAuth()
   const app = application as any
   const isLoading = Boolean(loading)
 
@@ -539,7 +540,7 @@ export function ApplicationDetailModal({ application, open, loading = false, sca
                   {applicantPortCerts.length > 0 && (
                     <div className="w-full md:w-auto flex-shrink-0 space-y-3">
                       <p className="text-xs font-black text-amber-500/80 uppercase tracking-widest">항만이수증</p>
-                      <PortCertThumbnails files={applicantPortCerts} />
+                      <PortCertThumbnails files={applicantPortCerts} authToken={token} />
                     </div>
                   )}
                 </div>
@@ -627,7 +628,7 @@ export function ApplicationDetailModal({ application, open, loading = false, sca
                             {companionPortCerts.length > 0 && (
                               <div className="w-full md:w-auto flex-shrink-0 space-y-3">
                                 <p className="text-xs font-black text-amber-500/80 uppercase tracking-widest">항만이수증</p>
-                                <PortCertThumbnails files={companionPortCerts} />
+                                <PortCertThumbnails files={companionPortCerts} authToken={token} />
                               </div>
                             )}
                           </div>

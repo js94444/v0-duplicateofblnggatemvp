@@ -1,10 +1,13 @@
 import { NextRequest, NextResponse } from "next/server"
 import { AzureSqlDB } from "@/lib/db/azure-sql"
+import { getAuthenticatedAdmin, isAuthError } from "@/lib/auth/require-admin"
 
 export const runtime = "nodejs"
 
 export async function GET(request: NextRequest, { params }: { params: { receipt: string } }) {
   try {
+    const auth = getAuthenticatedAdmin(request)
+    if (isAuthError(auth)) return auth
     const receipt = params?.receipt?.trim()
     if (!receipt) {
       return NextResponse.json(

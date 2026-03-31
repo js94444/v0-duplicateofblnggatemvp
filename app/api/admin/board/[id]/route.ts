@@ -1,12 +1,16 @@
 import { NextRequest, NextResponse } from "next/server"
 import { AzureSqlDB } from "@/lib/db/azure-sql"
+import { getAuthenticatedAdmin, isAuthError } from "@/lib/auth/require-admin"
 
-// 어드민용 게시물 삭제 (비밀번호 불필요)
+// 어드민용 게시물 삭제 (관리자 인증 필요)
 export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const auth = getAuthenticatedAdmin(request)
+    if (isAuthError(auth)) return auth
+
     const { id } = await params
 
     if (!id) {

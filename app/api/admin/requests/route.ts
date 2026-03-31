@@ -1,5 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { AzureSqlDB } from "@/lib/db/azure-sql"
+import { getAuthenticatedAdmin, isAuthError } from "@/lib/auth/require-admin"
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -7,7 +8,8 @@ export const revalidate = 0
 
 export async function GET(request: NextRequest) {
   try {
-    // TODO: Add proper admin authentication check
+    const auth = getAuthenticatedAdmin(request)
+    if (isAuthError(auth)) return auth
     const queryTime = new Date().toISOString()
     console.log('[v0] API /admin/requests called at:', queryTime)
     const applications = await AzureSqlDB.getAllApplications()

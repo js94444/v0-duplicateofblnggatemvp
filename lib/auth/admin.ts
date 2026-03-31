@@ -11,8 +11,11 @@ export interface AdminUser {
   must_change_password?: boolean
 }
 
-// JWT 서명에 사용할 시크릿 (env에서 읽고 없으면 fallback)
-const JWT_SECRET = process.env.ADMIN_JWT_SECRET || "blink-admin-secret-2024"
+// JWT 서명에 사용할 시크릿 (환경변수 필수)
+const JWT_SECRET = process.env.ADMIN_JWT_SECRET
+if (!JWT_SECRET) {
+  console.error("[auth] ADMIN_JWT_SECRET 환경변수가 설정되지 않았습니다.")
+}
 const TOKEN_EXPIRY_MS = 8 * 60 * 60 * 1000 // 8시간
 
 /** DB에서 계정을 조회해 비밀번호를 검증하고 AdminUser 반환 */
