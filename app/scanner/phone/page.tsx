@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation"
 import Link from "next/link"
 import { ArrowLeft, User } from "lucide-react"
 import { PublicFooter } from "@/components/public/public-footer"
+import { getScannerToken } from "@/lib/scanner-auth"
 
 interface ApprovedItem {
   receipt: string
@@ -47,7 +48,8 @@ export default function ScannerPhonePage() {
     setError(null)
     setLoading(true)
     try {
-      const res = await fetch(`/api/verify/by-phone?phone=${encodeURIComponent(phone.trim())}`)
+      const scannerToken = getScannerToken()
+      const res = await fetch(`/api/verify/by-phone?phone=${encodeURIComponent(phone.trim())}&scanner_token=${encodeURIComponent(scannerToken || "")}`)
       const json = await res.json()
       if (!res.ok) throw new Error(json.error || "조회 실패")
       setList(json.data || [])
@@ -97,8 +99,8 @@ export default function ScannerPhonePage() {
           <Link
             href={`/scanner/phone?direction=${oppositeDirection}&gate=${gate}`}
             className={`flex items-center gap-2 px-4 py-3 rounded-xl border transition-all active:scale-95 shrink-0 ${direction === "ENTRY"
-                ? "bg-blue-500/10 border-blue-500/30 text-blue-400 hover:bg-blue-500/20"
-                : "bg-emerald-500/10 border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/20"
+              ? "bg-blue-500/10 border-blue-500/30 text-blue-400 hover:bg-blue-500/20"
+              : "bg-emerald-500/10 border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/20"
               }`}
           >
             <span className="text-2xl sm:text-3xl font-black">{oppositeLabel} 인증</span>
@@ -146,8 +148,8 @@ export default function ScannerPhonePage() {
                 type="button"
                 onClick={() => selectReceipt(item.receipt)}
                 className={`w-full flex items-center gap-5 p-5 rounded-2xl border transition-all text-left group ${index === 0
-                    ? "border-amber-500/60 bg-amber-500/15 ring-2 ring-amber-500/30"
-                    : "border-white/10 bg-white/5 hover:bg-white/10 hover:border-amber-500/30"
+                  ? "border-amber-500/60 bg-amber-500/15 ring-2 ring-amber-500/30"
+                  : "border-white/10 bg-white/5 hover:bg-white/10 hover:border-amber-500/30"
                   }`}
               >
                 <div className={`w-12 h-12 rounded-full flex items-center justify-center transition-colors ${index === 0 ? "bg-amber-500/30" : "bg-amber-500/10 group-hover:bg-amber-500/20"
