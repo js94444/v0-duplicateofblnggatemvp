@@ -46,6 +46,10 @@ export default function AdminRequestsPage() {
   const [dateFrom, setDateFrom] = useState("")
   const [dateTo, setDateTo] = useState("")
 
+  // Pagination
+  const [currentPage, setCurrentPage] = useState(1)
+  const [pageSize, setPageSize] = useState(20)
+
   // Sorting
   const [sortField, setSortField] = useState<string>("")
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc")
@@ -194,7 +198,15 @@ export default function AdminRequestsPage() {
     }
 
     setFilteredApplications(filtered)
+    setCurrentPage(1) // 필터 변경 시 1페이지로 리셋
   }
+
+  // 페이지네이션 계산
+  const totalPages = Math.max(1, Math.ceil(filteredApplications.length / pageSize))
+  const paginatedApplications = filteredApplications.slice(
+    (currentPage - 1) * pageSize,
+    currentPage * pageSize
+  )
 
   const fetchFullApplication = async (receipt: string, baseApplication?: Application) => {
     if (detailCache[receipt]) {
@@ -476,7 +488,7 @@ export default function AdminRequestsPage() {
                 <>
                   {/* 모바일: 카드 리스트 */}
                   <div className="md:hidden space-y-3">
-                    {filteredApplications.map((application) => {
+                    {paginatedApplications.map((application) => {
                       const contactInfo = getContactInfo(application)
                       const isMyTask = user?.name && contactInfo.name && user.name === contactInfo.name
                       return (
@@ -637,7 +649,7 @@ export default function AdminRequestsPage() {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {filteredApplications.map((application) => {
+                        {paginatedApplications.map((application) => {
                           const contactInfo = getContactInfo(application)
                           return (
                             <TableRow key={application.id} className="border-white/5 hover:bg-white/5 transition-colors">
@@ -699,6 +711,94 @@ export default function AdminRequestsPage() {
                         })}
                       </TableBody>
                     </Table>
+                  </div>
+                  {/* 페이지네이션 */}
+                  <div className="mt-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm text-white/40">페이지당</span>
+                      {[20, 50, 100].map((size) => (
+                        <button
+                          key={size}
+                          type="button"
+                          onClick={() => { setPageSize(size); setCurrentPage(1) }}
+                          className={`h-8 px-3 rounded-lg text-sm font-bold transition-all ${pageSize === size
+                            ? "bg-amber-500 text-black"
+                            : "text-white/50 hover:text-white hover:bg-white/10 border border-white/10"
+                          }`}
+                        >
+                          {size}건
+                        </button>
+                      ))}
+                    </div>
+
+                    <div className="flex items-center gap-1">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        disabled={currentPage <= 1}
+                        onClick={() => setCurrentPage(1)}
+                        className="text-white/50 hover:text-white hover:bg-white/10 text-xs px-2"
+                      >
+                        «
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        disabled={currentPage <= 1}
+                        onClick={() => setCurrentPage(currentPage - 1)}
+                        className="text-white/50 hover:text-white hover:bg-white/10 text-xs px-2"
+                      >
+                        ‹
+                      </Button>
+
+                      {Array.from({ length: totalPages }, (_, i) => i + 1)
+                        .filter(p => p === 1 || p === totalPages || Math.abs(p - currentPage) <= 2)
+                        .reduce<(number | string)[]>((acc, p, i, arr) => {
+                          if (i > 0 && p - (arr[i - 1] as number) > 1) acc.push("...")
+                          acc.push(p)
+                          return acc
+                        }, [])
+                        .map((p, i) =>
+                          typeof p === "string" ? (
+                            <span key={`dot-${i}`} className="text-white/30 px-1 text-sm">…</span>
+                          ) : (
+                            <button
+                              key={p}
+                              type="button"
+                              onClick={() => setCurrentPage(p)}
+                              className={`h-8 w-8 rounded-lg text-sm font-bold transition-all ${currentPage === p
+                                ? "bg-amber-500 text-black"
+                                : "text-white/50 hover:text-white hover:bg-white/10"
+                              }`}
+                            >
+                              {p}
+                            </button>
+                          )
+                        )}
+
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        disabled={currentPage >= totalPages}
+                        onClick={() => setCurrentPage(currentPage + 1)}
+                        className="text-white/50 hover:text-white hover:bg-white/10 text-xs px-2"
+                      >
+                        ›
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        disabled={currentPage >= totalPages}
+                        onClick={() => setCurrentPage(totalPages)}
+                        className="text-white/50 hover:text-white hover:bg-white/10 text-xs px-2"
+                      >
+                        »
+                      </Button>
+                    </div>
+
+                    <span className="text-sm text-white/40">
+                      {filteredApplications.length}건 중 {(currentPage - 1) * pageSize + 1}~{Math.min(currentPage * pageSize, filteredApplications.length)}
+                    </span>
                   </div>
                 </>
               ) : (
