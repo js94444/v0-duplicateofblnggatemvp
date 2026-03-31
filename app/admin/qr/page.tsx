@@ -411,12 +411,14 @@ export default function AdminQrScanPage() {
     }))
   }, [scans])
 
-  // 카드 필터링된 리스트
+  // 카드 필터링된 리스트 (부두 탭에서는 카드 필터 무시 — 항상 전체 표시)
   const filteredRows = useMemo(() => {
     let rows = rowsByPerson
-    if (cardFilter === "pending") rows = rowsByPerson.filter(r => !r.lastEntryAt)
-    else if (cardFilter === "checkIn") rows = rowsByPerson.filter(r => r.lastScanDirection === 'ENTRY')
-    else if (cardFilter === "checkOut") rows = rowsByPerson.filter(r => r.lastScanDirection === 'EXIT')
+    if (activeTab === "main") {
+      if (cardFilter === "pending") rows = rowsByPerson.filter(r => !r.lastEntryAt)
+      else if (cardFilter === "checkIn") rows = rowsByPerson.filter(r => r.lastScanDirection === 'ENTRY')
+      else if (cardFilter === "checkOut") rows = rowsByPerson.filter(r => r.lastScanDirection === 'EXIT')
+    }
 
     // 부두 탭 이름 검색 필터
     if (activeTab === "pier" && pierNameSearch.trim()) {
