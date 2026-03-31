@@ -838,7 +838,7 @@ export default function AdminQrScanPage() {
                       <TableHead className="text-white/70 min-w-[100px] cursor-pointer select-none" onClick={() => handleSort("access_area")}>출입구역<SortIcon col="access_area" /></TableHead>
                       <TableHead className="text-white/70 min-w-[140px] cursor-pointer select-none" onClick={() => handleSort("lastEntryAt")}>입장시각<SortIcon col="lastEntryAt" /></TableHead>
                       <TableHead className="text-white/70 min-w-[140px] cursor-pointer select-none" onClick={() => handleSort("lastExitAt")}>퇴장시각<SortIcon col="lastExitAt" /></TableHead>
-                      <TableHead className="text-white/70 min-w-[110px]">차량</TableHead>
+                      <TableHead className="text-white/70 min-w-[110px]">차량 및 유종</TableHead>
                       <TableHead className="text-white/70 min-w-[70px] text-center">불꽃방지망</TableHead>
                       <TableHead className="text-white/70 min-w-[120px]">방문일</TableHead>
                       <TableHead className="text-white/70 min-w-[70px]">상세</TableHead>
@@ -918,7 +918,7 @@ export default function AdminQrScanPage() {
                             {formatDateTime(row.lastExitAt)}
                           </TableCell>
                           <TableCell className="text-sm text-white/80">
-                            <div className="flex flex-col gap-0.5">
+                            <div className="flex flex-col gap-0.5 items-center">
                               <span>{row.vehicle_number || "-"}</span>
                               {row.vehicle_model && <span className="text-xs text-white/40">{row.vehicle_model}</span>}
                             </div>
@@ -1071,7 +1071,7 @@ export default function AdminQrScanPage() {
                       <TableHead className="text-white/70 min-w-[100px] cursor-pointer select-none" onClick={() => handleSort("access_area")}>출입구역<SortIcon col="access_area" /></TableHead>
                       <TableHead className="text-white/70 min-w-[140px] cursor-pointer select-none" onClick={() => handleSort("lastEntryAt")}>입장시각<SortIcon col="lastEntryAt" /></TableHead>
                       <TableHead className="text-white/70 min-w-[140px] cursor-pointer select-none" onClick={() => handleSort("lastExitAt")}>퇴장시각<SortIcon col="lastExitAt" /></TableHead>
-                      <TableHead className="text-white/70 min-w-[110px]">차량</TableHead>
+                      <TableHead className="text-white/70 min-w-[110px]">차량 및 유종</TableHead>
                       <TableHead className="text-white/70 min-w-[70px] text-center">불꽃방지망</TableHead>
                       <TableHead className="text-white/70 min-w-[120px]">방문일</TableHead>
                       <TableHead className="text-white/70 min-w-[70px]">상세</TableHead>
@@ -1133,7 +1133,7 @@ export default function AdminQrScanPage() {
                             {formatDateTime(row.lastExitAt)}
                           </TableCell>
                           <TableCell className="text-sm text-white/80">
-                            <div className="flex flex-col gap-0.5">
+                            <div className="flex flex-col gap-0.5 items-center">
                               <span>{row.vehicle_number || "-"}</span>
                               {row.vehicle_model && <span className="text-xs text-white/40">{row.vehicle_model}</span>}
                             </div>
