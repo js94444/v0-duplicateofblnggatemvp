@@ -2192,6 +2192,60 @@
         if (!wasOpen) item.classList.add('open');
       });
     });
+
+    /* ════════════════════════════════════════
+       ROLE VISIBILITY CONTROL
+       특수경비대(s), 슈퍼어드민(a) 섹션 숨김
+    ════════════════════════════════════════ */
+    (function hideRestrictedRoles() {
+      // 1. 벤토 카드 숨김 (특수경비대, 슈퍼어드민)
+      var secCard = document.querySelector('.bc-security');
+      var admCard = document.querySelector('.bc-admin');
+      if (secCard) secCard.style.display = 'none';
+      if (admCard) admCard.style.display = 'none';
+
+      // 2. 가이드 탭 버튼 숨김
+      var tabS = document.getElementById('gtab-s');
+      var tabA = document.getElementById('gtab-a');
+      if (tabS) tabS.style.display = 'none';
+      if (tabA) tabA.style.display = 'none';
+
+      // 3. 가이드 패널 숨김
+      var panelS = document.getElementById('gp-s');
+      var panelA = document.getElementById('gp-a');
+      if (panelS) panelS.style.display = 'none';
+      if (panelA) panelA.style.display = 'none';
+
+      // 4. FAQ 중 특수경비대/슈퍼어드민 관련 항목 숨김
+      document.querySelectorAll('.faq-item').forEach(function(item) {
+        var q = item.querySelector('.faq-q span');
+        if (q) {
+          var txt = q.textContent;
+          if (txt.indexOf('경비대') !== -1 || txt.indexOf('슈퍼어드민') !== -1) {
+            item.style.display = 'none';
+          }
+        }
+      });
+
+      // 5. 벤토 그리드 재배치: 남은 카드(방문자, 담당자)가 자연스럽게 채우도록
+      var visitor = document.querySelector('.bc-visitor');
+      var manager = document.querySelector('.bc-manager');
+      if (visitor) visitor.style.gridColumn = 'span 6';
+      if (manager) manager.style.gridColumn = 'span 6';
+
+      // 6. meta description에서 특수경비대 제거
+      var meta = document.querySelector('meta[name="description"]');
+      if (meta) {
+        meta.setAttribute('content', meta.getAttribute('content').replace(', 특수경비대', ''));
+      }
+
+      // 7. switchGuide 재정의: s, a 선택 시 방문자로 폴백
+      var origSwitch = window.switchGuide;
+      window.switchGuide = function(role) {
+        if (role === 's' || role === 'a') role = 'v';
+        origSwitch(role);
+      };
+    })();
   </script>
 </body>
 
