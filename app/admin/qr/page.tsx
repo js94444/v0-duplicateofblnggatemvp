@@ -569,10 +569,10 @@ export default function AdminQrScanPage() {
                 setUseRangeSearch(true)
               }}
               className={`h-7 px-2.5 rounded-lg text-xs font-bold transition-all ${rangeStartDate && rangeEndDate
-                  && format(startOfMonth(m), "yyyy-MM") === format(rangeStartDate, "yyyy-MM")
-                  && format(endOfMonth(m), "yyyy-MM-dd") === format(rangeEndDate, "yyyy-MM-dd")
-                  ? "bg-amber-500 text-black"
-                  : "text-white/50 hover:text-white hover:bg-white/10 border border-white/10"
+                && format(startOfMonth(m), "yyyy-MM") === format(rangeStartDate, "yyyy-MM")
+                && format(endOfMonth(m), "yyyy-MM-dd") === format(rangeEndDate, "yyyy-MM-dd")
+                ? "bg-amber-500 text-black"
+                : "text-white/50 hover:text-white hover:bg-white/10 border border-white/10"
                 }`}
             >
               {format(m, "M")}월
@@ -838,9 +838,8 @@ export default function AdminQrScanPage() {
                       <TableHead className="text-white/70 min-w-[100px] cursor-pointer select-none" onClick={() => handleSort("access_area")}>출입구역<SortIcon col="access_area" /></TableHead>
                       <TableHead className="text-white/70 min-w-[140px] cursor-pointer select-none" onClick={() => handleSort("lastEntryAt")}>입장시각<SortIcon col="lastEntryAt" /></TableHead>
                       <TableHead className="text-white/70 min-w-[140px] cursor-pointer select-none" onClick={() => handleSort("lastExitAt")}>퇴장시각<SortIcon col="lastExitAt" /></TableHead>
-                      <TableHead className="text-white/70 min-w-[90px]">차량번호</TableHead>
-                      <TableHead className="text-white/70 min-w-[70px]">차량유종</TableHead>
-                      <TableHead className="text-white/70 min-w-[70px] text-center">불꽃방지망<br />보유</TableHead>
+                      <TableHead className="text-white/70 min-w-[110px]">차량 및 유종</TableHead>
+                      <TableHead className="text-white/70 min-w-[70px] text-center">불꽃방지망</TableHead>
                       <TableHead className="text-white/70 min-w-[120px]">방문일</TableHead>
                       <TableHead className="text-white/70 min-w-[70px]">상세</TableHead>
                     </TableRow>
@@ -919,10 +918,10 @@ export default function AdminQrScanPage() {
                             {formatDateTime(row.lastExitAt)}
                           </TableCell>
                           <TableCell className="text-sm text-white/80">
-                            {row.vehicle_number || "-"}
-                          </TableCell>
-                          <TableCell className="text-sm text-white/80">
-                            {row.vehicle_model || "-"}
+                            <div className="flex flex-col gap-0.5 items-center">
+                              <span>{row.vehicle_number || "-"}</span>
+                              {row.vehicle_model && <span className="text-xs text-white/40">{row.vehicle_model}</span>}
+                            </div>
                           </TableCell>
                           <TableCell className="text-sm text-center text-white/80">
                             {row.spark_arrestor || "-"}
@@ -1072,9 +1071,8 @@ export default function AdminQrScanPage() {
                       <TableHead className="text-white/70 min-w-[100px] cursor-pointer select-none" onClick={() => handleSort("access_area")}>출입구역<SortIcon col="access_area" /></TableHead>
                       <TableHead className="text-white/70 min-w-[140px] cursor-pointer select-none" onClick={() => handleSort("lastEntryAt")}>입장시각<SortIcon col="lastEntryAt" /></TableHead>
                       <TableHead className="text-white/70 min-w-[140px] cursor-pointer select-none" onClick={() => handleSort("lastExitAt")}>퇴장시각<SortIcon col="lastExitAt" /></TableHead>
-                      <TableHead className="text-white/70 min-w-[90px]">차량번호</TableHead>
-                      <TableHead className="text-white/70 min-w-[70px]">차량유종</TableHead>
-                      <TableHead className="text-white/70 min-w-[70px] text-center">불꽃방지망<br />보유</TableHead>
+                      <TableHead className="text-white/70 min-w-[110px]">차량 및 유종</TableHead>
+                      <TableHead className="text-white/70 min-w-[70px] text-center">불꽃방지망</TableHead>
                       <TableHead className="text-white/70 min-w-[120px]">방문일</TableHead>
                       <TableHead className="text-white/70 min-w-[70px]">상세</TableHead>
                     </TableRow>
@@ -1135,10 +1133,10 @@ export default function AdminQrScanPage() {
                             {formatDateTime(row.lastExitAt)}
                           </TableCell>
                           <TableCell className="text-sm text-white/80">
-                            {row.vehicle_number || "-"}
-                          </TableCell>
-                          <TableCell className="text-sm text-white/80">
-                            {row.vehicle_model || "-"}
+                            <div className="flex flex-col gap-0.5 items-center">
+                              <span>{row.vehicle_number || "-"}</span>
+                              {row.vehicle_model && <span className="text-xs text-white/40">{row.vehicle_model}</span>}
+                            </div>
                           </TableCell>
                           <TableCell className="text-sm text-center text-white/80">
                             {row.spark_arrestor || "-"}
