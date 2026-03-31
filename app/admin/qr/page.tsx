@@ -161,21 +161,60 @@ export default function AdminQrScanPage() {
       return
     }
 
-    // 체크인 시 이미 입장+퇴장 완료된 행이 있으면 재입장 안내
+    // === A그룹: 엄격한 버튼 활성화 규칙 ===
+
     if (action === 'checkin') {
+      // 조건2: 체크인+체크아웃 완료된 건은 체크인 불가
       const completedRows = targetRows.filter(r => r.lastEntryAt && r.lastExitAt)
       if (completedRows.length > 0) {
         alert("이미 입장/퇴장이 완료된 방문자입니다.\n재입장 버튼을 눌러주세요.")
         return
       }
+      // 조건3: 재입장 후(ENTRY 상태) 체크아웃 전에는 체크인 불가
+      const alreadyIn = targetRows.filter(r => r.lastScanDirection === 'ENTRY')
+      if (alreadyIn.length > 0) {
+        alert("이미 체크인 상태인 방문자가 있습니다.\n먼저 체크아웃을 해주세요.")
+        return
+      }
     }
 
-    // 체크아웃 시 입장 기록이 없는 행이 있으면 안내
     if (action === 'checkout') {
+      // 조건5: 체크인 안 된 상태에서 체크아웃 불가
       const noEntryRows = targetRows.filter(r => !r.lastEntryAt)
       if (noEntryRows.length > 0) {
-        alert("입장 기록이 없는 방문자가 있습니다.\n먼저 체크인을 해주세주요.")
+        alert("입장 기록이 없는 방문자가 있습니다.\n먼저 체크인을 해주세요.")
         return
+      }
+      // 조건2: 이미 체크아웃 완료된 건은 체크아웃 불가
+      const alreadyOut = targetRows.filter(r => r.lastScanDirection === 'EXIT')
+      if (alreadyOut.length > 0) {
+        alert("이미 체크아웃 완료된 방문자가 있습니다.")
+        return
+      }
+    }
+
+    if (action === 'reentry') {
+      // 조건1: 체크인+체크아웃 모두 완료된 건만 재입장 가능
+      const notCompleted = targetRows.filter(r => !r.lastEntryAt || !r.lastExitAt || r.lastScanDirection !== 'EXIT')
+      if (notCompleted.length > 0) {
+        alert("체크인과 체크아웃이 모두 완료된 방문자만 재입장이 가능합니다.")
+        return
+      }
+    }
+
+    // === B그룹: 부두에서 정문 상태 검증 ===
+    if (activeTab === "pier" && mainGateData.length > 0) {
+      for (const row of targetRows) {
+        const mainStatus = getMainGateStatus(row.pass_id)
+        if (mainStatus !== 'IN') {
+          const name = row.visitor_name || "선택된 방문자"
+          if (mainStatus === 'OUT') {
+            alert(`${name}: 정문에서 체크아웃된 상태입니다.\n부두 출입 기능이 비활성화됩니다.`)
+          } else {
+            alert(`${name}: 정문에서 체크인되지 않았습니다.\n정문 체크인 후 부두 출입이 가능합니다.`)
+          }
+          return
+        }
       }
     }
 
@@ -255,6 +294,26 @@ export default function AdminQrScanPage() {
       dedupingInterval: 5000,   // 5초 내 중복 요청 방지 (탭 전환 시 빠른 갱신)
     }
   )
+
+  // B그룹: 부두 탭일 때 정문 데이터도 함께 fetch
+  const { data: mainGateSwrData } = useSWR(
+    activeTab === "pier" && token ? `/api/admin/qr-scans?scan_site=main&${dateParam}` : null,
+    fetcher,
+    { revalidateOnFocus: false, dedupingInterval: 5000 }
+  )
+  const mainGateData: ScanRow[] = mainGateSwrData?.data || []
+
+  // B그룹: pass_id로 정문 상태 조회 ('IN' | 'OUT' | 'NONE')
+  const getMainGateStatus = (passId: string): 'IN' | 'OUT' | 'NONE' => {
+    // 해당 pass_id의 정문 스캔 중 가장 최신 기록 확인
+    const mainScans = mainGateData.filter(s => s.pass_id === passId)
+    if (mainScans.length === 0) return 'NONE'
+    // last_scan_direction이 ENTRY면 정문 체크인 상태, EXIT면 정문 체크아웃 상태
+    const latest = mainScans.reduce((a, b) => new Date(a.last_event_at) > new Date(b.last_event_at) ? a : b)
+    if (latest.last_scan_direction === 'ENTRY') return 'IN'
+    if (latest.last_scan_direction === 'EXIT') return 'OUT'
+    return 'NONE'
+  }
 
   const scans: ScanRow[] = swrData?.data || []
   const stats: ScanStats | null = swrData?.stats || null
@@ -1079,15 +1138,18 @@ export default function AdminQrScanPage() {
                     {filteredRows.map((row) => {
                       const statusStyle = getStatusStyle(row)
                       const rowKey = `${row.pass_id}-${row.cycleNum ?? 0}`
+                      const mainStatus = getMainGateStatus(row.pass_id)
+                      const pierDisabled = mainStatus !== 'IN'
                       return (
                         <TableRow
                           key={`${row.pass_id}-${row.cycleNum || 0}`}
-                          className={`border-white/5 hover:bg-white/5 transition-colors ${statusStyle.bg} ${statusStyle.bar} ${selectedRows.has(rowKey) ? "bg-amber-500/5" : ""}`}
+                          className={`border-white/5 hover:bg-white/5 transition-colors ${pierDisabled ? "opacity-40" : ""} ${statusStyle.bg} ${statusStyle.bar} ${selectedRows.has(rowKey) ? "bg-amber-500/5" : ""}`}
                         >
                           <TableCell className="w-10">
                             <Checkbox
                               checked={selectedRows.has(rowKey)}
                               onCheckedChange={() => toggleRowSelection(rowKey)}
+                              disabled={pierDisabled}
                               className="border-white/30"
                             />
                           </TableCell>
@@ -1100,9 +1162,21 @@ export default function AdminQrScanPage() {
                               }
                             }}
                           >
-                            <div className="flex items-center gap-1.5">
-                              {statusStyle.badge && <span className={`text-[9px] font-black px-1.5 py-0.5 rounded-full border shrink-0 ${statusStyle.badge.color}`}>{statusStyle.badge.text}</span>}
-                              <span>{row.visitor_name || "-"}</span>
+                            <div className="flex flex-col gap-0.5">
+                              <div className="flex items-center gap-1.5">
+                                {statusStyle.badge && <span className={`text-[9px] font-black px-1.5 py-0.5 rounded-full border shrink-0 ${statusStyle.badge.color}`}>{statusStyle.badge.text}</span>}
+                                <span>{row.visitor_name || "-"}</span>
+                                {row.cycleNum && row.cycleNum > 1 && (
+                                  <span className="text-[10px] px-1.5 py-0.5 rounded bg-purple-500/20 text-purple-400 font-medium">
+                                    {row.cycleNum}회차
+                                  </span>
+                                )}
+                              </div>
+                              {pierDisabled && (
+                                <span className="text-[10px] text-red-400/70">
+                                  {mainStatus === 'OUT' ? '정문 퇴장' : '정문 미입장'}
+                                </span>
+                              )}
                             </div>
                           </TableCell>
                           <TableCell className="text-sm text-white/80">
