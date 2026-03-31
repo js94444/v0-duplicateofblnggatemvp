@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { AzureSqlDB } from "@/lib/db/azure-sql"
+import { validateScannerToken } from "@/lib/scanner-auth"
 
 export const runtime = "nodejs"
 
@@ -12,13 +13,22 @@ export async function GET(
     const { searchParams } = new URL(request.url)
     const direction = searchParams.get("direction") === "EXIT" ? "EXIT" : "ENTRY"
     const gate = searchParams.get("gate") ?? "main"
-    
+
     console.log("[v0] QR Verify GET - receipt:", receipt, "direction:", direction, "gate:", gate)
 
     if (!receipt || receipt.trim() === "") {
       return NextResponse.json(
         { result: "DENY", message: "접수번호가 필요합니다." },
         { status: 400 }
+      )
+    }
+
+    // 스캐너 토큰 검증 - 인증된 스캐너에서만 출입 처리 가능
+    const scannerToken = searchParams.get("scanner_token")
+    if (!validateScannerToken(scannerToken)) {
+      return NextResponse.json(
+        { result: "DENY", message: "인증된 스캐너에서만 출입 처리가 가능합니다." },
+        { status: 403 }
       )
     }
 
