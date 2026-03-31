@@ -41,7 +41,7 @@ export async function GET(
       request.headers.get("user-agent"),
       gate
     )
-    
+
     console.log("[v0] QR Verify result:", result)
 
     return NextResponse.json({
