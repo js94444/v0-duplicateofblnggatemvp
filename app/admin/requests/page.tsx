@@ -73,7 +73,7 @@ export default function AdminRequestsPage() {
   )
 
   useEffect(() => {
-    fetch('/data/contacts.json')
+    fetch('/api/contacts')
       .then(res => res.json())
       .then(data => setContacts(data))
       .catch(() => { })

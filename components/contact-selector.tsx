@@ -33,8 +33,8 @@ export function ContactSelector({ value, onChange, onMobileChange, error }: Cont
         setIsLoading(true)
         setLoadError(null)
 
-        const res = await fetch("/data/contacts.json", { cache: "no-store" })
-        if (!res.ok) throw new Error(`contacts.json HTTP ${res.status}`)
+        const res = await fetch("/api/contacts", { cache: "no-store" })
+        if (!res.ok) throw new Error(`담당자 목록 로드 실패 (HTTP ${res.status})`)
 
         const data = (await res.json()) as { department: string; name: string }[]
         setContacts(
