@@ -954,7 +954,7 @@ export default function AdminQrScanPage() {
                               value={cardNumbers[row.pass_id] ?? row.card_number ?? ""}
                               onChange={(e) => setCardNumbers(prev => ({ ...prev, [row.pass_id]: e.target.value }))}
                               placeholder="-"
-                              className="w-24 h-7 px-2 rounded-lg bg-white/5 border border-white/10 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-amber-500/50"
+                              className="w-20 h-7 px-2 rounded-lg bg-white/5 border border-white/10 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-amber-500/50"
                             />
                           </TableCell>
                           <TableCell className="max-w-[140px]">
