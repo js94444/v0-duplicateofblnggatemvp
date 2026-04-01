@@ -144,9 +144,11 @@ export default function AdminQrScanPage() {
     })
   }
 
-  const toggleAllRows = (rows: any[]) => {
-    const allKeys = rows.map(r => `${r.pass_id}-${r.cycleNum ?? 0}`)
-    const allSelected = allKeys.every(k => selectedRows.has(k))
+  const toggleAllRows = (rows: any[], filterFn?: (r: any) => boolean) => {
+    // filterFn이 있으면 활성화된 행만 대상으로 함 (부두 탭에서 정문 미입장 행 제외)
+    const targetRows = filterFn ? rows.filter(filterFn) : rows
+    const allKeys = targetRows.map(r => `${r.pass_id}-${r.cycleNum ?? 0}`)
+    const allSelected = allKeys.length > 0 && allKeys.every(k => selectedRows.has(k))
     if (allSelected) {
       setSelectedRows(new Set())
     } else {
@@ -154,53 +156,28 @@ export default function AdminQrScanPage() {
     }
   }
 
+  // 선택된 행들의 상태에 따라 버튼 활성화 여부 판단
+  const getActionAvailability = (rows: any[]) => {
+    const selected = rows.filter(r => selectedRows.has(`${r.pass_id}-${r.cycleNum ?? 0}`))
+    if (selected.length === 0) return { checkin: false, checkout: false, reentry: false }
+
+    const canCheckin = selected.every(r => !r.lastEntryAt && r.lastScanDirection !== 'ENTRY')
+    const canCheckout = selected.every(r => r.lastEntryAt && r.lastScanDirection === 'ENTRY')
+    // 재입장: 최신 사이클이면서 EXIT 상태인 행만
+    const canReentry = selected.every(r => {
+      if (r.lastScanDirection !== 'EXIT') return false
+      // 같은 pass_id의 최대 cycleNum인지 확인 (최신 행만 재입장 가능)
+      const samePerson = rows.filter(row => row.pass_id === r.pass_id)
+      const maxCycle = Math.max(...samePerson.map((row: any) => row.cycleNum ?? 0))
+      return (r.cycleNum ?? 0) === maxCycle
+    })
+
+    return { checkin: canCheckin, checkout: canCheckout, reentry: canReentry }
+  }
+
   const handleManualAction = async (action: 'checkin' | 'checkout' | 'reentry', rows: any[]) => {
     const targetRows = rows.filter(r => selectedRows.has(`${r.pass_id}-${r.cycleNum ?? 0}`))
-    if (targetRows.length === 0) {
-      alert("처리할 방문자를 선택해주세요.")
-      return
-    }
-
-    // === A그룹: 엄격한 버튼 활성화 규칙 ===
-
-    if (action === 'checkin') {
-      // 조건2: 체크인+체크아웃 완료된 건은 체크인 불가
-      const completedRows = targetRows.filter(r => r.lastEntryAt && r.lastExitAt)
-      if (completedRows.length > 0) {
-        alert("이미 입장/퇴장이 완료된 방문자입니다.\n재입장 버튼을 눌러주세요.")
-        return
-      }
-      // 조건3: 재입장 후(ENTRY 상태) 체크아웃 전에는 체크인 불가
-      const alreadyIn = targetRows.filter(r => r.lastScanDirection === 'ENTRY')
-      if (alreadyIn.length > 0) {
-        alert("이미 체크인 상태인 방문자가 있습니다.\n먼저 체크아웃을 해주세요.")
-        return
-      }
-    }
-
-    if (action === 'checkout') {
-      // 조건5: 체크인 안 된 상태에서 체크아웃 불가
-      const noEntryRows = targetRows.filter(r => !r.lastEntryAt)
-      if (noEntryRows.length > 0) {
-        alert("입장 기록이 없는 방문자가 있습니다.\n먼저 체크인을 해주세요.")
-        return
-      }
-      // 조건2: 이미 체크아웃 완료된 건은 체크아웃 불가
-      const alreadyOut = targetRows.filter(r => r.lastScanDirection === 'EXIT')
-      if (alreadyOut.length > 0) {
-        alert("이미 체크아웃 완료된 방문자가 있습니다.")
-        return
-      }
-    }
-
-    if (action === 'reentry') {
-      // 조건1: 체크인+체크아웃 모두 완료된 건만 재입장 가능
-      const notCompleted = targetRows.filter(r => !r.lastEntryAt || !r.lastExitAt || r.lastScanDirection !== 'EXIT')
-      if (notCompleted.length > 0) {
-        alert("체크인과 체크아웃이 모두 완료된 방문자만 재입장이 가능합니다.")
-        return
-      }
-    }
+    if (targetRows.length === 0) return
 
     // === B그룹: 부두에서 정문 상태 검증 ===
     if (activeTab === "pier" && mainGateData.length > 0) {
@@ -825,35 +802,40 @@ export default function AdminQrScanPage() {
                   {cardNumberSaving ? "저장 중..." : "카드번호 저장"}
                 </Button>
               </div>
-              <div className="flex items-center gap-2 shrink-0">
-                {selectedRows.size > 0 && (
-                  <span className="text-xs text-white/50">{selectedRows.size}명 선택</span>
-                )}
-                <Button
-                  size="sm"
-                  disabled={manualActionLoading || selectedRows.size === 0}
-                  onClick={() => handleManualAction('checkin', filteredRows)}
-                  className="bg-emerald-500/20 hover:bg-emerald-500/40 border border-emerald-500/50 text-emerald-300 font-bold rounded-xl text-xs px-3 py-2"
-                >
-                  체크인
-                </Button>
-                <Button
-                  size="sm"
-                  disabled={manualActionLoading || selectedRows.size === 0}
-                  onClick={() => handleManualAction('checkout', filteredRows)}
-                  className="bg-blue-500/20 hover:bg-blue-500/40 border border-blue-500/50 text-blue-300 font-bold rounded-xl text-xs px-3 py-2"
-                >
-                  체크아웃
-                </Button>
-                <Button
-                  size="sm"
-                  disabled={manualActionLoading || selectedRows.size === 0}
-                  onClick={() => handleManualAction('reentry', filteredRows)}
-                  className="bg-purple-500/20 hover:bg-purple-500/40 border border-purple-500/50 text-purple-300 font-bold rounded-xl text-xs px-3 py-2"
-                >
-                  재입장
-                </Button>
-              </div>
+              {(() => {
+                const avail = getActionAvailability(filteredRows)
+                return (
+                  <div className="flex items-center gap-2 shrink-0">
+                    {selectedRows.size > 0 && (
+                      <span className="text-xs text-white/50">{selectedRows.size}명 선택</span>
+                    )}
+                    <Button
+                      size="sm"
+                      disabled={manualActionLoading || !avail.checkin}
+                      onClick={() => handleManualAction('checkin', filteredRows)}
+                      className="bg-emerald-500/20 hover:bg-emerald-500/40 border border-emerald-500/50 text-emerald-300 font-bold rounded-xl text-xs px-3 py-2"
+                    >
+                      체크인
+                    </Button>
+                    <Button
+                      size="sm"
+                      disabled={manualActionLoading || !avail.checkout}
+                      onClick={() => handleManualAction('checkout', filteredRows)}
+                      className="bg-blue-500/20 hover:bg-blue-500/40 border border-blue-500/50 text-blue-300 font-bold rounded-xl text-xs px-3 py-2"
+                    >
+                      체크아웃
+                    </Button>
+                    <Button
+                      size="sm"
+                      disabled={manualActionLoading || !avail.reentry}
+                      onClick={() => handleManualAction('reentry', filteredRows)}
+                      className="bg-purple-500/20 hover:bg-purple-500/40 border border-purple-500/50 text-purple-300 font-bold rounded-xl text-xs px-3 py-2"
+                    >
+                      재입장
+                    </Button>
+                  </div>
+                )
+              })()}
             </div>
 
             {error && (
@@ -1059,35 +1041,40 @@ export default function AdminQrScanPage() {
                   {pierTab} 구역 방문자 출입 이력을 확인합니다.
                 </p>
               </div>
-              <div className="flex items-center gap-2 shrink-0">
-                {selectedRows.size > 0 && (
-                  <span className="text-xs text-white/50">{selectedRows.size}명 선택</span>
-                )}
-                <Button
-                  size="sm"
-                  disabled={manualActionLoading || selectedRows.size === 0}
-                  onClick={() => handleManualAction('checkin', rowsByPerson)}
-                  className="bg-emerald-500/20 hover:bg-emerald-500/40 border border-emerald-500/50 text-emerald-300 font-bold rounded-xl text-xs px-3 py-2"
-                >
-                  체크인
-                </Button>
-                <Button
-                  size="sm"
-                  disabled={manualActionLoading || selectedRows.size === 0}
-                  onClick={() => handleManualAction('checkout', rowsByPerson)}
-                  className="bg-blue-500/20 hover:bg-blue-500/40 border border-blue-500/50 text-blue-300 font-bold rounded-xl text-xs px-3 py-2"
-                >
-                  체크아웃
-                </Button>
-                <Button
-                  size="sm"
-                  disabled={manualActionLoading || selectedRows.size === 0}
-                  onClick={() => handleManualAction('reentry', rowsByPerson)}
-                  className="bg-purple-500/20 hover:bg-purple-500/40 border border-purple-500/50 text-purple-300 font-bold rounded-xl text-xs px-3 py-2"
-                >
-                  재입장
-                </Button>
-              </div>
+              {(() => {
+                const avail = getActionAvailability(rowsByPerson)
+                return (
+                  <div className="flex items-center gap-2 shrink-0">
+                    {selectedRows.size > 0 && (
+                      <span className="text-xs text-white/50">{selectedRows.size}명 선택</span>
+                    )}
+                    <Button
+                      size="sm"
+                      disabled={manualActionLoading || !avail.checkin}
+                      onClick={() => handleManualAction('checkin', rowsByPerson)}
+                      className="bg-emerald-500/20 hover:bg-emerald-500/40 border border-emerald-500/50 text-emerald-300 font-bold rounded-xl text-xs px-3 py-2"
+                    >
+                      체크인
+                    </Button>
+                    <Button
+                      size="sm"
+                      disabled={manualActionLoading || !avail.checkout}
+                      onClick={() => handleManualAction('checkout', rowsByPerson)}
+                      className="bg-blue-500/20 hover:bg-blue-500/40 border border-blue-500/50 text-blue-300 font-bold rounded-xl text-xs px-3 py-2"
+                    >
+                      체크아웃
+                    </Button>
+                    <Button
+                      size="sm"
+                      disabled={manualActionLoading || !avail.reentry}
+                      onClick={() => handleManualAction('reentry', rowsByPerson)}
+                      className="bg-purple-500/20 hover:bg-purple-500/40 border border-purple-500/50 text-purple-300 font-bold rounded-xl text-xs px-3 py-2"
+                    >
+                      재입장
+                    </Button>
+                  </div>
+                )
+              })()}
             </div>
 
             {error && (
@@ -1117,8 +1104,8 @@ export default function AdminQrScanPage() {
                     <TableRow className="border-white/10 hover:bg-transparent">
                       <TableHead className="text-white/70 w-10">
                         <Checkbox
-                          checked={filteredRows.length > 0 && filteredRows.every(r => selectedRows.has(`${r.pass_id}-${r.cycleNum ?? 0}`))}
-                          onCheckedChange={() => toggleAllRows(filteredRows)}
+                          checked={filteredRows.filter(r => getMainGateStatus(r.pass_id) === 'IN').length > 0 && filteredRows.filter(r => getMainGateStatus(r.pass_id) === 'IN').every(r => selectedRows.has(`${r.pass_id}-${r.cycleNum ?? 0}`))}
+                          onCheckedChange={() => toggleAllRows(filteredRows, r => getMainGateStatus(r.pass_id) === 'IN')}
                           className="border-white/30"
                         />
                       </TableHead>
