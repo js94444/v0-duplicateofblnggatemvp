@@ -179,6 +179,25 @@ export default function AdminQrScanPage() {
     const targetRows = rows.filter(r => selectedRows.has(`${r.pass_id}-${r.cycleNum ?? 0}`))
     if (targetRows.length === 0) return
 
+    // === 최종 검증 (버튼 비활성화 우회 방지) ===
+    if (action === 'checkin') {
+      const invalid = targetRows.filter(r => r.lastEntryAt || r.lastScanDirection === 'ENTRY')
+      if (invalid.length > 0) return
+    }
+    if (action === 'checkout') {
+      const invalid = targetRows.filter(r => !r.lastEntryAt || r.lastScanDirection !== 'ENTRY')
+      if (invalid.length > 0) return
+    }
+    if (action === 'reentry') {
+      const invalid = targetRows.filter(r => {
+        if (r.lastScanDirection !== 'EXIT') return true
+        const samePerson = rows.filter(row => row.pass_id === r.pass_id)
+        const maxCycle = Math.max(...samePerson.map((row: any) => row.cycleNum ?? 0))
+        return (r.cycleNum ?? 0) !== maxCycle
+      })
+      if (invalid.length > 0) return
+    }
+
     // === B그룹: 부두에서 정문 상태 검증 ===
     if (activeTab === "pier" && mainGateData.length > 0) {
       for (const row of targetRows) {
