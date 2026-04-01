@@ -63,7 +63,7 @@ interface ScanStats {
 }
 
 type TabKind = "main" | "pier"
-type PierKind = "1부두" | "2부두"
+type PierKind = "1부두" | "2부두" 
 
 export default function AdminQrScanPage() {
   const router = useRouter()
@@ -891,7 +891,7 @@ export default function AdminQrScanPage() {
                       <TableHead className="text-white/70 min-w-[90px] cursor-pointer select-none" onClick={() => handleSort("visitor_name")}>방문자<SortIcon col="visitor_name" /></TableHead>
                       <TableHead className="text-white/70 min-w-[100px] cursor-pointer select-none" onClick={() => handleSort("visitor_birth_date")}>생년월일<SortIcon col="visitor_birth_date" /></TableHead>
                       <TableHead className="text-white/70 min-w-[120px] cursor-pointer select-none" onClick={() => handleSort("visitor_organization")}>소속<SortIcon col="visitor_organization" /></TableHead>
-                      <TableHead className="text-white/70 min-w-[60px]">카드<br />번호</TableHead>
+                      <TableHead className="text-white/70 min-w-[50px]">카드번호</TableHead>
                       <TableHead className="text-white/70 min-w-[140px] cursor-pointer select-none" onClick={() => handleSort("contact_name")}>담당자<SortIcon col="contact_name" /></TableHead>
                       <TableHead className="text-white/70 min-w-[100px] cursor-pointer select-none" onClick={() => handleSort("access_area")}>출입구역<SortIcon col="access_area" /></TableHead>
                       <TableHead className="text-white/70 min-w-[140px] cursor-pointer select-none" onClick={() => handleSort("lastEntryAt")}>입장시각<SortIcon col="lastEntryAt" /></TableHead>
@@ -1125,7 +1125,7 @@ export default function AdminQrScanPage() {
                       <TableHead className="text-white/70 min-w-[90px] cursor-pointer select-none" onClick={() => handleSort("visitor_name")}>방문자<SortIcon col="visitor_name" /></TableHead>
                       <TableHead className="text-white/70 min-w-[100px] cursor-pointer select-none" onClick={() => handleSort("visitor_birth_date")}>생년월일<SortIcon col="visitor_birth_date" /></TableHead>
                       <TableHead className="text-white/70 min-w-[120px] cursor-pointer select-none" onClick={() => handleSort("visitor_organization")}>소속<SortIcon col="visitor_organization" /></TableHead>
-                      <TableHead className="text-white/70 min-w-[60px]">카드<br />번호</TableHead>
+                      <TableHead className="text-white/70 min-w-[50px]">카드번호</TableHead>
                       <TableHead className="text-white/70 min-w-[140px] cursor-pointer select-none" onClick={() => handleSort("contact_name")}>담당자<SortIcon col="contact_name" /></TableHead>
                       <TableHead className="text-white/70 min-w-[100px] cursor-pointer select-none" onClick={() => handleSort("access_area")}>출입구역<SortIcon col="access_area" /></TableHead>
                       <TableHead className="text-white/70 min-w-[140px] cursor-pointer select-none" onClick={() => handleSort("lastEntryAt")}>입장시각<SortIcon col="lastEntryAt" /></TableHead>
