@@ -1278,20 +1278,6 @@ export class AzureSqlDB {
       `)
   }
 
-  /** 비밀번호 변경 강제 플래그 설정 */
-  static async setMustChangePassword(accountId: number, value: boolean): Promise<void> {
-    const dbPool = await getPool()
-    await dbPool.request()
-      .input('account_id', sql.Int, accountId)
-      .input('must_change_password', sql.Bit, value ? 1 : 0)
-      .input('updated_at', sql.DateTime, getKoreaTime())
-      .query(`
-        UPDATE admin_accounts
-        SET must_change_password = @must_change_password, updated_at = @updated_at
-        WHERE account_id = @account_id
-      `)
-  }
-
   /** 계정 수정 (역할, 이름, 활성화 여부) */
   static async updateAccount(accountId: number, data: { name?: string; role?: string; is_active?: boolean }): Promise<void> {
     const dbPool = await getPool()
@@ -1622,7 +1608,17 @@ export class AzureSqlDB {
     scanned_ip: string | null,
     user_agent: string | null,
     scan_site: string = "MAIN"
-  ): Promise<{ result: string; message: string; denyReason?: string }> {
+  ): Promise<{
+    result: string
+    message: string
+    denyReason?: string
+    visitor_name?: string
+    visitor_org?: string
+    access_area?: string
+    visit_start_date?: Date | string
+    visit_end_date?: Date | string
+    is_companion?: boolean
+  }> {
     const dbPool = await getPool()
 
     // pass_receipt로 신청 조회 (동행인 QR인 경우 동행인 이름 사용)
@@ -1675,11 +1671,15 @@ export class AzureSqlDB {
 
     const lastDirection = lastScanResult.recordset[0]?.direction || null
 
-    // 입장(ENTRY) 시 - 이미 입장 중이면 재입장으로 처리 (새 사이클)
-    // 단, 정확히 같은 시각(100ms 이내) 중복 스캔은 무시
+    // 입장(ENTRY) 시 - 퇴장 없이 연속 입장은 중복으로 처리 (DB INSERT 없음)
     if (direction === 'ENTRY' && lastDirection === 'ENTRY') {
-      // 재입장으로 처리 - 그냥 새로운 ENTRY 기록을 추가하면 됨
-      // 아래 로직에서 자동으로 새 ENTRY가 INSERT됨
+      return {
+        result: "MISMATCH",
+        message: "이미 입장 처리된 상태입니다. 퇴장 후 다시 입장해 주세요.",
+        visitor_name: displayName,
+        visitor_org: app.visitor_org,
+        is_companion: !!app.companion_id,
+      }
     }
 
     // 퇴장(EXIT) 시 - 입장 기록이 없거나 이미 퇴장 완료면 재입장 안내
@@ -2477,4 +2477,3 @@ export class AzureSqlDB {
     return { success: true, message: "삭제되었습니다." }
   }
 }
-
