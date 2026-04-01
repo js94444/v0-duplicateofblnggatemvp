@@ -174,6 +174,16 @@ export default function AdminQrScanPage() {
       return (r.cycleNum ?? 0) === maxCycle
     })
 
+    if (selected.length > 0) {
+      console.log('[DEBUG] getActionAvailability:', selected.map(r => ({
+        name: r.visitor_name,
+        lastEntryAt: r.lastEntryAt,
+        lastExitAt: r.lastExitAt,
+        cycleNum: r.cycleNum,
+        lastScanDirection: r.lastScanDirection,
+      })), { canCheckin, canCheckout, canReentry })
+    }
+
     return { checkin: canCheckin, checkout: canCheckout, reentry: canReentry }
   }
 
