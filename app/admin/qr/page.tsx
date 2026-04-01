@@ -1042,7 +1042,7 @@ export default function AdminQrScanPage() {
                 </p>
               </div>
               {(() => {
-                const avail = getActionAvailability(rowsByPerson)
+                const avail = getActionAvailability(filteredRows)
                 return (
                   <div className="flex items-center gap-2 shrink-0">
                     {selectedRows.size > 0 && (
@@ -1256,7 +1256,7 @@ export default function AdminQrScanPage() {
       {portCertModal.open && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm"
-          onClick={() => setPortCertModal({ open: false, files: [], visitorName: "" })}
+          onClick={() => setPortCertModal({ open: false, files: [], visitorName: "", birthDate: "" })}
         >
           <div
             className="bg-zinc-900 border border-white/10 rounded-2xl p-6 max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto"
@@ -1267,7 +1267,7 @@ export default function AdminQrScanPage() {
                 {portCertModal.visitorName}{portCertModal.birthDate ? ` - ${portCertModal.birthDate}` : ""} - 항만이수증
               </h3>
               <button
-                onClick={() => setPortCertModal({ open: false, files: [], visitorName: "" })}
+                onClick={() => setPortCertModal({ open: false, files: [], visitorName: "", birthDate: "" })}
                 className="text-white/60 hover:text-white text-2xl"
               >
                 &times;
