@@ -161,11 +161,13 @@ export default function AdminQrScanPage() {
     const selected = rows.filter(r => selectedRows.has(`${r.pass_id}-${r.cycleNum ?? 0}`))
     if (selected.length === 0) return { checkin: false, checkout: false, reentry: false }
 
-    const canCheckin = selected.every(r => !r.lastEntryAt && r.lastScanDirection !== 'ENTRY')
-    const canCheckout = selected.every(r => r.lastEntryAt && r.lastScanDirection === 'ENTRY')
-    // 재입장: 최신 사이클이면서 EXIT 상태인 행만
+    // 체크인 가능: 아직 입장 안 한 행 (대기 상태)
+    const canCheckin = selected.every(r => !r.lastEntryAt)
+    // 체크아웃 가능: 입장했고 아직 퇴장 안 한 행 (체크인 상태)
+    const canCheckout = selected.every(r => r.lastEntryAt && !r.lastExitAt)
+    // 재입장 가능: 입장+퇴장 모두 완료된 최신 사이클
     const canReentry = selected.every(r => {
-      if (r.lastScanDirection !== 'EXIT') return false
+      if (!r.lastEntryAt || !r.lastExitAt) return false
       // 같은 pass_id의 최대 cycleNum인지 확인 (최신 행만 재입장 가능)
       const samePerson = rows.filter(row => row.pass_id === r.pass_id)
       const maxCycle = Math.max(...samePerson.map((row: any) => row.cycleNum ?? 0))
@@ -181,16 +183,16 @@ export default function AdminQrScanPage() {
 
     // === 최종 검증 (버튼 비활성화 우회 방지) ===
     if (action === 'checkin') {
-      const invalid = targetRows.filter(r => r.lastEntryAt || r.lastScanDirection === 'ENTRY')
+      const invalid = targetRows.filter(r => !!r.lastEntryAt)
       if (invalid.length > 0) return
     }
     if (action === 'checkout') {
-      const invalid = targetRows.filter(r => !r.lastEntryAt || r.lastScanDirection !== 'ENTRY')
+      const invalid = targetRows.filter(r => !r.lastEntryAt || !!r.lastExitAt)
       if (invalid.length > 0) return
     }
     if (action === 'reentry') {
       const invalid = targetRows.filter(r => {
-        if (r.lastScanDirection !== 'EXIT') return true
+        if (!r.lastEntryAt || !r.lastExitAt) return true
         const samePerson = rows.filter(row => row.pass_id === r.pass_id)
         const maxCycle = Math.max(...samePerson.map((row: any) => row.cycleNum ?? 0))
         return (r.cycleNum ?? 0) !== maxCycle
