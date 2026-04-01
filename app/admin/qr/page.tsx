@@ -170,19 +170,9 @@ export default function AdminQrScanPage() {
       if (!r.lastEntryAt || !r.lastExitAt) return false
       // 같은 pass_id의 최대 cycleNum인지 확인 (최신 행만 재입장 가능)
       const samePerson = rows.filter(row => row.pass_id === r.pass_id)
-      const maxCycle = Math.max(...samePerson.map((row: any) => row.cycleNum ?? 0))
-      return (r.cycleNum ?? 0) === maxCycle
+      const maxCycle = Math.max(...samePerson.map((row: any) => Number(row.cycleNum) || 0))
+      return (Number(r.cycleNum) || 0) === maxCycle
     })
-
-    if (selected.length > 0) {
-      console.log('[DEBUG] getActionAvailability:', selected.map(r => ({
-        name: r.visitor_name,
-        lastEntryAt: r.lastEntryAt,
-        lastExitAt: r.lastExitAt,
-        cycleNum: r.cycleNum,
-        lastScanDirection: r.lastScanDirection,
-      })), { canCheckin, canCheckout, canReentry })
-    }
 
     return { checkin: canCheckin, checkout: canCheckout, reentry: canReentry }
   }
@@ -204,8 +194,8 @@ export default function AdminQrScanPage() {
       const invalid = targetRows.filter(r => {
         if (!r.lastEntryAt || !r.lastExitAt) return true
         const samePerson = rows.filter(row => row.pass_id === r.pass_id)
-        const maxCycle = Math.max(...samePerson.map((row: any) => row.cycleNum ?? 0))
-        return (r.cycleNum ?? 0) !== maxCycle
+        const maxCycle = Math.max(...samePerson.map((row: any) => Number(row.cycleNum) || 0))
+        return (Number(r.cycleNum) || 0) !== maxCycle
       })
       if (invalid.length > 0) return
     }
