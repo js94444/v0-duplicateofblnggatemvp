@@ -36,12 +36,12 @@ export function ContactSelector({ value, onChange, onMobileChange, error }: Cont
         const res = await fetch("/data/contacts.json", { cache: "no-store" })
         if (!res.ok) throw new Error(`contacts.json HTTP ${res.status}`)
 
-        const data = (await res.json()) as { department: string; name: string; mobile: string }[]
+        const data = (await res.json()) as { department: string; name: string }[]
         setContacts(
           data.map((c) => ({
             department: c.department,
             name: c.name,
-            mobile: c.mobile || '',
+            mobile: '',
             display: `${c.name}>${c.department}`,
           }))
         )
@@ -75,10 +75,17 @@ export function ContactSelector({ value, onChange, onMobileChange, error }: Cont
     return () => document.removeEventListener("mousedown", onDocClick)
   }, [])
 
-  const pick = (contact: Contact) => {
+  const pick = async (contact: Contact) => {
     onChange(contact.display)
+    // 서버에서 전화번호 조회 (public에 노출하지 않음)
     if (onMobileChange) {
-      onMobileChange(contact.mobile)
+      try {
+        const res = await fetch(`/api/contacts/mobile?name=${encodeURIComponent(contact.name)}`)
+        const data = await res.json()
+        onMobileChange(data.mobile || '')
+      } catch {
+        onMobileChange('')
+      }
     }
     setSearch("")
     setOpen(false)

@@ -326,7 +326,8 @@ export default function AdminRequestsPage() {
     const name = contactDisplay[0]
     const dept = contactDisplay[1] || ''
     const contact = contacts.find(c => c.name === name)
-    const mobile = contact?.mobile || "-"
+    // DB에 저장된 contact_mobile 우선 사용, 없으면 contacts 목록에서 부서 매칭
+    const mobile = (app as any).contact_mobile || "-"
     return { name, dept: dept || contact?.department || '', mobile }
   }
 
