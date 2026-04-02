@@ -179,7 +179,7 @@
 
     /* ═══ HERO ════════════════════════════════════════════════ */
     #hero {
-      height: 300vh;
+      height: 100vh;
       position: relative;
     }
 
@@ -192,16 +192,7 @@
       align-items: flex-end;
     }
 
-    /* Canvas fullscreen */
-    #hero-canvas {
-      position: absolute;
-      inset: 0;
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
-
-    /* Video fallback before frames load */
+    /* Video background */
     #hero-video {
       position: absolute;
       inset: 0;
@@ -212,10 +203,6 @@
       transition: opacity .6s ease;
     }
 
-    #hero-video.hidden {
-      opacity: 0;
-      pointer-events: none;
-    }
 
     /* Dark gradient overlay */
     .hero-overlay {
@@ -343,58 +330,6 @@
       color: var(--lime);
     }
 
-    /* Loading bar */
-    .hero-loader {
-      position: absolute;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      height: 2px;
-      background: rgba(255, 255, 255, .06);
-    }
-
-    .hero-loader-fill {
-      height: 100%;
-      background: var(--lime);
-      width: 0%;
-      transition: width .1s linear;
-    }
-
-    /* Scroll indicator */
-    .scroll-hint {
-      position: absolute;
-      bottom: 32px;
-      right: clamp(20px, 5vw, 80px);
-      z-index: 10;
-      opacity: .5;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 6px;
-      font-size: .72rem;
-      color: var(--txt-2);
-      letter-spacing: .1em;
-    }
-
-    .scroll-line {
-      width: 1px;
-      height: 48px;
-      background: var(--txt-2);
-      animation: scrollDown 1.8s ease-in-out infinite;
-    }
-
-    @keyframes scrollDown {
-
-      0%,
-      100% {
-        transform: scaleY(1);
-        transform-origin: top;
-      }
-
-      50% {
-        transform: scaleY(.4);
-      }
-    }
 
     /* ═══ COMMON SECTION ══════════════════════════════════════ */
     .container {
@@ -1390,11 +1325,8 @@
   <section id="hero">
     <div class="hero-sticky">
 
-      <!-- Video fallback (plays until canvas is ready) -->
+      <!-- Background video (auto loop) -->
       <video id="hero-video" src="/manual/hero.mp4" autoplay muted loop playsinline></video>
-
-      <!-- Canvas: scroll-driven frame playback -->
-      <canvas id="hero-canvas"></canvas>
 
       <!-- Gradient overlay -->
       <div class="hero-overlay"></div>
@@ -1418,17 +1350,6 @@
           <a href="https://v0-lng-tml.vercel.app" target="_blank" class="btn-lime">방문 신청하기</a>
           <a href="#guide" class="btn-outline">사용 가이드 보기</a>
         </div>
-      </div>
-
-      <!-- Progress bar while loading -->
-      <div class="hero-loader">
-        <div class="hero-loader-fill" id="loader-fill"></div>
-      </div>
-
-      <!-- Scroll hint -->
-      <div class="scroll-hint">
-        <span>SCROLL</span>
-        <div class="scroll-line"></div>
       </div>
     </div>
   </section>
@@ -2029,113 +1950,6 @@
   </footer>
 
   <script>
-    /* ════════════════════════════════════════
-       SCROLL-DRIVEN HERO FRAME ANIMATION
-    ════════════════════════════════════════ */
-    const canvas = document.getElementById('hero-canvas');
-    const ctx = canvas.getContext('2d');
-    const video = document.getElementById('hero-video');
-    const loaderFill = document.getElementById('loader-fill');
-
-    const FRAME_COUNT = 90;
-    const frames = new Array(FRAME_COUNT).fill(null);
-    let loadedCount = 0;
-    let animRunning = false;
-    let lastFrameIdx = -1;
-
-    function resizeCanvas() {
-      canvas.width = canvas.offsetWidth || window.innerWidth;
-      canvas.height = canvas.offsetHeight || window.innerHeight;
-      if (lastFrameIdx >= 0 && frames[lastFrameIdx]) drawFrame(lastFrameIdx);
-    }
-
-    function drawFrameCover(img) {
-      const cw = canvas.width, ch = canvas.height;
-      const iw = img.naturalWidth, ih = img.naturalHeight;
-      const scale = Math.max(cw / iw, ch / ih);
-      const dw = iw * scale, dh = ih * scale;
-      const dx = (cw - dw) / 2, dy = (ch - dh) / 2;
-      ctx.clearRect(0, 0, cw, ch);
-      ctx.drawImage(img, dx, dy, dw, dh);
-    }
-
-    function drawFrame(idx) {
-      const img = frames[idx];
-      if (!img) return;
-      drawFrameCover(img);
-      lastFrameIdx = idx;
-    }
-
-    function getScrollFrame() {
-      const hero = document.getElementById('hero');
-      const scrollTop = window.scrollY;
-      const maxScroll = hero.offsetHeight - window.innerHeight;
-      const fraction = Math.max(0, Math.min(1, scrollTop / maxScroll));
-      return Math.min(Math.floor(fraction * (FRAME_COUNT - 1)), FRAME_COUNT - 1);
-    }
-
-    /* Smooth frame interpolation via rAF */
-    let targetFrame = 0;
-    let currentFrame = 0;
-
-    function animLoop() {
-      animRunning = true;
-      const diff = targetFrame - currentFrame;
-      if (Math.abs(diff) > 0.5) {
-        currentFrame += diff * 0.15; // ease factor
-        const idx = Math.round(currentFrame);
-        if (idx !== lastFrameIdx) drawFrame(idx);
-      }
-      requestAnimationFrame(animLoop);
-    }
-
-    window.addEventListener('scroll', () => {
-      targetFrame = getScrollFrame();
-      if (targetFrame > 0 && video && !video.classList.contains('hidden')) {
-        video.classList.add('hidden');
-        canvas.style.opacity = '1';
-      }
-    }, { passive: true });
-
-    /* Preload all WebP frames */
-    function pad(n, len) { return String(n).padStart(len, '0'); }
-
-    (async function preload() {
-      canvas.style.opacity = '0';
-      canvas.style.transition = 'opacity .5s ease';
-
-      const loadPromises = Array.from({ length: FRAME_COUNT }, (_, i) => {
-        return new Promise(resolve => {
-          const img = new Image();
-          img.src = `/manual/frames/frame_${pad(i, 4)}.webp`;
-          img.onload = () => {
-            frames[i] = img;
-            loadedCount++;
-            const pct = (loadedCount / FRAME_COUNT) * 100;
-            loaderFill.style.width = pct + '%';
-            // Show canvas once first frame is ready
-            if (i === 0) {
-              drawFrame(0);
-              canvas.style.opacity = '1';
-            }
-            resolve();
-          };
-          img.onerror = resolve; // skip missing frames
-        });
-      });
-
-      // Start animation loop immediately
-      animLoop();
-
-      await Promise.all(loadPromises);
-      loaderFill.style.width = '100%';
-      setTimeout(() => { loaderFill.style.opacity = '0'; }, 600);
-    })();
-
-    window.addEventListener('resize', resizeCanvas, { passive: true });
-    resizeCanvas();
-
-
     /* ════════════════════════════════════════
        NAV SCROLL STATE
     ════════════════════════════════════════ */
