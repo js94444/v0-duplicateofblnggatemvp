@@ -203,3 +203,13 @@ export function getRejectionSMSMessage(application: any, rejection_reason: strin
     rejection_reason,
   }, recipientType)
 }
+
+/** 승인 취소 SMS 메시지 생성 */
+export function getCancelApprovalSMSMessage(application: any, recipientType: 'applicant' | 'contact' = 'applicant'): string {
+  const receipt = application.application_number || application.receipt || "N/A"
+  const visitorName = application.visitor_name || ""
+  if (recipientType === 'contact') {
+    return `[보령LNG터미널] 방문 승인이 취소되었습니다.\n신청자: ${visitorName}\n접수번호: ${receipt}\n\n담당자 확인 후 재승인 또는 반려 처리 바랍니다.`
+  }
+  return `[보령LNG터미널] 방문 승인이 취소되었습니다.\n신청자: ${visitorName}\n접수번호: ${receipt}\n\n기존 QR코드는 더 이상 사용할 수 없습니다. 담당자 확인 후 재발급됩니다.`
+}

@@ -2226,6 +2226,18 @@ export class AzureSqlDB {
       `)
   }
 
+  /** 승인 취소 시 해당 application의 모든 visit_passes를 REVOKED로 무효화 */
+  static async revokePassesByApplicationId(applicationId: string): Promise<void> {
+    const dbPool = await getPool()
+    await dbPool.request()
+      .input('application_id', sql.BigInt, applicationId)
+      .query(`
+        UPDATE visit_passes
+        SET status = 'REVOKED'
+        WHERE application_id = @application_id
+      `)
+  }
+
   /** 여러 application_id에 대한 항만이수증 파일 조회 (신청자 본인 항만이수증만) */
   static async getPortCertFilesByApplicationIds(applicationIds: number[]): Promise<Array<{ application_id: number; file_url: string; file_name: string }>> {
     if (applicationIds.length === 0) return []

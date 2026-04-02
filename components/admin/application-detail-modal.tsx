@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import { type Application, APPLICATION_STATUS_LABELS } from "@/lib/types"
-import { X, Download, FileText, ZoomIn, Loader2, Pencil, Save, XCircle } from "lucide-react"
+import { X, Download, FileText, ZoomIn, Loader2, Pencil, Save, XCircle, RotateCcw } from "lucide-react"
 import { useAdminAuth } from "@/hooks/use-admin-auth"
 
 interface ScanHistoryItem {
@@ -300,6 +300,7 @@ export function ApplicationDetailModal({ application, open, loading = false, sca
   const [editData, setEditData] = useState<Record<string, any>>({})
   const [isSaving, setIsSaving] = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
+  const [isCancellingApproval, setIsCancellingApproval] = useState(false)
 
   // 수정 모드 진입 시 현재 데이터로 초기화
   const startEditing = () => {
@@ -361,6 +362,37 @@ export function ApplicationDetailModal({ application, open, loading = false, sca
     }
   }
 
+  const handleCancelApproval = async () => {
+    if (!app?.id) return
+    const confirmed = window.confirm(
+      `"${app.visitor_name}" 방문자의 승인을 취소하시겠습니까?\n\n` +
+      "• 기존 QR코드가 무효화됩니다.\n" +
+      "• 신청자와 담당자에게 취소 안내 문자가 발송됩니다.\n" +
+      "• 취소 후 접수 대기 상태로 변경되며 재승인 또는 반려 처리가 가능합니다."
+    )
+    if (!confirmed) return
+
+    setIsCancellingApproval(true)
+    setSaveError(null)
+    try {
+      const res = await fetch("/api/admin/requests/approve", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ id: app.id, action: "cancel" }),
+      })
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}))
+        throw new Error(err.message || "승인 취소 실패")
+      }
+      onUpdated?.()
+      onClose()
+    } catch (e) {
+      setSaveError(e instanceof Error ? e.message : "승인 취소 중 오류가 발생했습니다.")
+    } finally {
+      setIsCancellingApproval(false)
+    }
+  }
+
   // 모달 닫힐 때 수정 모드 해제
   useEffect(() => {
     if (!open) {
@@ -416,6 +448,19 @@ export function ApplicationDetailModal({ application, open, loading = false, sca
               <p className="text-xs sm:text-sm font-mono text-white/40 truncate">RECEIPT: {app?.receipt || "-"}</p>
             </div>
             <div className="flex items-center gap-2 sm:gap-4 shrink-0">
+              {/* 승인 취소 버튼 (APPROVED 상태일 때만) */}
+              {canEdit && !isLoading && app && !isEditing && app.status?.toUpperCase() === "APPROVED" && (
+                <Button
+                  onClick={handleCancelApproval}
+                  disabled={isCancellingApproval}
+                  className="bg-red-500/20 hover:bg-red-500/30 border border-red-500/50 text-red-300 font-bold rounded-xl text-xs sm:text-sm px-3 sm:px-4 py-2"
+                >
+                  {isCancellingApproval
+                    ? <Loader2 size={14} className="mr-1.5 animate-spin" />
+                    : <RotateCcw size={14} className="mr-1.5" />}
+                  승인 취소
+                </Button>
+              )}
               {/* 수정/저장/취소 버튼 */}
               {canEdit && !isLoading && app && !isEditing && (
                 <Button
