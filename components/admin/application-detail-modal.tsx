@@ -399,6 +399,7 @@ export function ApplicationDetailModal({ application, open, loading = false, sca
       setIsEditing(false)
       setEditData({})
       setSaveError(null)
+      setIsCancellingApproval(false)
     }
   }, [open])
 
