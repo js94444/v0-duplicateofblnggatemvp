@@ -344,7 +344,7 @@ export function ApplicationDetailModal({ application, open, loading = false, sca
     try {
       const res = await fetch(`/api/admin/applications/${app.id}`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         body: JSON.stringify(editData),
       })
       if (!res.ok) {
