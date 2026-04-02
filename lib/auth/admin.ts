@@ -14,7 +14,7 @@ export interface AdminUser {
 // JWT 서명에 사용할 시크릿 (환경변수 필수)
 const JWT_SECRET = process.env.ADMIN_JWT_SECRET
 if (!JWT_SECRET) {
-  console.error("[auth] ADMIN_JWT_SECRET 환경변수가 설정되지 않았습니다.")
+  throw new Error("[auth] ADMIN_JWT_SECRET 환경변수가 설정되지 않았습니다. Vercel 환경변수를 확인하세요.")
 }
 const TOKEN_EXPIRY_MS = 8 * 60 * 60 * 1000 // 8시간
 

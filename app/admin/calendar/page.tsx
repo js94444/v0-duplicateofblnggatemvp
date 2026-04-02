@@ -47,14 +47,6 @@ interface WeekRow {
   eventBars: EventBar[]
 }
 
-const fetcher = (url: string) =>
-  fetch(url)
-    .then((r) => r.json())
-    .then((d) => {
-      const raw = d.data || d
-      return raw.map((a: any) => ({ ...a, status: String(a.status ?? "").trim().toUpperCase() }))
-    })
-
 const TYPE_STYLES: Record<string, { bar: string; badge: string; dot: string; solid: string }> = {
   GROUP_VISIT: {
     bar: "bg-violet-500/90 hover:bg-violet-500 shadow-violet-500/20",
