@@ -67,7 +67,9 @@ type PierKind = "1부두" | "2부두"
 
 export default function AdminQrScanPage() {
   const router = useRouter()
-  const { user, token, loading: authLoading } = useAdminAuth()
+  const { user, token, isLoading: authLoading } = useAdminAuth()
+  // 담당자(manager) 여부: 자신이 담당자로 지정된 방문자만 조회, 체크인/아웃 기능 비활성화
+  const isManager = user?.role === "manager"
   const [activeTab, setActiveTab] = useState<TabKind>("main")
   const [pierTab, setPierTab] = useState<PierKind>("1부두")
   const [selectedDate, setSelectedDate] = useState<Date>(new Date())
@@ -414,10 +416,16 @@ export default function AdminQrScanPage() {
   // 카드 필터링된 리스트 (부두 탭에서는 카드 필터 무시 — 항상 전체 표시)
   const filteredRows = useMemo(() => {
     let rows = rowsByPerson
+
+    // 담당자(manager)는 자신이 담당자로 지정된 방문자만 표시
+    if (isManager && user?.name) {
+      rows = rows.filter(r => r.contact_name === user.name)
+    }
+
     if (activeTab === "main") {
-      if (cardFilter === "pending") rows = rowsByPerson.filter(r => !r.lastEntryAt)
-      else if (cardFilter === "checkIn") rows = rowsByPerson.filter(r => r.lastScanDirection === 'ENTRY')
-      else if (cardFilter === "checkOut") rows = rowsByPerson.filter(r => r.lastScanDirection === 'EXIT')
+      if (cardFilter === "pending") rows = rows.filter(r => !r.lastEntryAt)
+      else if (cardFilter === "checkIn") rows = rows.filter(r => r.lastScanDirection === 'ENTRY')
+      else if (cardFilter === "checkOut") rows = rows.filter(r => r.lastScanDirection === 'EXIT')
     }
 
     // 부두 탭 이름 검색 필터
@@ -825,7 +833,7 @@ export default function AdminQrScanPage() {
                   {cardNumberSaving ? "저장 중..." : "카드번호 저장"}
                 </Button>
               </div>
-              {(() => {
+              {!isManager && (() => {
                 const avail = getActionAvailability(filteredRows)
                 return (
                   <div className="flex items-center gap-2 shrink-0">
@@ -859,6 +867,11 @@ export default function AdminQrScanPage() {
                   </div>
                 )
               })()}
+              {isManager && (
+                <div className="shrink-0">
+                  <span className="text-xs text-white/30 border border-white/10 rounded-lg px-3 py-1.5">모니터링 전용</span>
+                </div>
+              )}
             </div>
 
             {error && (
@@ -888,8 +901,9 @@ export default function AdminQrScanPage() {
                     <TableRow className="border-white/10 hover:bg-transparent">
                       <TableHead className="text-white/70 w-10">
                         <Checkbox
-                          checked={filteredRows.length > 0 && filteredRows.every(r => selectedRows.has(`${r.pass_id}-${r.cycleNum ?? 0}`))}
-                          onCheckedChange={() => toggleAllRows(filteredRows)}
+                          checked={!isManager && filteredRows.length > 0 && filteredRows.every(r => selectedRows.has(`${r.pass_id}-${r.cycleNum ?? 0}`))}
+                          onCheckedChange={() => !isManager && toggleAllRows(filteredRows)}
+                          disabled={isManager}
                           className="border-white/30"
                         />
                       </TableHead>
@@ -914,12 +928,13 @@ export default function AdminQrScanPage() {
                       return (
                         <TableRow
                           key={`${row.pass_id}-${row.cycleNum || 0}`}
-                          className={`border-white/5 hover:bg-white/5 transition-colors ${statusStyle.bg} ${statusStyle.bar} ${selectedRows.has(rowKey) ? "bg-amber-500/5" : ""}`}
+                          className={`border-white/5 hover:bg-white/5 transition-colors ${statusStyle.bg} ${statusStyle.bar} ${!isManager && selectedRows.has(rowKey) ? "bg-amber-500/5" : ""}`}
                         >
                           <TableCell className="w-10">
                             <Checkbox
-                              checked={selectedRows.has(rowKey)}
-                              onCheckedChange={() => toggleRowSelection(rowKey)}
+                              checked={!isManager && selectedRows.has(rowKey)}
+                              onCheckedChange={() => !isManager && toggleRowSelection(rowKey)}
+                              disabled={isManager}
                               className="border-white/30"
                             />
                           </TableCell>
@@ -1064,7 +1079,7 @@ export default function AdminQrScanPage() {
                   {pierTab} 구역 방문자 출입 이력을 확인합니다.
                 </p>
               </div>
-              {(() => {
+              {!isManager && (() => {
                 const avail = getActionAvailability(filteredRows)
                 return (
                   <div className="flex items-center gap-2 shrink-0">
@@ -1098,6 +1113,11 @@ export default function AdminQrScanPage() {
                   </div>
                 )
               })()}
+              {isManager && (
+                <div className="shrink-0">
+                  <span className="text-xs text-white/30 border border-white/10 rounded-lg px-3 py-1.5">모니터링 전용</span>
+                </div>
+              )}
             </div>
 
             {error && (
@@ -1127,8 +1147,9 @@ export default function AdminQrScanPage() {
                     <TableRow className="border-white/10 hover:bg-transparent">
                       <TableHead className="text-white/70 w-10">
                         <Checkbox
-                          checked={filteredRows.filter(r => getMainGateStatus(r.pass_id) === 'IN').length > 0 && filteredRows.filter(r => getMainGateStatus(r.pass_id) === 'IN').every(r => selectedRows.has(`${r.pass_id}-${r.cycleNum ?? 0}`))}
-                          onCheckedChange={() => toggleAllRows(filteredRows, r => getMainGateStatus(r.pass_id) === 'IN')}
+                          checked={!isManager && filteredRows.filter(r => getMainGateStatus(r.pass_id) === 'IN').length > 0 && filteredRows.filter(r => getMainGateStatus(r.pass_id) === 'IN').every(r => selectedRows.has(`${r.pass_id}-${r.cycleNum ?? 0}`))}
+                          onCheckedChange={() => !isManager && toggleAllRows(filteredRows, r => getMainGateStatus(r.pass_id) === 'IN')}
+                          disabled={isManager}
                           className="border-white/30"
                         />
                       </TableHead>
@@ -1155,13 +1176,13 @@ export default function AdminQrScanPage() {
                       return (
                         <TableRow
                           key={`${row.pass_id}-${row.cycleNum || 0}`}
-                          className={`border-white/5 hover:bg-white/5 transition-colors ${pierDisabled ? "opacity-40" : ""} ${statusStyle.bg} ${statusStyle.bar} ${selectedRows.has(rowKey) ? "bg-amber-500/5" : ""}`}
+                          className={`border-white/5 hover:bg-white/5 transition-colors ${pierDisabled ? "opacity-40" : ""} ${statusStyle.bg} ${statusStyle.bar} ${!isManager && selectedRows.has(rowKey) ? "bg-amber-500/5" : ""}`}
                         >
                           <TableCell className="w-10">
                             <Checkbox
-                              checked={selectedRows.has(rowKey)}
-                              onCheckedChange={() => toggleRowSelection(rowKey)}
-                              disabled={pierDisabled}
+                              checked={!isManager && selectedRows.has(rowKey)}
+                              onCheckedChange={() => !isManager && toggleRowSelection(rowKey)}
+                              disabled={isManager || pierDisabled}
                               className="border-white/30"
                             />
                           </TableCell>
