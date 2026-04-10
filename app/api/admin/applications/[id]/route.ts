@@ -23,9 +23,8 @@ export async function GET(
       )
     }
 
-    // getAllApplications에서 동행인, 첨부파일 등 전체 정보가 포함된 데이터 사용
-    const applications = await AzureSqlDB.getAllApplications()
-    const application = applications.find(app => app.id === id)
+    // ID로 직접 조회 (전체 로드 대신)
+    const application = await AzureSqlDB.getApplicationById(id)
 
     if (!application) {
       return NextResponse.json(
