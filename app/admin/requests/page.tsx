@@ -91,6 +91,11 @@ export default function AdminRequestsPage() {
     applyFilters()
   }, [applications, activeTab, statusFilter, areaFilter, searchQuery, dateFrom, dateTo, sortField, sortDirection, user])
 
+  // 필터/탭/검색 변경 시에만 1페이지로 리셋 (applications 변경 시는 제외)
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [activeTab, statusFilter, areaFilter, searchQuery, dateFrom, dateTo, pageSize])
+
   useEffect(() => {
     if (applications.length > 0 && token) {
       applications.forEach((app) => {
@@ -206,7 +211,6 @@ export default function AdminRequestsPage() {
     }
 
     setFilteredApplications(filtered)
-    setCurrentPage(1) // 필터 변경 시 1페이지로 리셋
   }
 
   // 서버 페이지네이션: 서버에서 이미 페이지 단위로 데이터를 가져옴
