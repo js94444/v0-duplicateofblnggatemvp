@@ -10,42 +10,41 @@ export async function GET(request: NextRequest) {
   try {
     const auth = getAuthenticatedAdmin(request)
     if (isAuthError(auth)) return auth
-    const queryTime = new Date().toISOString()
-    console.log('[v0] API /admin/requests called at:', queryTime)
-    const applications = await AzureSqlDB.getAllApplications()
-    console.log('[v0] Returning', applications.length, 'applications')
-    
-    // Debug: Check companions data in first few applications
-    applications.slice(0, 3).forEach(app => {
-      console.log(`[v0] API Response - ${app.receipt}:`, {
-        type: app.type,
-        hasCompanions: !!(app as any).companions,
-        companionsCount: ((app as any).companions || []).length,
-        companionsData: ((app as any).companions || []),
-        hasDevices: !!(app as any).electronicDevices,
-        devicesCount: ((app as any).electronicDevices || []).length
-      })
+
+    const url = new URL(request.url)
+    const page = parseInt(url.searchParams.get('page') || '1')
+    const pageSize = parseInt(url.searchParams.get('pageSize') || '20')
+    const search = url.searchParams.get('search') || undefined
+    const status = url.searchParams.get('status') || undefined
+    // manager 역할은 본인 담당 건만 조회
+    const contactName = (auth as any).role === 'manager' ? (auth as any).name : undefined
+
+    const result = await AzureSqlDB.getAllApplications({
+      page,
+      pageSize,
+      search,
+      status,
+      contactName,
     })
-    
+
     return NextResponse.json({
-      queryTime,
-      count: applications.length,
-      data: applications
+      count: result.data.length,
+      total: result.total,
+      page,
+      pageSize,
+      totalPages: Math.ceil(result.total / pageSize),
+      data: result.data,
     }, {
       headers: {
         'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
         'Pragma': 'no-cache',
         'Expires': '0',
-        'X-Query-Time': queryTime,
       },
     })
   } catch (error) {
     console.error("Admin requests fetch error:", error)
     return NextResponse.json(
-      {
-        code: "INTERNAL_ERROR",
-        message: "서버 오류가 발생했습니다",
-      },
+      { code: "INTERNAL_ERROR", message: "서버 오류가 발생했습니다" },
       { status: 500 },
     )
   }

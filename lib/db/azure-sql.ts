@@ -965,20 +965,63 @@ export class AzureSqlDB {
     return application
   }
 
-  // 모든 신청서 조회 (최적화: 전체 데이터를 4개 쿼리로 한번에 가져와 메모리에서 매핑)
-  static async getAllApplications(): Promise<Application[]> {
+  // 신청서 조회 (서버 페이지네이션 지원)
+  static async getAllApplications(options?: {
+    page?: number
+    pageSize?: number
+    search?: string
+    status?: string
+    contactName?: string
+  }): Promise<{ data: Application[]; total: number }> {
     const dbPool = await getPool()
+    const page = options?.page || 1
+    const pageSize = options?.pageSize || 9999
+    const offset = (page - 1) * pageSize
 
-    // 쿼리 병렬 실행으로 N+1 문제 완전 해결
+    // WHERE 조건 구성
+    const conditions: string[] = []
+    const request = dbPool.request()
+
+    if (options?.status && options.status !== 'ALL') {
+      conditions.push('a.status = @filterStatus')
+      request.input('filterStatus', sql.NVarChar(50), options.status)
+    }
+    if (options?.search) {
+      conditions.push('(a.visitor_name LIKE @search OR a.application_number LIKE @search OR a.visitor_organization LIKE @search OR a.contact_name LIKE @search)')
+      request.input('search', sql.NVarChar(200), `%${options.search}%`)
+    }
+    if (options?.contactName) {
+      conditions.push('a.contact_name LIKE @contactName')
+      request.input('contactName', sql.NVarChar(200), `%${options.contactName}%`)
+    }
+
+    const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : ''
+
+    // 총 건수 조회
+    const countResult = await request.query(`
+      SELECT COUNT(*) as total FROM visit_applications a WITH (NOLOCK) ${whereClause}
+    `)
+    const total = countResult.recordset[0].total
+
+    // 페이지네이션된 메인 쿼리 + 서브 데이터 병렬 실행
+    const appRequest = dbPool.request()
+    if (options?.status && options.status !== 'ALL') appRequest.input('filterStatus', sql.NVarChar(50), options.status)
+    if (options?.search) appRequest.input('search', sql.NVarChar(200), `%${options.search}%`)
+    if (options?.contactName) appRequest.input('contactName', sql.NVarChar(200), `%${options.contactName}%`)
+    appRequest.input('offset', sql.Int, offset)
+    appRequest.input('pageSize', sql.Int, pageSize)
+
     const [appResult, attachResult, companionResult, companionDeviceResult, deviceResult, companionAttachResult] = await Promise.all([
-      dbPool.request().query(`
+      appRequest.query(`
         SELECT application_id, application_number, status, visitor_name, visitor_phone,
                visitor_organization, visitor_position, visitor_email, visitor_birth_date,
                visitor_address, visit_start_date, visit_end_date,
                visit_purpose, detailed_purpose, contact_name, contact_mobile, access_area,
                vehicle_number, vehicle_model, spark_arrestor, rejection_reason, created_at, updated_at
-        FROM visit_applications WITH (NOLOCK)
+        FROM visit_applications a WITH (NOLOCK)
+        ${whereClause}
         ORDER BY created_at DESC
+        OFFSET @offset ROWS FETCH NEXT @pageSize ROWS ONLY
       `),
       dbPool.request().query(`
         SELECT application_id, file_name, file_key, blob_url, file_type, file_size, attachment_type
@@ -1108,7 +1151,90 @@ export class AzureSqlDB {
       } as any
     })
 
-    return applications
+    return { data: applications, total }
+  }
+
+  // 단건 신청서 조회 (ID로 직접 — 전체 로드 대신)
+  static async getApplicationById(id: string): Promise<Application | null> {
+    const dbPool = await getPool()
+
+    const [appResult, attachResult, companionResult, companionDeviceResult, deviceResult, companionAttachResult] = await Promise.all([
+      dbPool.request().input('id', sql.BigInt, id).query(`
+        SELECT application_id, application_number, status, visitor_name, visitor_phone,
+               visitor_organization, visitor_position, visitor_email, visitor_birth_date,
+               visitor_address, visit_start_date, visit_end_date,
+               visit_purpose, detailed_purpose, contact_name, contact_mobile, access_area,
+               vehicle_number, vehicle_model, spark_arrestor, rejection_reason, created_at, updated_at
+        FROM visit_applications WITH (NOLOCK) WHERE application_id = @id
+      `),
+      dbPool.request().input('id', sql.BigInt, id).query(`SELECT application_id, file_name, file_key, blob_url, file_type, file_size, attachment_type FROM visit_attachments WITH (NOLOCK) WHERE application_id = @id`),
+      dbPool.request().input('id', sql.BigInt, id).query(`SELECT companion_id, application_id, name, phone, birth_date, organization, position FROM visit_companions WITH (NOLOCK) WHERE application_id = @id`),
+      dbPool.request().input('id', sql.BigInt, id).query(`
+        SELECT vcd.companion_id, vcd.item_name, vcd.model_name, vcd.serial_number, vcd.reason, vc.application_id
+        FROM visit_companion_devices vcd WITH (NOLOCK)
+        JOIN visit_companions vc WITH (NOLOCK) ON vcd.companion_id = vc.companion_id
+        WHERE vc.application_id = @id
+      `),
+      dbPool.request().input('id', sql.BigInt, id).query(`SELECT application_id, item_name, model_name, serial_number, reason FROM visit_electronic_devices WITH (NOLOCK) WHERE application_id = @id`),
+      dbPool.request().input('id', sql.BigInt, id).query(`SELECT companion_id, application_id, file_name, file_key, blob_url, file_type, file_size, attachment_type FROM visit_companion_attachments WITH (NOLOCK) WHERE application_id = @id`).catch(() => ({ recordset: [] })),
+    ])
+
+    if (!appResult.recordset[0]) return null
+    const row = appResult.recordset[0]
+    const appId = String(row.application_id)
+
+    // 매핑 (getAllApplications와 동일 로직)
+    const files = attachResult.recordset.filter((a: any) => a.attachment_type !== 'PORT_CERT').map((a: any) => ({ filename: a.file_name, key: a.file_key, url: a.blob_url, type: a.file_type, size: a.file_size ? Number(a.file_size) : 0, attachment_type: a.attachment_type }))
+    const portCertFiles = attachResult.recordset.filter((a: any) => a.attachment_type === 'PORT_CERT').map((a: any) => ({ filename: a.file_name, key: a.file_key, url: a.blob_url, type: a.file_type, size: a.file_size ? Number(a.file_size) : 0, attachment_type: a.attachment_type }))
+
+    const companionDeviceMap = new Map<string, any[]>()
+    for (const d of companionDeviceResult.recordset) {
+      const key = String(d.companion_id)
+      if (!companionDeviceMap.has(key)) companionDeviceMap.set(key, [])
+      companionDeviceMap.get(key)!.push({ item_name: d.item_name, model_name: d.model_name, serial_number: d.serial_number, reason: d.reason })
+    }
+
+    const companionAttachMap = new Map<string, any[]>()
+    for (const a of companionAttachResult.recordset) {
+      const key = String(a.companion_id)
+      if (!companionAttachMap.has(key)) companionAttachMap.set(key, [])
+      companionAttachMap.get(key)!.push({ filename: a.file_name, key: a.file_key, url: a.blob_url, type: a.file_type, size: a.file_size ? Number(a.file_size) : 0, attachment_type: a.attachment_type })
+    }
+
+    const companions = companionResult.recordset.map((c: any) => ({
+      companion_id: String(c.companion_id), name: c.name, phone: c.phone, birth_date: c.birth_date,
+      organization: c.organization, position: c.position,
+      electronicDevices: companionDeviceMap.get(String(c.companion_id)) || [],
+      portCertFiles: companionAttachMap.get(String(c.companion_id)) || [],
+    }))
+
+    const electronicDevices = deviceResult.recordset.map((d: any) => ({ item_name: d.item_name, model_name: d.model_name, serial_number: d.serial_number, reason: d.reason }))
+
+    const normalizedStatus = normalizeStatus(row.status)
+    const receiptPrefix = row.application_number.split('-')[0]
+    let applicationType: Type
+    switch (receiptPrefix) {
+      case 'PA': applicationType = Type.PORT_ACCESS; break
+      case 'GV': applicationType = Type.GROUP_VISIT; break
+      case 'VR': applicationType = Type.VISIT_R3; break
+      case 'GI': applicationType = Type.GOODS_INOUT; break
+      default: applicationType = companions.length > 0 ? Type.GROUP_VISIT : Type.VISIT_R3
+    }
+
+    return {
+      id: appId, receipt: row.application_number, type: applicationType, status: normalizedStatus,
+      visitor_name: row.visitor_name, visitor_phone: row.visitor_phone, visitor_organization: row.visitor_organization,
+      visitor_position: row.visitor_position, visitor_birth_date: row.visitor_birth_date, visitor_address: row.visitor_address,
+      visit_datetime: row.visit_start_date ? new Date(row.visit_start_date) : null,
+      visit_start_date: row.visit_start_date ? new Date(row.visit_start_date) : null,
+      visit_end_date: row.visit_end_date ? new Date(row.visit_end_date) : null,
+      visit_purpose: row.visit_purpose, detailed_purpose: row.detailed_purpose,
+      contact_name: row.contact_name, contact_mobile: row.contact_mobile, contact_email: row.visitor_email,
+      access_area: row.access_area as AccessArea, vehicle_number: row.vehicle_number, vehicle_model: row.vehicle_model,
+      spark_arrestor: row.spark_arrestor, visit_start_time: "09:00", visit_end_time: "18:00",
+      created_at: new Date(row.created_at), updated_at: new Date(row.updated_at), rejection_reason: row.rejection_reason,
+      files, portCertFiles, companions, electronicDevices,
+    } as any
   }
 
   // 상태 업데이트
@@ -1462,18 +1588,33 @@ export class AzureSqlDB {
       statusStats[row.status] = row.count
     })
 
-    // Get all applications to determine type based on companions
-    const allApps = await this.getAllApplications()
+    // application_number 접두사로 유형 집계 (DB에서 직접)
+    const typeResult = await dbPool.request().query(`
+      SELECT
+        CASE
+          WHEN application_number LIKE 'PA-%' THEN 'PORT_ACCESS'
+          WHEN application_number LIKE 'GV-%' THEN 'GROUP_VISIT'
+          WHEN application_number LIKE 'VR-%' THEN 'VISIT_R3'
+          ELSE 'OTHER'
+        END as app_type,
+        COUNT(*) as count
+      FROM visit_applications
+      GROUP BY CASE
+        WHEN application_number LIKE 'PA-%' THEN 'PORT_ACCESS'
+        WHEN application_number LIKE 'GV-%' THEN 'GROUP_VISIT'
+        WHEN application_number LIKE 'VR-%' THEN 'VISIT_R3'
+        ELSE 'OTHER'
+      END
+    `)
 
     const typeStats: Record<string, number> = {
       GROUP_VISIT: 0,
       VISIT_R3: 0,
       PORT_ACCESS: 0,
     }
-
-    allApps.forEach(app => {
-      if (app.type && typeStats[app.type] !== undefined) {
-        typeStats[app.type] = (typeStats[app.type] || 0) + 1
+    typeResult.recordset.forEach((row: any) => {
+      if (typeStats[row.app_type] !== undefined) {
+        typeStats[row.app_type] = row.count
       }
     })
 
@@ -1511,22 +1652,31 @@ export class AzureSqlDB {
         byStatus[row.status] = row.count
       })
 
-      // Filter apps for this month to get type stats
-      const monthApps = allApps.filter(app => {
-        const appDate = new Date(app.created_at)
-        return appDate.getFullYear() === year && appDate.getMonth() + 1 === month
-      })
+      // 월별 유형 집계 (DB에서 직접)
+      const monthTypeResult = await dbPool.request()
+        .input('typeYear', sql.Int, year)
+        .input('typeMonth', sql.Int, month).query(`
+        SELECT
+          CASE
+            WHEN application_number LIKE 'PA-%' THEN 'PORT_ACCESS'
+            WHEN application_number LIKE 'GV-%' THEN 'GROUP_VISIT'
+            WHEN application_number LIKE 'VR-%' THEN 'VISIT_R3'
+            ELSE 'OTHER'
+          END as app_type,
+          COUNT(*) as count
+        FROM visit_applications
+        WHERE YEAR(created_at) = @typeYear AND MONTH(created_at) = @typeMonth
+        GROUP BY CASE
+          WHEN application_number LIKE 'PA-%' THEN 'PORT_ACCESS'
+          WHEN application_number LIKE 'GV-%' THEN 'GROUP_VISIT'
+          WHEN application_number LIKE 'VR-%' THEN 'VISIT_R3'
+          ELSE 'OTHER'
+        END
+      `)
 
-      const byType: Record<string, number> = {
-        GROUP_VISIT: 0,
-        VISIT_R3: 0,
-        PORT_ACCESS: 0,
-      }
-
-      monthApps.forEach(app => {
-        if (app.type && byType[app.type] !== undefined) {
-          byType[app.type] = (byType[app.type] || 0) + 1
-        }
+      const byType: Record<string, number> = { GROUP_VISIT: 0, VISIT_R3: 0, PORT_ACCESS: 0 }
+      monthTypeResult.recordset.forEach((row: any) => {
+        if (byType[row.app_type] !== undefined) byType[row.app_type] = row.count
       })
 
       monthlyStats.push({
@@ -2223,6 +2373,18 @@ export class AzureSqlDB {
       .query(`
         INSERT INTO visit_passes (application_id, companion_id, pass_receipt, token, status, valid_from, valid_to)
         VALUES (@application_id, @companion_id, @pass_receipt, @token, 'active', @valid_from, @valid_to)
+      `)
+  }
+
+  /** 승인 취소 시 해당 application의 모든 visit_passes를 REVOKED로 무효화 */
+  static async revokePassesByApplicationId(applicationId: string): Promise<void> {
+    const dbPool = await getPool()
+    await dbPool.request()
+      .input('application_id', sql.BigInt, applicationId)
+      .query(`
+        UPDATE visit_passes
+        SET status = 'REVOKED'
+        WHERE application_id = @application_id
       `)
   }
 

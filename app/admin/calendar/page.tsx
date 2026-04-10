@@ -124,7 +124,7 @@ export default function AdminCalendarPage() {
       })
 
   const { data: applications = [], isLoading, isValidating, mutate } = useSWR<Application[]>(
-    token ? "/api/admin/requests" : null,
+    token ? "/api/admin/requests?page=1&pageSize=9999" : null,
     authFetcher,
     { revalidateOnFocus: false, dedupingInterval: 30000 }
   )

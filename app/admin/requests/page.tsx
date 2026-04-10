@@ -56,14 +56,22 @@ export default function AdminRequestsPage() {
 
   const { toast } = useToast()
 
+  // 서버 페이지네이션 키
+  const [serverTotal, setServerTotal] = useState(0)
+  const [serverTotalPages, setServerTotalPages] = useState(1)
+
+  const swrKey = token ? `/api/admin/requests?page=${currentPage}&pageSize=${pageSize}${searchQuery ? `&search=${encodeURIComponent(searchQuery)}` : ''}${statusFilter !== 'ALL' ? `&status=${statusFilter}` : ''}` : null
+
   const fetcher = useCallback((url: string) =>
     fetch(url, { headers: { Authorization: `Bearer ${token}` } }).then(res => res.json()).then(data => {
+      setServerTotal(data.total || 0)
+      setServerTotalPages(data.totalPages || 1)
       const raw = data.data || data
-      return raw.map((a: any) => ({ ...a, status: String(a.status ?? "").trim().toUpperCase() }))
+      return (Array.isArray(raw) ? raw : []).map((a: any) => ({ ...a, status: String(a.status ?? "").trim().toUpperCase() }))
     }), [token])
 
   const { data: applications = [], isLoading: loading, isValidating, mutate: refreshApplications } = useSWR(
-    '/api/admin/requests',
+    swrKey,
     fetcher,
     {
       revalidateOnFocus: false,
@@ -201,12 +209,9 @@ export default function AdminRequestsPage() {
     setCurrentPage(1) // 필터 변경 시 1페이지로 리셋
   }
 
-  // 페이지네이션 계산
-  const totalPages = Math.max(1, Math.ceil(filteredApplications.length / pageSize))
-  const paginatedApplications = filteredApplications.slice(
-    (currentPage - 1) * pageSize,
-    currentPage * pageSize
-  )
+  // 서버 페이지네이션: 서버에서 이미 페이지 단위로 데이터를 가져옴
+  const totalPages = serverTotalPages
+  const paginatedApplications = filteredApplications
 
   const fetchFullApplication = async (receipt: string, baseApplication?: Application) => {
     if (detailCache[receipt]) {
@@ -326,9 +331,13 @@ export default function AdminRequestsPage() {
     const name = contactDisplay[0]
     const dept = contactDisplay[1] || ''
     const contact = contacts.find(c => c.name === name)
-    // DB에 저장된 contact_mobile 우선 사용, 없으면 contacts 목록에서 부서 매칭
-    const mobile = (app as any).contact_mobile || "-"
-    return { name, dept: dept || contact?.department || '', mobile }
+    // DB에 저장된 contact_mobile 우선 사용, 없으면 서버 API에서 조회
+    let mobile = (app as any).contact_mobile || ''
+    if (!mobile && contact) {
+      // contacts 목록에서는 전화번호가 없으므로 API로 조회 (비동기 불가 → 빈값 표시)
+      mobile = ''
+    }
+    return { name, dept: dept || contact?.department || '', mobile: mobile || "-" }
   }
 
   const tabCounts = {
@@ -477,15 +486,15 @@ export default function AdminRequestsPage() {
           <TabsContent value={activeTab} className="space-y-4">
             <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl sm:rounded-[40px] p-4 sm:p-8 shadow-2xl">
               <div className="mb-4 sm:mb-6">
-                <h3 className="text-xl sm:text-2xl font-black text-white">신청 목록 ({filteredApplications.length}건)</h3>
+                <h3 className="text-xl sm:text-2xl font-black text-white">신청 목록 ({serverTotal}건)</h3>
                 <p className="text-sm text-white/40 mt-1">
-                  {filteredApplications.length > 0
-                    ? `총 ${filteredApplications.length}건의 신청이 있습니다`
+                  {serverTotal > 0
+                    ? `총 ${serverTotal}건의 신청이 있습니다`
                     : "조건에 맞는 신청이 없습니다"}
                 </p>
               </div>
 
-              {filteredApplications.length > 0 ? (
+              {paginatedApplications.length > 0 ? (
                 <>
                   {/* 모바일: 카드 리스트 */}
                   <div className="md:hidden space-y-3">
@@ -798,7 +807,7 @@ export default function AdminRequestsPage() {
                     </div>
 
                     <span className="text-sm text-white/40">
-                      {filteredApplications.length}건 중 {(currentPage - 1) * pageSize + 1}~{Math.min(currentPage * pageSize, filteredApplications.length)}
+                      {serverTotal}건 중 {(currentPage - 1) * pageSize + 1}~{Math.min(currentPage * pageSize, serverTotal)}
                     </span>
                   </div>
                 </>
