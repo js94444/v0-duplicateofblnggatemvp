@@ -16,6 +16,12 @@ export async function GET(request: NextRequest) {
     const pageSize = parseInt(url.searchParams.get('pageSize') || '20')
     const search = url.searchParams.get('search') || undefined
     const status = url.searchParams.get('status') || undefined
+    const type = url.searchParams.get('type') || undefined
+    const area = url.searchParams.get('area') || undefined
+    const dateFrom = url.searchParams.get('dateFrom') || undefined
+    const dateTo = url.searchParams.get('dateTo') || undefined
+    const sortField = url.searchParams.get('sortField') || undefined
+    const sortDirection = (url.searchParams.get('sortDirection') === 'asc' ? 'asc' : 'desc') as 'asc' | 'desc'
     // manager 역할은 본인 담당 건만 조회
     const contactName = (auth as any).role === 'manager' ? (auth as any).name : undefined
 
@@ -25,6 +31,12 @@ export async function GET(request: NextRequest) {
       search,
       status,
       contactName,
+      type,
+      area,
+      dateFrom,
+      dateTo,
+      sortField,
+      sortDirection,
     })
 
     return NextResponse.json({

@@ -59,13 +59,37 @@ export default function AdminRequestsPage() {
   // 서버 페이지네이션 키
   const [serverTotal, setServerTotal] = useState(0)
   const [serverTotalPages, setServerTotalPages] = useState(1)
+  const [serverTypeCounts, setServerTypeCounts] = useState<{ ALL: number; PORT_ACCESS: number; VISIT_R3: number; GROUP_VISIT: number }>({ ALL: 0, PORT_ACCESS: 0, VISIT_R3: 0, GROUP_VISIT: 0 })
 
-  const swrKey = token ? `/api/admin/requests?page=${currentPage}&pageSize=${pageSize}${searchQuery ? `&search=${encodeURIComponent(searchQuery)}` : ''}${statusFilter !== 'ALL' ? `&status=${statusFilter}` : ''}` : null
+  // 검색어 debounce (300ms) - 한 글자씩 API 호출 방지
+  const [debouncedSearch, setDebouncedSearch] = useState("")
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedSearch(searchQuery), 300)
+    return () => clearTimeout(t)
+  }, [searchQuery])
+
+  const swrKey = token ? (() => {
+    const params = new URLSearchParams()
+    params.set('page', String(currentPage))
+    params.set('pageSize', String(pageSize))
+    if (debouncedSearch) params.set('search', debouncedSearch)
+    if (statusFilter !== 'ALL') params.set('status', statusFilter)
+    if (activeTab !== 'ALL') params.set('type', activeTab)
+    if (areaFilter !== 'ALL') params.set('area', areaFilter)
+    if (dateFrom) params.set('dateFrom', dateFrom)
+    if (dateTo) params.set('dateTo', dateTo)
+    if (sortField) {
+      params.set('sortField', sortField)
+      params.set('sortDirection', sortDirection)
+    }
+    return `/api/admin/requests?${params.toString()}`
+  })() : null
 
   const fetcher = useCallback((url: string) =>
     fetch(url, { headers: { Authorization: `Bearer ${token}` } }).then(res => res.json()).then(data => {
       setServerTotal(data.total || 0)
       setServerTotalPages(data.totalPages || 1)
+      if (data.typeCounts) setServerTypeCounts(data.typeCounts)
       const raw = data.data || data
       return (Array.isArray(raw) ? raw : []).map((a: any) => ({ ...a, status: String(a.status ?? "").trim().toUpperCase() }))
     }), [token])
@@ -87,14 +111,15 @@ export default function AdminRequestsPage() {
       .catch(() => { })
   }, [])
 
+  // 서버가 이미 필터/정렬/페이지네이션을 처리. applications를 그대로 filtered에 반영
   useEffect(() => {
-    applyFilters()
-  }, [applications, activeTab, statusFilter, areaFilter, searchQuery, dateFrom, dateTo, sortField, sortDirection, user])
+    setFilteredApplications(applications)
+  }, [applications])
 
-  // 필터/탭/검색 변경 시에만 1페이지로 리셋 (applications 변경 시는 제외)
+  // 필터/탭/검색 변경 시에만 1페이지로 리셋 (currentPage 변경 시는 제외)
   useEffect(() => {
     setCurrentPage(1)
-  }, [activeTab, statusFilter, areaFilter, searchQuery, dateFrom, dateTo, pageSize])
+  }, [activeTab, statusFilter, areaFilter, debouncedSearch, dateFrom, dateTo, pageSize, sortField, sortDirection])
 
   useEffect(() => {
     if (applications.length > 0 && token) {
@@ -130,90 +155,7 @@ export default function AdminRequestsPage() {
     }
   }
 
-  const applyFilters = () => {
-    let filtered = applications
-
-    if (user?.role === "manager" && user?.name) {
-      const myName = user.name.trim()
-      filtered = filtered.filter((app) => {
-        const raw = (app.contact_name || "").trim()
-        const namepart = raw.split(">")[0].trim()
-        return namepart === myName || raw === myName || raw.startsWith(myName + ">")
-      })
-    }
-
-    if (activeTab !== "ALL") {
-      filtered = filtered.filter((app) => {
-        const receipt = app.receipt || ''
-        if (activeTab === "PORT_ACCESS") return receipt.startsWith("PA-")
-        if (activeTab === "VISIT_R3") return receipt.startsWith("VR-")
-        if (activeTab === "GROUP_VISIT") return receipt.startsWith("GV-")
-        return false
-      })
-    }
-
-    if (statusFilter !== "ALL") {
-      filtered = filtered.filter((app) => app.status === statusFilter)
-    }
-
-    if (areaFilter !== "ALL") {
-      filtered = filtered.filter((app) => app.access_area === areaFilter)
-    }
-
-    if (searchQuery) {
-      const query = searchQuery.toLowerCase()
-      filtered = filtered.filter(
-        (app) =>
-          app.receipt.toLowerCase().includes(query) ||
-          app.contact_name?.toLowerCase().includes(query) ||
-          (app as any).organization?.toLowerCase().includes(query) ||
-          (app as any).representative?.toLowerCase().includes(query) ||
-          (app as any).visitor_name?.toLowerCase().includes(query),
-      )
-    }
-
-    if (dateFrom) {
-      filtered = filtered.filter((app) => new Date(app.created_at) >= new Date(dateFrom))
-    }
-    if (dateTo) {
-      filtered = filtered.filter((app) => new Date(app.created_at) <= new Date(dateTo + "T23:59:59"))
-    }
-
-    if (sortField) {
-      filtered = [...filtered].sort((a, b) => {
-        let aVal: any, bVal: any
-
-        switch (sortField) {
-          case 'type':
-            aVal = a.receipt.substring(0, 3)
-            bVal = b.receipt.substring(0, 3)
-            break
-          case 'created_at':
-            aVal = new Date(a.created_at).getTime()
-            bVal = new Date(b.created_at).getTime()
-            break
-          case 'visit_date':
-            aVal = new Date((a as any).visit_start_date || (a as any).visit_datetime || 0).getTime()
-            bVal = new Date((b as any).visit_start_date || (b as any).visit_datetime || 0).getTime()
-            break
-          case 'status':
-            aVal = a.status
-            bVal = b.status
-            break
-          default:
-            return 0
-        }
-
-        if (aVal < bVal) return sortDirection === 'asc' ? -1 : 1
-        if (aVal > bVal) return sortDirection === 'asc' ? 1 : -1
-        return 0
-      })
-    }
-
-    setFilteredApplications(filtered)
-  }
-
-  // 서버 페이지네이션: 서버에서 이미 페이지 단위로 데이터를 가져옴
+  // 서버 페이지네이션: 모든 필터/정렬/페이지네이션은 서버에서 처리
   const totalPages = serverTotalPages
   const paginatedApplications = filteredApplications
 
@@ -344,12 +286,13 @@ export default function AdminRequestsPage() {
     return { name, dept: dept || contact?.department || '', mobile: mobile || "-" }
   }
 
+  // 탭 카운트는 서버에서 받은 typeCounts 사용 (전체 DB 기준)
   const tabCounts = {
-    ALL: applications.length,
-    GROUP_VISIT: applications.filter((app) => (app.receipt || '').startsWith("GV-")).length,
-    PORT_ACCESS: applications.filter((app) => (app.receipt || '').startsWith("PA-")).length,
-    GOODS_INOUT: applications.filter((app) => app.type === "GOODS_INOUT").length,
-    VISIT_R3: applications.filter((app) => (app.receipt || '').startsWith("VR-")).length,
+    ALL: serverTypeCounts.ALL,
+    GROUP_VISIT: serverTypeCounts.GROUP_VISIT,
+    PORT_ACCESS: serverTypeCounts.PORT_ACCESS,
+    GOODS_INOUT: 0,
+    VISIT_R3: serverTypeCounts.VISIT_R3,
   }
 
   if (loading) {

@@ -921,50 +921,6 @@ export class AzureSqlDB {
     return null
   }
 
-  // ID로 조회
-  static async getApplicationById(id: string): Promise<Application | null> {
-    const dbPool = await getPool()
-
-    console.log('[v0] Getting application by ID:', id)
-
-    const result = await dbPool.request().input('id', sql.BigInt, parseInt(id)).query('SELECT * FROM visit_applications WHERE application_id = @id')
-
-    if (result.recordset.length === 0) {
-      return null
-    }
-
-    const row = result.recordset[0]
-    const application: VisitR3Application = {
-      id: row.application_id.toString(),
-      receipt: row.application_number,
-      type: Type.VISIT_R3,
-      status: row.status as ApplicationStatus,
-      visitor_name: row.visitor_name,
-      visitor_phone: row.visitor_phone,
-      visitor_organization: row.visitor_organization,
-      visitor_position: row.visitor_position,
-      visit_datetime: new Date(row.visit_start_date),
-      visit_start_date: row.visit_start_date,
-      visit_end_date: row.visit_end_date,
-      visit_purpose: row.visit_purpose,
-      contact_name: row.contact_name,
-      contact_mobile: row.contact_mobile,
-      contact_email: row.visitor_email,
-      access_area: row.access_area as AccessArea,
-      vehicle_number: row.vehicle_number,
-      vehicle_model: row.vehicle_model,
-      spark_arrestor: row.spark_arrestor,
-      visit_start_time: "09:00",
-      visit_end_time: "18:00",
-      created_at: new Date(row.created_at),
-      updated_at: new Date(row.updated_at),
-      rejection_reason: row.rejection_reason,
-      files: [],
-    }
-
-    return application
-  }
-
   // 신청서 조회 (서버 페이지네이션 지원)
   static async getAllApplications(options?: {
     page?: number
@@ -972,42 +928,108 @@ export class AzureSqlDB {
     search?: string
     status?: string
     contactName?: string
-  }): Promise<{ data: Application[]; total: number }> {
+    type?: string
+    area?: string
+    dateFrom?: string
+    dateTo?: string
+    sortField?: string
+    sortDirection?: 'asc' | 'desc'
+  }): Promise<{ data: Application[]; total: number; typeCounts: { ALL: number; PORT_ACCESS: number; VISIT_R3: number; GROUP_VISIT: number } }> {
     const dbPool = await getPool()
     const page = options?.page || 1
     const pageSize = options?.pageSize || 9999
     const offset = (page - 1) * pageSize
 
-    // WHERE 조건 구성
-    const conditions: string[] = []
+    // WHERE 조건 구성 - type 필터만 따로 분리 (탭 카운트는 type 무시하고 계산)
+    const baseConditions: string[] = []
     const request = dbPool.request()
 
     if (options?.status && options.status !== 'ALL') {
-      conditions.push('a.status = @filterStatus')
+      baseConditions.push('a.status = @filterStatus')
       request.input('filterStatus', sql.NVarChar(50), options.status)
     }
     if (options?.search) {
-      conditions.push('(a.visitor_name LIKE @search OR a.application_number LIKE @search OR a.visitor_organization LIKE @search OR a.contact_name LIKE @search)')
+      baseConditions.push('(a.visitor_name LIKE @search OR a.application_number LIKE @search OR a.visitor_organization LIKE @search OR a.contact_name LIKE @search)')
       request.input('search', sql.NVarChar(200), `%${options.search}%`)
     }
     if (options?.contactName) {
-      conditions.push('a.contact_name LIKE @contactName')
+      baseConditions.push('a.contact_name LIKE @contactName')
       request.input('contactName', sql.NVarChar(200), `%${options.contactName}%`)
     }
+    if (options?.area && options.area !== 'ALL') {
+      baseConditions.push('a.access_area = @filterArea')
+      request.input('filterArea', sql.NVarChar(100), options.area)
+    }
+    if (options?.dateFrom) {
+      baseConditions.push('a.created_at >= @dateFrom')
+      request.input('dateFrom', sql.DateTime2, new Date(options.dateFrom))
+    }
+    if (options?.dateTo) {
+      baseConditions.push('a.created_at <= @dateTo')
+      request.input('dateTo', sql.DateTime2, new Date(options.dateTo + 'T23:59:59'))
+    }
 
+    const typePrefix =
+      options?.type === 'PORT_ACCESS' ? 'PA-' :
+      options?.type === 'VISIT_R3' ? 'VR-' :
+      options?.type === 'GROUP_VISIT' ? 'GV-' : null
+    const typeCondition = typePrefix ? 'a.application_number LIKE @typePrefix' : null
+    if (typeCondition) request.input('typePrefix', sql.NVarChar(10), `${typePrefix}%`)
+
+    const conditions = typeCondition ? [...baseConditions, typeCondition] : baseConditions
     const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : ''
+    const baseWhereClause = baseConditions.length > 0 ? `WHERE ${baseConditions.join(' AND ')}` : ''
 
-    // 총 건수 조회
+    // ORDER BY 구성 (화이트리스트)
+    const sortColumnMap: Record<string, string> = {
+      type: 'a.application_number',
+      created_at: 'a.created_at',
+      visit_date: 'a.visit_start_date',
+      status: 'a.status',
+    }
+    const sortCol = (options?.sortField && sortColumnMap[options.sortField]) || 'a.created_at'
+    const sortDir = options?.sortDirection === 'asc' ? 'ASC' : 'DESC'
+    const orderByClause = `ORDER BY ${sortCol} ${sortDir}`
+
+    // 총 건수 (type 필터 포함) + 탭별 카운트 (type 필터 제외) 한 번에
     const countResult = await request.query(`
       SELECT COUNT(*) as total FROM visit_applications a WITH (NOLOCK) ${whereClause}
     `)
     const total = countResult.recordset[0].total
+
+    // 탭 카운트: type 제외한 baseWhere 기준 - 별도 request로 실행 (params 공유 불가)
+    const typeCountRequest = dbPool.request()
+    if (options?.status && options.status !== 'ALL') typeCountRequest.input('filterStatus', sql.NVarChar(50), options.status)
+    if (options?.search) typeCountRequest.input('search', sql.NVarChar(200), `%${options.search}%`)
+    if (options?.contactName) typeCountRequest.input('contactName', sql.NVarChar(200), `%${options.contactName}%`)
+    if (options?.area && options.area !== 'ALL') typeCountRequest.input('filterArea', sql.NVarChar(100), options.area)
+    if (options?.dateFrom) typeCountRequest.input('dateFrom', sql.DateTime2, new Date(options.dateFrom))
+    if (options?.dateTo) typeCountRequest.input('dateTo', sql.DateTime2, new Date(options.dateTo + 'T23:59:59'))
+    const typeCountResult = await typeCountRequest.query(`
+      SELECT
+        SUM(CASE WHEN a.application_number LIKE 'PA-%' THEN 1 ELSE 0 END) as PORT_ACCESS,
+        SUM(CASE WHEN a.application_number LIKE 'VR-%' THEN 1 ELSE 0 END) as VISIT_R3,
+        SUM(CASE WHEN a.application_number LIKE 'GV-%' THEN 1 ELSE 0 END) as GROUP_VISIT,
+        COUNT(*) as ALL_COUNT
+      FROM visit_applications a WITH (NOLOCK) ${baseWhereClause}
+    `)
+    const tcRow = typeCountResult.recordset[0] || {}
+    const typeCounts = {
+      ALL: Number(tcRow.ALL_COUNT || 0),
+      PORT_ACCESS: Number(tcRow.PORT_ACCESS || 0),
+      VISIT_R3: Number(tcRow.VISIT_R3 || 0),
+      GROUP_VISIT: Number(tcRow.GROUP_VISIT || 0),
+    }
 
     // 페이지네이션된 메인 쿼리 + 서브 데이터 병렬 실행
     const appRequest = dbPool.request()
     if (options?.status && options.status !== 'ALL') appRequest.input('filterStatus', sql.NVarChar(50), options.status)
     if (options?.search) appRequest.input('search', sql.NVarChar(200), `%${options.search}%`)
     if (options?.contactName) appRequest.input('contactName', sql.NVarChar(200), `%${options.contactName}%`)
+    if (typePrefix) appRequest.input('typePrefix', sql.NVarChar(10), `${typePrefix}%`)
+    if (options?.area && options.area !== 'ALL') appRequest.input('filterArea', sql.NVarChar(100), options.area)
+    if (options?.dateFrom) appRequest.input('dateFrom', sql.DateTime2, new Date(options.dateFrom))
+    if (options?.dateTo) appRequest.input('dateTo', sql.DateTime2, new Date(options.dateTo + 'T23:59:59'))
     appRequest.input('offset', sql.Int, offset)
     appRequest.input('pageSize', sql.Int, pageSize)
 
@@ -1020,7 +1042,7 @@ export class AzureSqlDB {
                vehicle_number, vehicle_model, spark_arrestor, rejection_reason, created_at, updated_at
         FROM visit_applications a WITH (NOLOCK)
         ${whereClause}
-        ORDER BY created_at DESC
+        ${orderByClause}
         OFFSET @offset ROWS FETCH NEXT @pageSize ROWS ONLY
       `),
       dbPool.request().query(`
@@ -1151,7 +1173,7 @@ export class AzureSqlDB {
       } as any
     })
 
-    return { data: applications, total }
+    return { data: applications, total, typeCounts }
   }
 
   // 단건 신청서 조회 (ID로 직접 — 전체 로드 대신)
