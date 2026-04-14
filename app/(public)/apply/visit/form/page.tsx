@@ -259,6 +259,7 @@ export default function VisitFormPage() {
     if (!formData.has_no_vehicle) {
       if (!formData.vehicle_number.trim()) newErrors.vehicle_number = t("차량번호를 입력해주세요", "Please enter your vehicle number")
       if (!formData.vehicle_model.trim()) newErrors.vehicle_model = t("차량의 유종을 입력해주세요", "Please select vehicle fuel type")
+      if (!formData.spark_arrestor) newErrors.spark_arrestor = t("불꽃방지망보유 여부를 선택해주세요", "Please select spark arrestor status")
     }
 
     if (!formData.visit_purpose.trim()) newErrors.visit_purpose = t("방문 목적을 입력해주세요", "Please select a visit purpose")

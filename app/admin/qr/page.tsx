@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
-import { RefreshCw, ChevronLeft, ChevronRight, Calendar, ChevronUp, ChevronDown, ChevronsUpDown } from "lucide-react"
+import { RefreshCw, ChevronLeft, ChevronRight, Calendar, ChevronUp, ChevronDown, ChevronsUpDown, ZoomIn, ZoomOut, RotateCcw, ExternalLink, FileText } from "lucide-react"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Calendar as CalendarComponent } from "@/components/ui/calendar"
 import { format, addDays, subDays, startOfMonth, endOfMonth, subMonths } from "date-fns"
@@ -67,7 +67,9 @@ type PierKind = "1부두" | "2부두"
 
 export default function AdminQrScanPage() {
   const router = useRouter()
-  const { user, token, loading: authLoading } = useAdminAuth()
+  const { user, token, isLoading: authLoading } = useAdminAuth()
+  // 담당자(manager) 여부: 자신이 담당자로 지정된 방문자만 조회, 체크인/아웃 기능 비활성화
+  const isManager = user?.role === "manager"
   const [activeTab, setActiveTab] = useState<TabKind>("main")
   const [pierTab, setPierTab] = useState<PierKind>("1부두")
   const [selectedDate, setSelectedDate] = useState<Date>(new Date())
@@ -81,6 +83,8 @@ export default function AdminQrScanPage() {
   const [scanHistory, setScanHistory] = useState<any[]>([])
   const [modalLoading, setModalLoading] = useState(false)
   const [portCertModal, setPortCertModal] = useState<{ open: boolean; files: Array<{ file_url: string; file_name: string }>; visitorName: string; birthDate: string }>({ open: false, files: [], visitorName: "", birthDate: "" })
+  const [zoomLevel, setZoomLevel] = useState(1)
+  const [imgErrors, setImgErrors] = useState<Record<number, boolean>>({})
   const [calendarOpen, setCalendarOpen] = useState(false)
   const [rangeStartCalendarOpen, setRangeStartCalendarOpen] = useState(false)
   const [rangeEndCalendarOpen, setRangeEndCalendarOpen] = useState(false)
@@ -412,10 +416,16 @@ export default function AdminQrScanPage() {
   // 카드 필터링된 리스트 (부두 탭에서는 카드 필터 무시 — 항상 전체 표시)
   const filteredRows = useMemo(() => {
     let rows = rowsByPerson
+
+    // 담당자(manager)는 자신이 담당자로 지정된 방문자만 표시
+    if (isManager && user?.name) {
+      rows = rows.filter(r => r.contact_name === user.name)
+    }
+
     if (activeTab === "main") {
-      if (cardFilter === "pending") rows = rowsByPerson.filter(r => !r.lastEntryAt)
-      else if (cardFilter === "checkIn") rows = rowsByPerson.filter(r => r.lastScanDirection === 'ENTRY')
-      else if (cardFilter === "checkOut") rows = rowsByPerson.filter(r => r.lastScanDirection === 'EXIT')
+      if (cardFilter === "pending") rows = rows.filter(r => !r.lastEntryAt)
+      else if (cardFilter === "checkIn") rows = rows.filter(r => r.lastScanDirection === 'ENTRY')
+      else if (cardFilter === "checkOut") rows = rows.filter(r => r.lastScanDirection === 'EXIT')
     }
 
     // 부두 탭 이름 검색 필터
@@ -823,7 +833,7 @@ export default function AdminQrScanPage() {
                   {cardNumberSaving ? "저장 중..." : "카드번호 저장"}
                 </Button>
               </div>
-              {(() => {
+              {!isManager && (() => {
                 const avail = getActionAvailability(filteredRows)
                 return (
                   <div className="flex items-center gap-2 shrink-0">
@@ -857,6 +867,11 @@ export default function AdminQrScanPage() {
                   </div>
                 )
               })()}
+              {isManager && (
+                <div className="shrink-0">
+                  <span className="text-xs text-white/30 border border-white/10 rounded-lg px-3 py-1.5">모니터링 전용</span>
+                </div>
+              )}
             </div>
 
             {error && (
@@ -886,8 +901,9 @@ export default function AdminQrScanPage() {
                     <TableRow className="border-white/10 hover:bg-transparent">
                       <TableHead className="text-white/70 w-10">
                         <Checkbox
-                          checked={filteredRows.length > 0 && filteredRows.every(r => selectedRows.has(`${r.pass_id}-${r.cycleNum ?? 0}`))}
-                          onCheckedChange={() => toggleAllRows(filteredRows)}
+                          checked={!isManager && filteredRows.length > 0 && filteredRows.every(r => selectedRows.has(`${r.pass_id}-${r.cycleNum ?? 0}`))}
+                          onCheckedChange={() => !isManager && toggleAllRows(filteredRows)}
+                          disabled={isManager}
                           className="border-white/30"
                         />
                       </TableHead>
@@ -912,12 +928,13 @@ export default function AdminQrScanPage() {
                       return (
                         <TableRow
                           key={`${row.pass_id}-${row.cycleNum || 0}`}
-                          className={`border-white/5 hover:bg-white/5 transition-colors ${statusStyle.bg} ${statusStyle.bar} ${selectedRows.has(rowKey) ? "bg-amber-500/5" : ""}`}
+                          className={`border-white/5 hover:bg-white/5 transition-colors ${statusStyle.bg} ${statusStyle.bar} ${!isManager && selectedRows.has(rowKey) ? "bg-amber-500/5" : ""}`}
                         >
                           <TableCell className="w-10">
                             <Checkbox
-                              checked={selectedRows.has(rowKey)}
-                              onCheckedChange={() => toggleRowSelection(rowKey)}
+                              checked={!isManager && selectedRows.has(rowKey)}
+                              onCheckedChange={() => !isManager && toggleRowSelection(rowKey)}
+                              disabled={isManager}
                               className="border-white/30"
                             />
                           </TableCell>
@@ -1062,7 +1079,7 @@ export default function AdminQrScanPage() {
                   {pierTab} 구역 방문자 출입 이력을 확인합니다.
                 </p>
               </div>
-              {(() => {
+              {!isManager && (() => {
                 const avail = getActionAvailability(filteredRows)
                 return (
                   <div className="flex items-center gap-2 shrink-0">
@@ -1096,6 +1113,11 @@ export default function AdminQrScanPage() {
                   </div>
                 )
               })()}
+              {isManager && (
+                <div className="shrink-0">
+                  <span className="text-xs text-white/30 border border-white/10 rounded-lg px-3 py-1.5">모니터링 전용</span>
+                </div>
+              )}
             </div>
 
             {error && (
@@ -1125,8 +1147,9 @@ export default function AdminQrScanPage() {
                     <TableRow className="border-white/10 hover:bg-transparent">
                       <TableHead className="text-white/70 w-10">
                         <Checkbox
-                          checked={filteredRows.filter(r => getMainGateStatus(r.pass_id) === 'IN').length > 0 && filteredRows.filter(r => getMainGateStatus(r.pass_id) === 'IN').every(r => selectedRows.has(`${r.pass_id}-${r.cycleNum ?? 0}`))}
-                          onCheckedChange={() => toggleAllRows(filteredRows, r => getMainGateStatus(r.pass_id) === 'IN')}
+                          checked={!isManager && filteredRows.filter(r => getMainGateStatus(r.pass_id) === 'IN').length > 0 && filteredRows.filter(r => getMainGateStatus(r.pass_id) === 'IN').every(r => selectedRows.has(`${r.pass_id}-${r.cycleNum ?? 0}`))}
+                          onCheckedChange={() => !isManager && toggleAllRows(filteredRows, r => getMainGateStatus(r.pass_id) === 'IN')}
+                          disabled={isManager}
                           className="border-white/30"
                         />
                       </TableHead>
@@ -1153,13 +1176,13 @@ export default function AdminQrScanPage() {
                       return (
                         <TableRow
                           key={`${row.pass_id}-${row.cycleNum || 0}`}
-                          className={`border-white/5 hover:bg-white/5 transition-colors ${pierDisabled ? "opacity-40" : ""} ${statusStyle.bg} ${statusStyle.bar} ${selectedRows.has(rowKey) ? "bg-amber-500/5" : ""}`}
+                          className={`border-white/5 hover:bg-white/5 transition-colors ${pierDisabled ? "opacity-40" : ""} ${statusStyle.bg} ${statusStyle.bar} ${!isManager && selectedRows.has(rowKey) ? "bg-amber-500/5" : ""}`}
                         >
                           <TableCell className="w-10">
                             <Checkbox
-                              checked={selectedRows.has(rowKey)}
-                              onCheckedChange={() => toggleRowSelection(rowKey)}
-                              disabled={pierDisabled}
+                              checked={!isManager && selectedRows.has(rowKey)}
+                              onCheckedChange={() => !isManager && toggleRowSelection(rowKey)}
+                              disabled={isManager || pierDisabled}
                               className="border-white/30"
                             />
                           </TableCell>
@@ -1276,51 +1299,157 @@ export default function AdminQrScanPage() {
       {/* 항만이수증 모달 */}
       {portCertModal.open && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm"
-          onClick={() => setPortCertModal({ open: false, files: [], visitorName: "", birthDate: "" })}
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm"
+          onClick={() => {
+            setPortCertModal({ open: false, files: [], visitorName: "", birthDate: "" })
+            setZoomLevel(1)
+            setImgErrors({})
+          }}
         >
           <div
-            className="bg-zinc-900 border border-white/10 rounded-2xl p-6 max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto"
+            className="bg-zinc-900 border border-white/10 rounded-2xl p-6 max-w-4xl w-full mx-4 max-h-[92vh] flex flex-col"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-bold text-white">
-                {portCertModal.visitorName}{portCertModal.birthDate ? ` - ${portCertModal.birthDate}` : ""} - 항만이수증
-              </h3>
+            {/* 헤더 */}
+            <div className="flex items-center justify-between mb-4 shrink-0">
+              <div>
+                <h3 className="text-lg font-bold text-white">
+                  {portCertModal.visitorName}{portCertModal.birthDate ? ` (${portCertModal.birthDate})` : ""} — 항만이수증
+                </h3>
+                <p className="text-xs text-white/40 mt-0.5">파일 {portCertModal.files.length}개</p>
+              </div>
               <button
-                onClick={() => setPortCertModal({ open: false, files: [], visitorName: "", birthDate: "" })}
-                className="text-white/60 hover:text-white text-2xl"
+                onClick={() => {
+                  setPortCertModal({ open: false, files: [], visitorName: "", birthDate: "" })
+                  setZoomLevel(1)
+                  setImgErrors({})
+                }}
+                className="text-white/60 hover:text-white text-2xl leading-none"
               >
                 &times;
               </button>
             </div>
-            <div className="grid grid-cols-1 gap-6">
+
+            {/* 줌 컨트롤 (이미지 파일이 있을 때만) */}
+            {portCertModal.files.some(f => !f.file_name.toLowerCase().endsWith(".pdf")) && (
+              <div className="flex items-center gap-2 mb-4 shrink-0">
+                <span className="text-xs text-white/50">확대/축소</span>
+                <button
+                  onClick={() => setZoomLevel(z => Math.max(0.25, +(z - 0.25).toFixed(2)))}
+                  className="flex items-center justify-center w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 text-white transition-colors"
+                  title="축소"
+                >
+                  <ZoomOut size={15} />
+                </button>
+                <span className="text-sm font-mono text-white/70 w-12 text-center">{Math.round(zoomLevel * 100)}%</span>
+                <button
+                  onClick={() => setZoomLevel(z => Math.min(4, +(z + 0.25).toFixed(2)))}
+                  className="flex items-center justify-center w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 text-white transition-colors"
+                  title="확대"
+                >
+                  <ZoomIn size={15} />
+                </button>
+                <button
+                  onClick={() => setZoomLevel(1)}
+                  className="flex items-center justify-center w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 text-white transition-colors"
+                  title="원래 크기"
+                >
+                  <RotateCcw size={14} />
+                </button>
+                <div className="flex gap-1 ml-2">
+                  {[0.5, 1, 1.5, 2].map(z => (
+                    <button
+                      key={z}
+                      onClick={() => setZoomLevel(z)}
+                      className={`text-xs px-2 py-1 rounded-md transition-colors ${zoomLevel === z ? "bg-amber-500 text-black font-bold" : "bg-white/10 hover:bg-white/20 text-white/70"}`}
+                    >
+                      {z * 100}%
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* 파일 목록 */}
+            <div className="overflow-y-auto flex-1 space-y-6 pr-1">
               {portCertModal.files.map((file, idx) => {
-                // blob_url에서 파일명 추출하여 /api/files/ 경로로 변환
                 const blobName = file.file_url.includes("/attachments/")
                   ? file.file_url.split("/attachments/")[1]?.split("?")[0]
                   : file.file_name
-                const imageUrl = `/api/files/${encodeURIComponent(blobName || file.file_name)}${token ? `?token=${encodeURIComponent(token)}` : ""}`
+                const fileUrl = `/api/files/${encodeURIComponent(blobName || file.file_name)}${token ? `?token=${encodeURIComponent(token)}` : ""}`
+                const isPdf = file.file_name.toLowerCase().endsWith(".pdf")
+                const hasError = imgErrors[idx]
 
                 return (
                   <div
                     key={idx}
-                    className="border border-white/20 rounded-lg overflow-hidden bg-black/40 p-2"
+                    className="border border-white/20 rounded-xl overflow-hidden bg-black/40"
                   >
-                    <img
-                      src={imageUrl}
-                      alt={file.file_name}
-                      className="w-full h-auto object-contain max-h-[600px] rounded"
-                      onError={(e) => {
-                        e.currentTarget.style.display = "none"
-                        const fallback = document.createElement("div")
-                        fallback.className = "text-white/60 p-4 text-center"
-                        fallback.textContent = `이미지를 불러올 수 없습니다. ${file.file_name}`
-                        e.currentTarget.parentElement?.appendChild(fallback)
-                      }}
-                    />
-                    <div className="text-white/50 text-xs p-2 break-words">
-                      {file.file_name}
+                    {/* 파일명 + 새 탭 열기 */}
+                    <div className="flex items-center justify-between px-3 py-2 border-b border-white/10">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <FileText size={14} className="text-white/50 shrink-0" />
+                        <span className="text-white/70 text-xs truncate">{file.file_name}</span>
+                      </div>
+                      <a
+                        href={fileUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-1 text-xs text-blue-400 hover:text-blue-300 shrink-0 ml-2"
+                        title="새 탭에서 열기"
+                      >
+                        <ExternalLink size={12} />
+                        열기
+                      </a>
+                    </div>
+
+                    {/* 미리보기 영역 */}
+                    <div className="p-2">
+                      {isPdf ? (
+                        /* PDF: iframe으로 인라인 렌더링 (브라우저 내장 PDF 뷰어 사용) */
+                        <div className="relative">
+                          <iframe
+                            src={fileUrl}
+                            className="w-full rounded border-0"
+                            style={{ height: "650px" }}
+                            title={file.file_name}
+                          />
+                          <p className="text-white/40 text-xs text-center mt-2">
+                            PDF가 표시되지 않으면 위의 '열기' 버튼을 이용해 주세요.
+                          </p>
+                        </div>
+                      ) : hasError ? (
+                        /* 이미지 로드 실패 시 */
+                        <div className="flex flex-col items-center justify-center py-10 gap-3 text-white/40">
+                          <FileText size={40} className="text-white/20" />
+                          <p className="text-sm">이미지를 불러올 수 없습니다.</p>
+                          <a
+                            href={fileUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-1.5 text-xs text-blue-400 hover:text-blue-300 border border-blue-400/30 rounded-lg px-3 py-1.5"
+                          >
+                            <ExternalLink size={12} />
+                            새 탭에서 직접 열기
+                          </a>
+                        </div>
+                      ) : (
+                        /* 이미지: 줌 적용 (width % 방식 - transform 방식과 달리 올바르게 스크롤 생성) */
+                        <div className="overflow-auto rounded" style={{ maxHeight: "600px" }}>
+                          <img
+                            src={fileUrl}
+                            alt={file.file_name}
+                            style={{
+                              width: `${Math.round(zoomLevel * 100)}%`,
+                              height: "auto",
+                              display: "block",
+                              maxWidth: "none",
+                              transition: "width 0.15s ease",
+                            }}
+                            onError={() => setImgErrors(prev => ({ ...prev, [idx]: true }))}
+                          />
+                        </div>
+                      )}
                     </div>
                   </div>
                 )
@@ -1332,4 +1461,3 @@ export default function AdminQrScanPage() {
     </div>
   )
 }
-

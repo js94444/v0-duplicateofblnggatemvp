@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import { type Application, APPLICATION_STATUS_LABELS } from "@/lib/types"
-import { X, Download, FileText, ZoomIn, Loader2, Pencil, Save, XCircle } from "lucide-react"
+import { X, Download, FileText, ZoomIn, Loader2, Pencil, Save, XCircle, RotateCcw } from "lucide-react"
 import { useAdminAuth } from "@/hooks/use-admin-auth"
 
 interface ScanHistoryItem {
@@ -35,8 +35,15 @@ function isImageFile(filename: string, fileType?: string): boolean {
   return false
 }
 
+function isPdfFile(filename: string, fileType?: string): boolean {
+  const ext = filename?.split(".").pop()?.toLowerCase() || ""
+  if (ext === "pdf") return true
+  if (fileType === "application/pdf") return true
+  return false
+}
+
 // 라이트박스 컴포넌트
-function Lightbox({ src, alt, onClose }: { src: string; alt: string; onClose: () => void }) {
+function Lightbox({ src, alt, onClose, kind = "image" }: { src: string; alt: string; onClose: () => void; kind?: "image" | "pdf" }) {
   return (
     <div
       className="fixed inset-0 z-[200] flex items-center justify-center bg-black/90 backdrop-blur-sm"
@@ -44,27 +51,67 @@ function Lightbox({ src, alt, onClose }: { src: string; alt: string; onClose: ()
     >
       <button
         onClick={onClose}
-        className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-all"
+        className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-all z-10"
       >
         <X size={20} />
       </button>
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        src={src}
-        alt={alt}
-        className="max-w-[90vw] max-h-[85vh] object-contain rounded-2xl shadow-2xl"
-        onClick={(e) => e.stopPropagation()}
-      />
+      {kind === "pdf" ? (
+        <iframe
+          src={src}
+          title={alt}
+          className="w-[92vw] h-[90vh] rounded-2xl shadow-2xl bg-white"
+          onClick={(e) => e.stopPropagation()}
+        />
+      ) : (
+        /* eslint-disable-next-line @next/next/no-img-element */
+        <img
+          src={src}
+          alt={alt}
+          className="max-w-[90vw] max-h-[85vh] object-contain rounded-2xl shadow-2xl"
+          onClick={(e) => e.stopPropagation()}
+        />
+      )}
     </div>
   )
 }
 
 // 썸네일 카드
-function FileThumbnail({ file, onLightbox, authToken }: { file: any; onLightbox: (url: string, name: string) => void; authToken?: string | null }) {
+function FileThumbnail({ file, onLightbox, authToken }: { file: any; onLightbox: (url: string, name: string, kind?: "image" | "pdf") => void; authToken?: string | null }) {
   const fileUrl = file.url || file.key
   const isImage = isImageFile(file.filename || "", file.type)
+  const isPdf = isPdfFile(file.filename || "", file.type)
   const tokenParam = authToken ? `?token=${encodeURIComponent(authToken)}` : ""
   const previewUrl = fileUrl ? `/api/files/${encodeURIComponent(fileUrl)}${tokenParam}` : null
+
+  if (isPdf && previewUrl) {
+    return (
+      <div className="group relative flex flex-col rounded-2xl overflow-hidden border border-white/10 bg-black/40 hover:border-amber-500/50 transition-all cursor-pointer w-full sm:w-[200px]">
+        <div
+          className="relative overflow-hidden h-[200px] sm:h-[280px] bg-white"
+          onClick={() => onLightbox(previewUrl, file.filename || "이수증", "pdf")}
+        >
+          <iframe
+            src={`${previewUrl}#toolbar=0&navpanes=0&view=FitH`}
+            title={file.filename || "PDF"}
+            className="w-full h-full pointer-events-none"
+          />
+          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all flex items-center justify-center opacity-0 group-hover:opacity-100">
+            <ZoomIn size={24} className="text-white drop-shadow-lg" />
+          </div>
+        </div>
+        <div className="flex items-center justify-between px-2 py-1.5 bg-black/60 gap-1">
+          <p className="text-[10px] text-white/50 truncate flex-1">{file.filename || "이수증"}</p>
+          <button
+            onClick={(e) => { e.stopPropagation(); if (previewUrl) window.open(previewUrl, "_blank") }}
+            className="flex-shrink-0 text-white/40 hover:text-amber-400 transition-colors"
+            title="다운로드"
+          >
+            <Download size={12} />
+          </button>
+        </div>
+      </div>
+    )
+  }
 
   if (isImage && previewUrl) {
     return (
@@ -123,43 +170,43 @@ function FileThumbnail({ file, onLightbox, authToken }: { file: any; onLightbox:
 }
 
 function PortCertThumbnails({ files, authToken }: { files: any[]; authToken?: string | null }) {
-  const [lightbox, setLightbox] = useState<{ url: string; name: string } | null>(null)
+  const [lightbox, setLightbox] = useState<{ url: string; name: string; kind: "image" | "pdf" } | null>(null)
   if (!files || files.length === 0) return null
   return (
     <>
       <div className="flex flex-col gap-3">
         {files.map((file, idx) => (
-          <FileThumbnail key={idx} file={file} authToken={authToken} onLightbox={(url, name) => setLightbox({ url, name })} />
+          <FileThumbnail key={idx} file={file} authToken={authToken} onLightbox={(url, name, kind = "image") => setLightbox({ url, name, kind })} />
         ))}
       </div>
-      {lightbox && <Lightbox src={lightbox.url} alt={lightbox.name} onClose={() => setLightbox(null)} />}
+      {lightbox && <Lightbox src={lightbox.url} alt={lightbox.name} kind={lightbox.kind} onClose={() => setLightbox(null)} />}
     </>
   )
 }
 
-function AttachmentSection({ title, files }: { title: string; files: any[] }) {
-  const [lightbox, setLightbox] = useState<{ url: string; name: string } | null>(null)
+function AttachmentSection({ title, files, authToken }: { title: string; files: any[]; authToken?: string | null }) {
+  const [lightbox, setLightbox] = useState<{ url: string; name: string; kind: "image" | "pdf" } | null>(null)
   if (!files || files.length === 0) return null
-  const imageFiles = files.filter((f) => isImageFile(f.filename || "", f.type))
-  const docFiles = files.filter((f) => !isImageFile(f.filename || "", f.type))
+  const previewable = files.filter((f) => isImageFile(f.filename || "", f.type) || isPdfFile(f.filename || "", f.type))
+  const otherFiles = files.filter((f) => !isImageFile(f.filename || "", f.type) && !isPdfFile(f.filename || "", f.type))
   return (
     <div className="pt-6 border-t border-white/10 space-y-3">
       <p className="text-xs font-black text-amber-500/80 uppercase tracking-widest">{title}</p>
-      {imageFiles.length > 0 && (
+      {previewable.length > 0 && (
         <div className="flex flex-wrap gap-3">
-          {imageFiles.map((file, idx) => (
-            <FileThumbnail key={idx} file={file} authToken={token} onLightbox={(url, name) => setLightbox({ url, name })} />
+          {previewable.map((file, idx) => (
+            <FileThumbnail key={idx} file={file} authToken={authToken} onLightbox={(url, name, kind = "image") => setLightbox({ url, name, kind })} />
           ))}
         </div>
       )}
-      {docFiles.length > 0 && (
+      {otherFiles.length > 0 && (
         <div className="grid grid-cols-1 gap-2 mt-2">
-          {docFiles.map((file, idx) => (
-            <FileThumbnail key={idx} file={file} onLightbox={() => { }} />
+          {otherFiles.map((file, idx) => (
+            <FileThumbnail key={idx} file={file} authToken={authToken} onLightbox={() => { }} />
           ))}
         </div>
       )}
-      {lightbox && <Lightbox src={lightbox.url} alt={lightbox.name} onClose={() => setLightbox(null)} />}
+      {lightbox && <Lightbox src={lightbox.url} alt={lightbox.name} kind={lightbox.kind} onClose={() => setLightbox(null)} />}
     </div>
   )
 }
@@ -300,6 +347,7 @@ export function ApplicationDetailModal({ application, open, loading = false, sca
   const [editData, setEditData] = useState<Record<string, any>>({})
   const [isSaving, setIsSaving] = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
+  const [isCancellingApproval, setIsCancellingApproval] = useState(false)
 
   // 수정 모드 진입 시 현재 데이터로 초기화
   const startEditing = () => {
@@ -361,12 +409,44 @@ export function ApplicationDetailModal({ application, open, loading = false, sca
     }
   }
 
+  const handleCancelApproval = async () => {
+    if (!app?.id) return
+    const confirmed = window.confirm(
+      `"${app.visitor_name}" 방문자의 승인을 취소하시겠습니까?\n\n` +
+      "• 기존 QR코드가 무효화됩니다.\n" +
+      "• 신청자와 담당자에게 취소 안내 문자가 발송됩니다.\n" +
+      "• 취소 후 접수 대기 상태로 변경되며 재승인 또는 반려 처리가 가능합니다."
+    )
+    if (!confirmed) return
+
+    setIsCancellingApproval(true)
+    setSaveError(null)
+    try {
+      const res = await fetch("/api/admin/requests/approve", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ id: app.id, action: "cancel" }),
+      })
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}))
+        throw new Error(err.message || "승인 취소 실패")
+      }
+      onUpdated?.()
+      onClose()
+    } catch (e) {
+      setSaveError(e instanceof Error ? e.message : "승인 취소 중 오류가 발생했습니다.")
+    } finally {
+      setIsCancellingApproval(false)
+    }
+  }
+
   // 모달 닫힐 때 수정 모드 해제
   useEffect(() => {
     if (!open) {
       setIsEditing(false)
       setEditData({})
       setSaveError(null)
+      setIsCancellingApproval(false)
     }
   }, [open])
 
@@ -416,6 +496,19 @@ export function ApplicationDetailModal({ application, open, loading = false, sca
               <p className="text-xs sm:text-sm font-mono text-white/40 truncate">RECEIPT: {app?.receipt || "-"}</p>
             </div>
             <div className="flex items-center gap-2 sm:gap-4 shrink-0">
+              {/* 승인 취소 버튼 (APPROVED 상태일 때만) */}
+              {canEdit && !isLoading && app && !isEditing && app.status?.toUpperCase() === "APPROVED" && (
+                <Button
+                  onClick={handleCancelApproval}
+                  disabled={isCancellingApproval}
+                  className="bg-red-500/20 hover:bg-red-500/30 border border-red-500/50 text-red-300 font-bold rounded-xl text-xs sm:text-sm px-3 sm:px-4 py-2"
+                >
+                  {isCancellingApproval
+                    ? <Loader2 size={14} className="mr-1.5 animate-spin" />
+                    : <RotateCcw size={14} className="mr-1.5" />}
+                  승인 취소
+                </Button>
+              )}
               {/* 수정/저장/취소 버튼 */}
               {canEdit && !isLoading && app && !isEditing && (
                 <Button
@@ -534,7 +627,7 @@ export function ApplicationDetailModal({ application, open, loading = false, sca
                       </div>
                     )}
 
-                    <AttachmentSection title="첨부파일" files={generalFiles} />
+                    <AttachmentSection title="첨부파일" files={generalFiles} authToken={token} />
                   </div>
 
                   {applicantPortCerts.length > 0 && (

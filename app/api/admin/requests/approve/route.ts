@@ -4,7 +4,7 @@ import { ApplicationStatus } from "@/lib/types"
 import { sendEmail } from "@/lib/email/sender"
 import { getApprovalEmailTemplate, getRejectionEmailTemplate } from "@/lib/email/templates"
 import { sendSms } from "@/lib/services/solapi"
-import { getApprovalSMSMessage, getRejectionSMSMessage } from "@/lib/messages/sms-templates"
+import { getApprovalSMSMessage, getRejectionSMSMessage, getCancelApprovalSMSMessage } from "@/lib/messages/sms-templates"
 import { getAuthenticatedAdmin, isAuthError } from "@/lib/auth/require-admin"
 
 export const runtime = 'nodejs'
@@ -37,6 +37,39 @@ export async function POST(request: NextRequest) {
         { status: 400 },
       )
     }
+
+    // ── 승인 취소 처리 ────────────────────────────────────────────────────
+    if (action === "cancel") {
+      // 1) 상태를 PENDING으로 복귀
+      const cancelledApp = await AzureSqlDB.updateApplicationStatus(id, ApplicationStatus.PENDING, undefined)
+      if (!cancelledApp) {
+        return NextResponse.json({ code: "NOT_FOUND", message: "해당 신청을 찾을 수 없습니다" }, { status: 404 })
+      }
+
+      // 2) QR pass 무효화 (REVOKED)
+      await AzureSqlDB.revokePassesByApplicationId(id)
+      console.log("[v0] Revoked passes for application:", id)
+
+      // 3) SMS 발송 (신청자 + 담당자)
+      try {
+        const visitorPhone = cancelledApp.visitor_phone || (cancelledApp as any).contactPhone
+        const contactPhone = (cancelledApp as any).contact_mobile || (cancelledApp as any).contact_phone
+        if (visitorPhone) {
+          await sendSms(visitorPhone, getCancelApprovalSMSMessage(cancelledApp, 'applicant')).catch(() => {})
+        }
+        if (contactPhone) {
+          await sendSms(contactPhone, getCancelApprovalSMSMessage(cancelledApp, 'contact')).catch(() => {})
+        }
+      } catch (smsErr) {
+        console.error("[v0] 승인취소 SMS 발송 실패:", smsErr)
+      }
+
+      return NextResponse.json({
+        message: "승인이 취소되었습니다. 신청이 접수 대기 상태로 변경됩니다.",
+        application: cancelledApp,
+      })
+    }
+    // ────────────────────────────────────────────────────────────────────
 
     const status = action === "approve" ? ApplicationStatus.APPROVED : ApplicationStatus.REJECTED
     console.log("[v0] Updating application status to:", status)
