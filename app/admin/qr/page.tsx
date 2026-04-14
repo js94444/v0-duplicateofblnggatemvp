@@ -204,22 +204,7 @@ export default function AdminQrScanPage() {
       if (invalid.length > 0) return
     }
 
-    // === B그룹: 부두에서 정문 상태 검증 ===
-    if (activeTab === "pier" && mainGateData.length > 0) {
-      for (const row of targetRows) {
-        const mainStatus = getMainGateStatus(row.pass_id)
-        if (mainStatus !== 'IN') {
-          const name = row.visitor_name || "선택된 방문자"
-          if (mainStatus === 'OUT') {
-            alert(`${name}: 정문에서 체크아웃된 상태입니다.\n부두 출입 기능이 비활성화됩니다.`)
-          } else {
-            alert(`${name}: 정문에서 체크인되지 않았습니다.\n정문 체크인 후 부두 출입이 가능합니다.`)
-          }
-          return
-        }
-      }
-    }
-
+    // 부두에서는 정문 통과 여부와 무관하게 체크인/아웃 가능 (독립 운영)
     setManualActionLoading(true)
     try {
       // 체크인: entry_scan_id로 UPDATE, 체크아웃: exit_scan_id로 UPDATE
@@ -1147,8 +1132,8 @@ export default function AdminQrScanPage() {
                     <TableRow className="border-white/10 hover:bg-transparent">
                       <TableHead className="text-white/70 w-10">
                         <Checkbox
-                          checked={!isManager && filteredRows.filter(r => getMainGateStatus(r.pass_id) === 'IN').length > 0 && filteredRows.filter(r => getMainGateStatus(r.pass_id) === 'IN').every(r => selectedRows.has(`${r.pass_id}-${r.cycleNum ?? 0}`))}
-                          onCheckedChange={() => !isManager && toggleAllRows(filteredRows, r => getMainGateStatus(r.pass_id) === 'IN')}
+                          checked={!isManager && filteredRows.length > 0 && filteredRows.every(r => selectedRows.has(`${r.pass_id}-${r.cycleNum ?? 0}`))}
+                          onCheckedChange={() => !isManager && toggleAllRows(filteredRows)}
                           disabled={isManager}
                           className="border-white/30"
                         />
@@ -1172,17 +1157,16 @@ export default function AdminQrScanPage() {
                       const statusStyle = getStatusStyle(row)
                       const rowKey = `${row.pass_id}-${row.cycleNum ?? 0}`
                       const mainStatus = getMainGateStatus(row.pass_id)
-                      const pierDisabled = mainStatus !== 'IN'
                       return (
                         <TableRow
                           key={`${row.pass_id}-${row.cycleNum || 0}`}
-                          className={`border-white/5 hover:bg-white/5 transition-colors ${pierDisabled ? "opacity-40" : ""} ${statusStyle.bg} ${statusStyle.bar} ${!isManager && selectedRows.has(rowKey) ? "bg-amber-500/5" : ""}`}
+                          className={`border-white/5 hover:bg-white/5 transition-colors ${statusStyle.bg} ${statusStyle.bar} ${!isManager && selectedRows.has(rowKey) ? "bg-amber-500/5" : ""}`}
                         >
                           <TableCell className="w-10">
                             <Checkbox
                               checked={!isManager && selectedRows.has(rowKey)}
                               onCheckedChange={() => !isManager && toggleRowSelection(rowKey)}
-                              disabled={isManager || pierDisabled}
+                              disabled={isManager}
                               className="border-white/30"
                             />
                           </TableCell>
@@ -1205,8 +1189,8 @@ export default function AdminQrScanPage() {
                                   </span>
                                 )}
                               </div>
-                              {pierDisabled && (
-                                <span className="text-[10px] text-red-400/70">
+                              {mainStatus !== 'IN' && (
+                                <span className="text-[10px] text-white/40">
                                   {mainStatus === 'OUT' ? '정문 퇴장' : '정문 미입장'}
                                 </span>
                               )}
