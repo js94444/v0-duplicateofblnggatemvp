@@ -46,6 +46,7 @@ export async function GET(request: NextRequest) {
       pageSize,
       totalPages: Math.ceil(result.total / pageSize),
       data: result.data,
+      typeCounts: result.typeCounts,
     }, {
       headers: {
         'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',

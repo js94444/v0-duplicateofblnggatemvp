@@ -20,7 +20,7 @@ import {
   APPLICATION_STATUS_LABELS,
 } from "@/lib/types"
 import { useToast } from "@/hooks/use-toast"
-import { RefreshCw, ChevronDown, ChevronUp } from "lucide-react"
+import { RefreshCw, ChevronDown, ChevronUp, X } from "lucide-react"
 import { useAdminAuth } from "@/hooks/use-admin-auth"
 
 export default function AdminRequestsPage() {
@@ -66,6 +66,30 @@ export default function AdminRequestsPage() {
   const handleSearchSubmit = () => {
     setSearchQuery(searchInput.trim())
   }
+
+  // 모든 필터/검색 초기화
+  const handleResetFilters = () => {
+    setSearchInput("")
+    setSearchQuery("")
+    setStatusFilter("ALL")
+    setAreaFilter("ALL")
+    setDateFrom("")
+    setDateTo("")
+    setActiveTab("ALL")
+    setSortField("")
+    setSortDirection("desc")
+  }
+
+  // 필터가 하나라도 활성화되어 있는지
+  const hasActiveFilters = !!(
+    searchQuery ||
+    statusFilter !== "ALL" ||
+    areaFilter !== "ALL" ||
+    dateFrom ||
+    dateTo ||
+    activeTab !== "ALL" ||
+    sortField
+  )
 
   const swrKey = token ? (() => {
     const params = new URLSearchParams()
@@ -330,16 +354,40 @@ export default function AdminRequestsPage() {
         {/* Filters — 모바일에서는 접이식 */}
         <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl sm:rounded-[40px] p-4 sm:p-8 shadow-2xl">
           {/* 모바일: 접이식 헤더 */}
-          <button
-            type="button"
-            onClick={() => setFilterOpen(!filterOpen)}
-            className="flex items-center justify-between w-full md:hidden"
-          >
-            <h3 className="text-lg font-black text-white">🔍 필터 및 검색</h3>
-            {filterOpen ? <ChevronUp size={20} className="text-white/40" /> : <ChevronDown size={20} className="text-white/40" />}
-          </button>
+          <div className="flex items-center justify-between w-full md:hidden">
+            <button
+              type="button"
+              onClick={() => setFilterOpen(!filterOpen)}
+              className="flex items-center gap-2 flex-1"
+            >
+              <h3 className="text-lg font-black text-white">🔍 필터 및 검색</h3>
+              {filterOpen ? <ChevronUp size={20} className="text-white/40" /> : <ChevronDown size={20} className="text-white/40" />}
+            </button>
+            {hasActiveFilters && (
+              <button
+                type="button"
+                onClick={handleResetFilters}
+                className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-bold text-white/70 hover:text-white bg-white/5 hover:bg-white/10 border border-white/10 transition-colors ml-2"
+              >
+                <X size={12} />
+                초기화
+              </button>
+            )}
+          </div>
           {/* 데스크탑: 항상 보임 */}
-          <h3 className="text-xl font-black text-white mb-6 hidden md:block">🔍 필터 및 검색</h3>
+          <div className="hidden md:flex items-center justify-between mb-6">
+            <h3 className="text-xl font-black text-white">🔍 필터 및 검색</h3>
+            {hasActiveFilters && (
+              <button
+                type="button"
+                onClick={handleResetFilters}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold text-white/70 hover:text-white bg-white/5 hover:bg-white/10 border border-white/10 transition-colors"
+              >
+                <X size={14} />
+                초기화
+              </button>
+            )}
+          </div>
 
           {/* 모바일: 검색만 항상 노출 */}
           <div className="mt-3 md:hidden">
@@ -405,11 +453,11 @@ export default function AdminRequestsPage() {
               </div>
               <div className="space-y-2">
                 <label className="text-sm font-bold text-white/60">시작일</label>
-                <Input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} className="bg-white/5 border-white/10 text-white h-11 rounded-xl [color-scheme:dark]" />
+                <Input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} className="bg-white/5 border-white/10 text-white h-11 rounded-xl" />
               </div>
               <div className="space-y-2">
                 <label className="text-sm font-bold text-white/60">종료일</label>
-                <Input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} className="bg-white/5 border-white/10 text-white h-11 rounded-xl [color-scheme:dark]" />
+                <Input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} className="bg-white/5 border-white/10 text-white h-11 rounded-xl" />
               </div>
               {/* 데스크탑에서만 검색 표시 (모바일은 위에서 이미 노출) */}
               <div className="space-y-2 hidden md:block">
