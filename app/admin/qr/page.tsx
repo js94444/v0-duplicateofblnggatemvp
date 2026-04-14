@@ -884,12 +884,12 @@ export default function AdminQrScanPage() {
                 <Table>
                   <TableHeader className="bg-white/5">
                     <TableRow className="border-white/10 hover:bg-transparent">
-                      <TableHead className="text-white/70 w-10">
+                      <TableHead className="text-white/70 w-12">
                         <Checkbox
                           checked={!isManager && filteredRows.length > 0 && filteredRows.every(r => selectedRows.has(`${r.pass_id}-${r.cycleNum ?? 0}`))}
                           onCheckedChange={() => !isManager && toggleAllRows(filteredRows)}
                           disabled={isManager}
-                          className="border-white/30"
+                          className="h-6 w-6 border-2 border-white/60 data-[state=checked]:bg-amber-500 data-[state=checked]:border-amber-500 data-[state=checked]:text-black [&_svg]:size-5"
                         />
                       </TableHead>
                       <TableHead className="text-white/70 min-w-[90px] cursor-pointer select-none" onClick={() => handleSort("visitor_name")}>방문자<SortIcon col="visitor_name" /></TableHead>
@@ -915,12 +915,12 @@ export default function AdminQrScanPage() {
                           key={`${row.pass_id}-${row.cycleNum || 0}`}
                           className={`border-white/5 hover:bg-white/5 transition-colors ${statusStyle.bg} ${statusStyle.bar} ${!isManager && selectedRows.has(rowKey) ? "bg-amber-500/5" : ""}`}
                         >
-                          <TableCell className="w-10">
+                          <TableCell className="w-12">
                             <Checkbox
                               checked={!isManager && selectedRows.has(rowKey)}
                               onCheckedChange={() => !isManager && toggleRowSelection(rowKey)}
                               disabled={isManager}
-                              className="border-white/30"
+                              className="h-6 w-6 border-2 border-white/60 data-[state=checked]:bg-amber-500 data-[state=checked]:border-amber-500 data-[state=checked]:text-black [&_svg]:size-5"
                             />
                           </TableCell>
                           <TableCell
@@ -1130,12 +1130,12 @@ export default function AdminQrScanPage() {
                 <Table>
                   <TableHeader className="bg-white/5">
                     <TableRow className="border-white/10 hover:bg-transparent">
-                      <TableHead className="text-white/70 w-10">
+                      <TableHead className="text-white/70 w-12">
                         <Checkbox
                           checked={!isManager && filteredRows.length > 0 && filteredRows.every(r => selectedRows.has(`${r.pass_id}-${r.cycleNum ?? 0}`))}
                           onCheckedChange={() => !isManager && toggleAllRows(filteredRows)}
                           disabled={isManager}
-                          className="border-white/30"
+                          className="h-6 w-6 border-2 border-white/60 data-[state=checked]:bg-amber-500 data-[state=checked]:border-amber-500 data-[state=checked]:text-black [&_svg]:size-5"
                         />
                       </TableHead>
                       <TableHead className="text-white/70 min-w-[90px] cursor-pointer select-none" onClick={() => handleSort("visitor_name")}>방문자<SortIcon col="visitor_name" /></TableHead>
@@ -1162,12 +1162,12 @@ export default function AdminQrScanPage() {
                           key={`${row.pass_id}-${row.cycleNum || 0}`}
                           className={`border-white/5 hover:bg-white/5 transition-colors ${statusStyle.bg} ${statusStyle.bar} ${!isManager && selectedRows.has(rowKey) ? "bg-amber-500/5" : ""}`}
                         >
-                          <TableCell className="w-10">
+                          <TableCell className="w-12">
                             <Checkbox
                               checked={!isManager && selectedRows.has(rowKey)}
                               onCheckedChange={() => !isManager && toggleRowSelection(rowKey)}
                               disabled={isManager}
-                              className="border-white/30"
+                              className="h-6 w-6 border-2 border-white/60 data-[state=checked]:bg-amber-500 data-[state=checked]:border-amber-500 data-[state=checked]:text-black [&_svg]:size-5"
                             />
                           </TableCell>
                           <TableCell
