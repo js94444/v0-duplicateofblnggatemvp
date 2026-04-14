@@ -56,19 +56,19 @@ export function PublicHeader({ initialScrolled = false }: PublicHeaderProps) {
             </Link>
           ))}
 
-          {/* 매뉴얼 — 한글 모드면 body의 0.04em 상속, 영문은 기본값 */}
+          {/* 이용안내 */}
           <Link
             href="/manual"
-            className="text-white/60 hover:text-amber-500 transition-colors font-bold"
+            className="text-white/70 hover:text-white transition-colors font-normal"
             style={{ fontSize: "15px" }}
           >
-            {lang === "ko" ? "매뉴얼" : "Manual"}
+            {lang === "ko" ? "이용안내" : "User Guide"}
           </Link>
 
           {/* 게시판 */}
           <Link
             href="/board"
-            className="text-white/60 hover:text-amber-500 transition-colors font-bold"
+            className="text-white/70 hover:text-white transition-colors font-normal"
             style={{ fontSize: "15px" }}
           >
             {lang === "ko" ? "게시판" : "Board"}
@@ -78,17 +78,17 @@ export function PublicHeader({ initialScrolled = false }: PublicHeaderProps) {
           <button
             type="button"
             onClick={() => setLang(lang === "ko" ? "en" : "ko")}
-            className="text-white/60 hover:text-amber-500 transition-colors font-bold"
+            className="text-white/70 hover:text-white transition-colors font-normal"
             style={{ fontSize: "15px", letterSpacing: "normal" }}
             aria-label="언어 전환"
           >
             {lang === "ko" ? "ENG" : "KOR"}
           </button>
 
-          {/* Admin — 항상 영문이므로 기본 자간 */}
+          {/* Admin — CTA 역할로 두께 유지 */}
           <Link
             href="/admin/login"
-            className="text-white/60 hover:text-amber-500 transition-colors font-bold border border-white/20 hover:border-amber-500/50 hover:bg-amber-500/10 px-5 py-2 rounded-full"
+            className="text-white hover:text-amber-500 transition-colors font-semibold border border-white/20 hover:border-amber-500/50 hover:bg-amber-500/10 px-5 py-2 rounded-full"
             style={{ fontSize: "15px", letterSpacing: "normal" }}
           >
             ADMIN
@@ -143,22 +143,22 @@ export function PublicHeader({ initialScrolled = false }: PublicHeaderProps) {
               </Link>
             ))}
 
-            {/* 매뉴얼 */}
+            {/* 이용안내 */}
             <Link
               href="/manual"
               onClick={() => setIsMenuOpen(false)}
-              className="text-white/60 hover:text-amber-500 transition-colors mt-2 font-bold"
-              style={{ fontSize: "15px", letterSpacing: lang === "ko" ? "-0.01em" : "0.04em" }}
+              className="text-white/70 hover:text-white transition-colors mt-2 font-normal"
+              style={{ fontSize: "15px" }}
             >
-              {lang === "ko" ? "매뉴얼" : "Manual"}
+              {lang === "ko" ? "이용안내" : "User Guide"}
             </Link>
 
             {/* 게시판 */}
             <Link
               href="/board"
               onClick={() => setIsMenuOpen(false)}
-              className="text-white/60 hover:text-amber-500 transition-colors mt-2 font-bold"
-              style={{ fontSize: "15px", letterSpacing: lang === "ko" ? "-0.01em" : "0.04em" }}
+              className="text-white/70 hover:text-white transition-colors mt-2 font-normal"
+              style={{ fontSize: "15px" }}
             >
               {lang === "ko" ? "게시판" : "Board"}
             </Link>
@@ -169,8 +169,8 @@ export function PublicHeader({ initialScrolled = false }: PublicHeaderProps) {
                 setLang(lang === "ko" ? "en" : "ko");
                 setIsMenuOpen(false);
               }}
-              className="text-white/60 hover:text-amber-500 transition-colors mt-2 font-bold text-left"
-              style={{ fontSize: "15px", letterSpacing: "0.04em" }}
+              className="text-white/70 hover:text-white transition-colors mt-2 font-normal text-left"
+              style={{ fontSize: "15px", letterSpacing: "normal" }}
             >
               {lang === "ko" ? "ENG" : "KOR"}
             </button>
@@ -178,8 +178,8 @@ export function PublicHeader({ initialScrolled = false }: PublicHeaderProps) {
             <Link
               href="/admin/login"
               onClick={() => setIsMenuOpen(false)}
-              className="text-white/60 hover:text-amber-500 transition-colors mt-4 font-bold"
-              style={{ fontSize: "15px", letterSpacing: "0.04em" }}
+              className="text-white hover:text-amber-500 transition-colors mt-4 font-semibold"
+              style={{ fontSize: "15px", letterSpacing: "normal" }}
             >
               ADMIN
             </Link>
