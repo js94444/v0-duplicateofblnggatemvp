@@ -56,7 +56,11 @@ export default function HomePage() {
                 서비스를 제공합니다.
               </>
             ) : (
-              "Boryeong LNG Terminal provides a visitor reservation service for safe and efficient access."
+              <>
+                Boryeong LNG Terminal provides a visitor reservation
+                <br />
+                service for safe and efficient access.
+              </>
             )}
           </p>
         </div>
