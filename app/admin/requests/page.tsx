@@ -42,7 +42,8 @@ export default function AdminRequestsPage() {
   const [activeTab, setActiveTab] = useState<ApplicationType | "ALL">("ALL")
   const [statusFilter, setStatusFilter] = useState<ApplicationStatus | "ALL">("ALL")
   const [areaFilter, setAreaFilter] = useState<AccessArea | "ALL">("ALL")
-  const [searchQuery, setSearchQuery] = useState("")
+  const [searchQuery, setSearchQuery] = useState("")  // 실제 서버로 전송되는 확정 검색어
+  const [searchInput, setSearchInput] = useState("")  // 입력창에 타이핑 중인 값
   const [dateFrom, setDateFrom] = useState("")
   const [dateTo, setDateTo] = useState("")
 
@@ -61,18 +62,16 @@ export default function AdminRequestsPage() {
   const [serverTotalPages, setServerTotalPages] = useState(1)
   const [serverTypeCounts, setServerTypeCounts] = useState<{ ALL: number; PORT_ACCESS: number; VISIT_R3: number; GROUP_VISIT: number }>({ ALL: 0, PORT_ACCESS: 0, VISIT_R3: 0, GROUP_VISIT: 0 })
 
-  // 검색어 debounce (300ms) - 한 글자씩 API 호출 방지
-  const [debouncedSearch, setDebouncedSearch] = useState("")
-  useEffect(() => {
-    const t = setTimeout(() => setDebouncedSearch(searchQuery), 300)
-    return () => clearTimeout(t)
-  }, [searchQuery])
+  // 검색은 Enter/버튼 클릭 시에만 searchQuery에 반영
+  const handleSearchSubmit = () => {
+    setSearchQuery(searchInput.trim())
+  }
 
   const swrKey = token ? (() => {
     const params = new URLSearchParams()
     params.set('page', String(currentPage))
     params.set('pageSize', String(pageSize))
-    if (debouncedSearch) params.set('search', debouncedSearch)
+    if (searchQuery) params.set('search', searchQuery)
     if (statusFilter !== 'ALL') params.set('status', statusFilter)
     if (activeTab !== 'ALL') params.set('type', activeTab)
     if (areaFilter !== 'ALL') params.set('area', areaFilter)
@@ -119,7 +118,7 @@ export default function AdminRequestsPage() {
   // 필터/탭/검색 변경 시에만 1페이지로 리셋 (currentPage 변경 시는 제외)
   useEffect(() => {
     setCurrentPage(1)
-  }, [activeTab, statusFilter, areaFilter, debouncedSearch, dateFrom, dateTo, pageSize, sortField, sortDirection])
+  }, [activeTab, statusFilter, areaFilter, searchQuery, dateFrom, dateTo, pageSize, sortField, sortDirection])
 
   useEffect(() => {
     if (applications.length > 0 && token) {
@@ -345,13 +344,21 @@ export default function AdminRequestsPage() {
           {/* 모바일: 검색만 항상 노출 */}
           <div className="mt-3 md:hidden">
             <div className="relative">
-              <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white/40">🔍</span>
               <Input
-                placeholder="접수번호, 담당자명, 신청자명"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 bg-white/5 border-white/10 text-white placeholder:text-white/30 h-11 rounded-xl"
+                placeholder="접수번호, 담당자명, 신청자명 (Enter로 검색)"
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
+                onKeyDown={(e) => { if (e.key === "Enter") handleSearchSubmit() }}
+                className="pr-12 bg-white/5 border-white/10 text-white placeholder:text-white/30 h-11 rounded-xl"
               />
+              <button
+                type="button"
+                onClick={handleSearchSubmit}
+                aria-label="검색"
+                className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-lg flex items-center justify-center text-white/60 hover:text-amber-500 hover:bg-white/10 transition-colors"
+              >
+                🔍
+              </button>
             </div>
           </div>
 
@@ -406,15 +413,23 @@ export default function AdminRequestsPage() {
               </div>
               {/* 데스크탑에서만 검색 표시 (모바일은 위에서 이미 노출) */}
               <div className="space-y-2 hidden md:block">
-                <label className="text-sm font-bold text-white/60">검색</label>
+                <label className="text-sm font-bold text-white/60">검색 (Enter/돋보기 클릭)</label>
                 <div className="relative">
-                  <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white/40">🔍</span>
                   <Input
                     placeholder="접수번호, 담당자명 등"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-10 bg-white/5 border-white/10 text-white placeholder:text-white/30 h-11 rounded-xl"
+                    value={searchInput}
+                    onChange={(e) => setSearchInput(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === "Enter") handleSearchSubmit() }}
+                    className="pr-12 bg-white/5 border-white/10 text-white placeholder:text-white/30 h-11 rounded-xl"
                   />
+                  <button
+                    type="button"
+                    onClick={handleSearchSubmit}
+                    aria-label="검색"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-lg flex items-center justify-center text-white/60 hover:text-amber-500 hover:bg-white/10 transition-colors"
+                  >
+                    🔍
+                  </button>
                 </div>
               </div>
             </div>
