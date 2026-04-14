@@ -56,11 +56,11 @@ export function PublicHeader({ initialScrolled = false }: PublicHeaderProps) {
             </Link>
           ))}
 
-          {/* 메뉴얼 */}
+          {/* 매뉴얼 — 한글 모드면 body의 0.04em 상속, 영문은 기본값 */}
           <Link
             href="/manual"
             className="text-white/60 hover:text-amber-500 transition-colors font-bold"
-            style={{ fontSize: "15px", letterSpacing: lang === "ko" ? "-0.01em" : "0.04em" }}
+            style={{ fontSize: "15px" }}
           >
             {lang === "ko" ? "매뉴얼" : "Manual"}
           </Link>
@@ -69,27 +69,27 @@ export function PublicHeader({ initialScrolled = false }: PublicHeaderProps) {
           <Link
             href="/board"
             className="text-white/60 hover:text-amber-500 transition-colors font-bold"
-            style={{ fontSize: "15px", letterSpacing: lang === "ko" ? "-0.01em" : "0.04em" }}
+            style={{ fontSize: "15px" }}
           >
             {lang === "ko" ? "게시판" : "Board"}
           </Link>
 
-          {/* 한영 전환 */}
+          {/* 한영 전환 — 항상 영문이므로 기본 자간 */}
           <button
             type="button"
-            onClick={() => setLang((prev) => (prev === "ko" ? "en" : "ko"))}
+            onClick={() => setLang(lang === "ko" ? "en" : "ko")}
             className="text-white/60 hover:text-amber-500 transition-colors font-bold"
-            style={{ fontSize: "15px", letterSpacing: "0.04em" }}
+            style={{ fontSize: "15px", letterSpacing: "normal" }}
             aria-label="언어 전환"
           >
             {lang === "ko" ? "ENG" : "KOR"}
           </button>
 
-          {/* Admin */}
+          {/* Admin — 항상 영문이므로 기본 자간 */}
           <Link
             href="/admin/login"
             className="text-white/60 hover:text-amber-500 transition-colors font-bold border border-white/20 hover:border-amber-500/50 hover:bg-amber-500/10 px-5 py-2 rounded-full"
-            style={{ fontSize: "15px", letterSpacing: "0.04em" }}
+            style={{ fontSize: "15px", letterSpacing: "normal" }}
           >
             ADMIN
           </Link>
@@ -166,7 +166,7 @@ export function PublicHeader({ initialScrolled = false }: PublicHeaderProps) {
             <button
               type="button"
               onClick={() => {
-                setLang((prev) => (prev === "ko" ? "en" : "ko"));
+                setLang(lang === "ko" ? "en" : "ko");
                 setIsMenuOpen(false);
               }}
               className="text-white/60 hover:text-amber-500 transition-colors mt-2 font-bold text-left"

@@ -7,7 +7,7 @@ import { PublicFooter } from "@/components/public/public-footer"
 import { useLang } from "@/lib/language-context"
 
 export default function HomePage() {
-  const { t } = useLang()
+  const { t, lang } = useLang()
 
   const menuItems = [
     { title: t("방문신청", "Visit Apply"), sub: "New Visit", icon: <FileText size={24} />, href: "/apply/visit" },
@@ -44,13 +44,18 @@ export default function HomePage() {
               {t("방문객 예약 시스템", "Visitor Reservation System")}
             </span>
           </div>
-          <h1 className="text-4xl md:text-6xl font-black mb-6 leading-[1.1] tracking-tight">
+          <h1 className="text-4xl md:text-6xl font-black mb-6 leading-[1.1]" style={{ letterSpacing: "normal" }}>
             Value No.1,<br />
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-white to-white/40">Energy Global Partnership</span>
           </h1>
           <p className="text-white text-base md:text-lg max-w-md font-medium leading-relaxed drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)]">
-            {t(
-              "보령 LNG 터미널은 안전하고 신속한 출입을 위해 방문 예약 서비스를 제공합니다.",
+            {lang === "ko" ? (
+              <>
+                보령 LNG 터미널은 안전하고 신속한 출입을 위해 방문 예약
+                <br />
+                서비스를 제공합니다.
+              </>
+            ) : (
               "Boryeong LNG Terminal provides a visitor reservation service for safe and efficient access."
             )}
           </p>

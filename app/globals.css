@@ -135,6 +135,11 @@
     @apply bg-background text-foreground;
   }
 
+  /* 한글 모드일 때 기본 자간 0.04em 적용 (영문 모드는 브라우저 기본값 유지) */
+  html:lang(ko) body {
+    letter-spacing: 0.04em;
+  }
+
   /* White calendar icon for date inputs in admin pages */
   input[type="date"]::-webkit-calendar-picker-indicator {
     filter: invert(1);

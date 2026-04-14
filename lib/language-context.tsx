@@ -29,6 +29,11 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     }
   }, [])
 
+  // <html lang="..."> 동기화 → globals.css의 :lang(ko) 셀렉터 활용
+  useEffect(() => {
+    document.documentElement.lang = lang
+  }, [lang])
+
   const setLang = (newLang: Lang) => {
     setLangState(newLang)
     localStorage.setItem(STORAGE_KEY, newLang)
