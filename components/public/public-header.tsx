@@ -3,8 +3,7 @@
 import { useState, useEffect } from "react"
 import Link from "next/link"
 import Image from "next/image"
-import { Button } from "@/components/ui/button"
-import { UserCircle, Menu, X, Globe, BookOpen, MessageSquare } from "lucide-react"
+import { Menu, X } from "lucide-react"
 import { useLang } from "@/lib/language-context"
 
 interface PublicHeaderProps {
@@ -45,67 +44,55 @@ export function PublicHeader({ initialScrolled = false }: PublicHeaderProps) {
         </Link>
 
         {/* Desktop Nav */}
-        <div className="hidden md:flex items-center gap-8 uppercase text-white/70">
+        <div className="hidden md:flex items-center text-white/70" style={{ gap: "24px" }}>
           {navLinks.map((link) => (
             <Link
               key={link.label}
               href={link.href}
-              className={`transition-colors hover:text-amber-500 ${lang === "ko"
-                  ? "text-[14px] font-extrabold tracking-wider" // 한글: 폰트 두께와 크기 동시 강화
-                  : "text-[13px] font-bold tracking-widest"
-                }`}
+              className="transition-colors hover:text-amber-500 font-bold"
+              style={{ fontSize: "15px", letterSpacing: "0.04em" }}
             >
               {link.label}
             </Link>
           ))}
 
-          {/* 메뉴얼 버튼 */}
+          {/* 메뉴얼 */}
           <Link
             href="/manual"
-            className="flex items-center gap-1.5 text-white/60 hover:text-amber-500 transition-colors"
+            className="text-white/60 hover:text-amber-500 transition-colors font-bold"
+            style={{ fontSize: "15px", letterSpacing: lang === "ko" ? "-0.01em" : "0.04em" }}
           >
-            <BookOpen size={14} />
-            <span className="text-[12px] font-extrabold tracking-[0.15em]">
-              {lang === "ko" ? "메뉴얼" : "Manual"}
-            </span>
+            {lang === "ko" ? "매뉴얼" : "Manual"}
           </Link>
 
-          {/* 게시판 버튼 */}
+          {/* 게시판 */}
           <Link
             href="/board"
-            className="flex items-center gap-1.5 text-white/60 hover:text-amber-500 transition-colors"
+            className="text-white/60 hover:text-amber-500 transition-colors font-bold"
+            style={{ fontSize: "15px", letterSpacing: lang === "ko" ? "-0.01em" : "0.04em" }}
           >
-            <MessageSquare size={14} />
-            <span className="text-[12px] font-extrabold tracking-[0.15em]">
-              {lang === "ko" ? "게시판" : "Board"}
-            </span>
+            {lang === "ko" ? "게시판" : "Board"}
           </Link>
 
-          {/* 한영 전환 버튼 */}
+          {/* 한영 전환 */}
           <button
             type="button"
             onClick={() => setLang((prev) => (prev === "ko" ? "en" : "ko"))}
-            className="flex items-center gap-1.5 text-white/60 hover:text-amber-500 transition-colors"
+            className="text-white/60 hover:text-amber-500 transition-colors font-bold"
+            style={{ fontSize: "15px", letterSpacing: "0.04em" }}
             aria-label="언어 전환"
           >
-            <Globe size={14} />
-            <span className="text-[12px] font-extrabold tracking-[0.15em]">
-              {lang === "ko" ? "ENG" : "KOR"}
-            </span>
+            {lang === "ko" ? "ENG" : "KOR"}
           </button>
 
-          {/* Admin 버튼 */}
-          <Button
-            variant="ghost"
-            size="sm"
-            asChild
-            className="flex items-center gap-2 border border-white/20 hover:border-amber-500/50 hover:bg-amber-500/10 px-5 py-2 rounded-full transition-all"
+          {/* Admin */}
+          <Link
+            href="/admin/login"
+            className="text-white/60 hover:text-amber-500 transition-colors font-bold border border-white/20 hover:border-amber-500/50 hover:bg-amber-500/10 px-5 py-2 rounded-full"
+            style={{ fontSize: "15px", letterSpacing: "0.04em" }}
           >
-            <Link href="/admin/login">
-              <UserCircle size={16} />
-              <span className="text-[13px] font-bold tracking-wider">Admin</span>
-            </Link>
-          </Button>
+            ADMIN
+          </Link>
         </div>
 
         {/* Mobile menu button */}
@@ -156,23 +143,23 @@ export function PublicHeader({ initialScrolled = false }: PublicHeaderProps) {
               </Link>
             ))}
 
-            {/* 메뉴얼 */}
+            {/* 매뉴얼 */}
             <Link
               href="/manual"
               onClick={() => setIsMenuOpen(false)}
-              className="flex items-center gap-2 text-white/60 hover:text-amber-500 transition-colors text-sm mt-2 font-bold"
+              className="text-white/60 hover:text-amber-500 transition-colors mt-2 font-bold"
+              style={{ fontSize: "15px", letterSpacing: lang === "ko" ? "-0.01em" : "0.04em" }}
             >
-              <BookOpen size={16} />
-              {lang === "ko" ? "메뉴얼" : "Manual"}
+              {lang === "ko" ? "매뉴얼" : "Manual"}
             </Link>
 
             {/* 게시판 */}
             <Link
               href="/board"
               onClick={() => setIsMenuOpen(false)}
-              className="flex items-center gap-2 text-white/60 hover:text-amber-500 transition-colors text-sm mt-2 font-bold"
+              className="text-white/60 hover:text-amber-500 transition-colors mt-2 font-bold"
+              style={{ fontSize: "15px", letterSpacing: lang === "ko" ? "-0.01em" : "0.04em" }}
             >
-              <MessageSquare size={16} />
               {lang === "ko" ? "게시판" : "Board"}
             </Link>
 
@@ -182,19 +169,19 @@ export function PublicHeader({ initialScrolled = false }: PublicHeaderProps) {
                 setLang((prev) => (prev === "ko" ? "en" : "ko"));
                 setIsMenuOpen(false);
               }}
-              className="flex items-center gap-2 text-white/60 hover:text-amber-500 transition-colors text-sm mt-2 font-bold"
+              className="text-white/60 hover:text-amber-500 transition-colors mt-2 font-bold text-left"
+              style={{ fontSize: "15px", letterSpacing: "0.04em" }}
             >
-              <Globe size={16} />
-              {lang === "ko" ? "VIEW IN ENGLISH (ENG)" : "한국어로 보기 (KOR)"}
+              {lang === "ko" ? "ENG" : "KOR"}
             </button>
 
             <Link
               href="/admin/login"
               onClick={() => setIsMenuOpen(false)}
-              className="flex items-center gap-2 text-white/60 hover:text-amber-500 transition-colors text-sm mt-4 font-bold"
+              className="text-white/60 hover:text-amber-500 transition-colors mt-4 font-bold"
+              style={{ fontSize: "15px", letterSpacing: "0.04em" }}
             >
-              <UserCircle size={16} />
-              Admin
+              ADMIN
             </Link>
           </nav>
         </div>
