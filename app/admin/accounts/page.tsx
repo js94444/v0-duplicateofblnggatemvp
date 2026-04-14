@@ -204,7 +204,7 @@ export default function AdminAccountsPage() {
 
   if (user?.role !== "super_admin") {
     return (
-      <div className="container mx-auto px-6 py-10 text-center">
+      <div className="max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-8 py-10 text-center">
         <p className="text-red-400 font-bold text-lg">접근 권한이 없습니다.</p>
       </div>
     )
@@ -300,7 +300,7 @@ export default function AdminAccountsPage() {
   }
 
   return (
-    <div className="container mx-auto px-6 py-10">
+    <div className="max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-8 py-10">
       <div className="space-y-8">
         {/* Header */}
         <div className="flex items-center justify-between">

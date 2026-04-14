@@ -99,7 +99,7 @@ export default function AdminDashboardPage() {
 
   if (isLoading) {
     return (
-      <div className="container mx-auto px-4 sm:px-6 py-6 sm:py-10 space-y-8">
+      <div className="max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10 space-y-8">
         <div className="flex items-center justify-between">
           <Skeleton className="h-10 w-48 bg-white/10 rounded-xl" />
           <Skeleton className="h-10 w-28 bg-white/10 rounded-xl" />
@@ -119,7 +119,7 @@ export default function AdminDashboardPage() {
 
   if (!stats) {
     return (
-      <div className="container mx-auto px-4 sm:px-6 py-6 sm:py-10">
+      <div className="max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10">
         <div className="bg-white/5 border border-white/10 rounded-2xl p-12 text-center">
           <p className="text-white/40">통계 데이터를 불러올 수 없습니다.</p>
           <Button onClick={fetchStats} className="mt-4 bg-amber-500 hover:bg-amber-600 text-black font-bold rounded-xl">
@@ -140,7 +140,7 @@ export default function AdminDashboardPage() {
     : 0
 
   return (
-    <div className="container mx-auto px-4 sm:px-6 py-6 sm:py-10 space-y-8">
+    <div className="max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10 space-y-8">
 
       {/* Header */}
       <div className="flex items-center justify-between">

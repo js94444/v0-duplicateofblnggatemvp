@@ -96,7 +96,7 @@ function AdminLayoutContent({ children }: { children: React.ReactNode }) {
 
       {/* Header */}
       <header className="relative z-10 border-b border-white/10 bg-black/40 backdrop-blur-xl">
-        <div className="container mx-auto px-4 sm:px-6 flex h-14 sm:h-20 items-center justify-between">
+        <div className="max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-8 flex h-14 sm:h-20 items-center justify-between">
           <div className="flex items-center gap-4 sm:gap-8">
             <Image
               src="/images/boryeong-lng-ci.png"
@@ -135,7 +135,7 @@ function AdminLayoutContent({ children }: { children: React.ReactNode }) {
 
       {/* Navigation — 데스크탑 */}
       <nav className="relative z-10 border-b border-white/5 bg-black/20 backdrop-blur-lg hidden md:block">
-        <div className="container mx-auto px-4 sm:px-6">
+        <div className="max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between py-3">
             <div className="flex gap-2">
               <Link href="/">
@@ -177,7 +177,7 @@ function AdminLayoutContent({ children }: { children: React.ReactNode }) {
 
       {/* Navigation — 모바일 햄버거 바 */}
       <nav className="relative z-10 border-b border-white/5 bg-black/20 backdrop-blur-lg md:hidden">
-        <div className="container mx-auto px-4">
+        <div className="max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between py-2">
             <button
               type="button"
@@ -206,7 +206,7 @@ function AdminLayoutContent({ children }: { children: React.ReactNode }) {
         {/* 모바일 드롭다운 메뉴 */}
         {mobileMenuOpen && (
           <div className="border-t border-white/5 bg-black/60 backdrop-blur-xl">
-            <div className="container mx-auto px-4 py-3 space-y-1">
+            <div className="max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-8 py-3 space-y-1">
               <Link href="/">
                 <button
                   type="button"

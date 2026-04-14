@@ -510,7 +510,7 @@ export default function AdminQrScanPage() {
   }
 
   return (
-    <div className="container mx-auto px-6 py-10">
+    <div className="max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-8 py-10">
       <div className="flex items-center justify-between mb-6">
         <div>
           <div className="flex items-center gap-2 mb-2">

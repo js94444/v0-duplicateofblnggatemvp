@@ -296,7 +296,7 @@ export default function AdminRequestsPage() {
 
   if (loading) {
     return (
-      <div className="container mx-auto px-4 sm:px-6 py-6 sm:py-10">
+      <div className="max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-4 border-amber-500 border-t-transparent mx-auto mb-4"></div>
           <p className="text-white/60">데이터를 불러오는 중...</p>
@@ -306,7 +306,7 @@ export default function AdminRequestsPage() {
   }
 
   return (
-    <div className="container mx-auto px-4 sm:px-6 py-6 sm:py-10">
+    <div className="max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10">
       <div className="space-y-6 sm:space-y-8">
         {/* Header */}
         <div className="flex items-center justify-between">
