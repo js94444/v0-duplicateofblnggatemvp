@@ -103,9 +103,10 @@ export default function VisitAgreementPage() {
             <p className="text-white/40 text-sm mb-2">
               {t("방문 신청을 위해 아래 동의 사항을 확인하고 동의해주세요.", "Please review and agree to the following terms to proceed with your visit application.")}
             </p>
-            <p className="text-amber-400 text-sm font-bold uppercase tracking-wider">
-              {t("상시출입증 소유자는 신청서 작성이 필요없습니다.", "Frequent pass holders do not need to fill out an application.")}
-            </p>
+            <div className="text-amber-400 text-base font-bold space-y-1">
+              <p>{t("- 상시출입증 소유자 : 별도의 방문 신청 없이 출입 가능", "- Permanent pass holders : Entry without a separate visit application")}</p>
+              <p>{t("- 단, 부두지역 출입 시 : 상시출입증 소유 관계없이 반드시 사전 방문 신청 필요", "- However, for pier area access : Prior visit application is required regardless of permanent pass ownership")}</p>
+            </div>
           </div>
 
           {/* Visit Steps Indicator */}
