@@ -52,9 +52,11 @@ export async function POST(request: NextRequest) {
       blobsFailed: result.blobsFailed,
     })
   } catch (error) {
-    console.error("[privacy] Failed to mask expired data:", error)
+    const errMsg = error instanceof Error ? error.message : String(error)
+    const errStack = error instanceof Error ? error.stack : ''
+    console.error("[privacy] Failed to purge expired data:", errMsg, errStack)
     return NextResponse.json(
-      { code: "INTERNAL_ERROR", message: "마스킹 처리 중 오류가 발생했습니다" },
+      { code: "INTERNAL_ERROR", message: `처리 실패: ${errMsg}` },
       { status: 500 }
     )
   }

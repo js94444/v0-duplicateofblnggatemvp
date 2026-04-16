@@ -2460,14 +2460,25 @@ export class AzureSqlDB {
     )
     compAttachResult.recordset.forEach((r: any) => { if (r.file_key) blobKeys.push(r.file_key) })
 
-    // 3) 자식 테이블 삭제 (순서: FK 제약 고려)
-    await dbPool.request().query(`DELETE FROM visit_pass_scans WHERE application_id IN (${idList})`)
-    await dbPool.request().query(`DELETE FROM visit_passes WHERE application_id IN (${idList})`)
-    await dbPool.request().query(`DELETE FROM visit_companion_attachments WHERE application_id IN (${idList})`)
-    await dbPool.request().query(`DELETE FROM visit_companion_devices WHERE companion_id IN (SELECT companion_id FROM visit_companions WHERE application_id IN (${idList}))`)
-    await dbPool.request().query(`DELETE FROM visit_electronic_devices WHERE application_id IN (${idList})`)
-    await dbPool.request().query(`DELETE FROM visit_attachments WHERE application_id IN (${idList})`)
-    await dbPool.request().query(`DELETE FROM visit_companions WHERE application_id IN (${idList})`)
+    // 3) 자식 테이블 삭제 (순서: FK 제약 고려, 단계별 에러 추적)
+    const steps = [
+      { name: 'visit_pass_scans', sql: `DELETE FROM visit_pass_scans WHERE application_id IN (${idList})` },
+      { name: 'visit_passes', sql: `DELETE FROM visit_passes WHERE application_id IN (${idList})` },
+      { name: 'visit_companion_attachments', sql: `DELETE FROM visit_companion_attachments WHERE application_id IN (${idList})` },
+      { name: 'visit_companion_devices', sql: `DELETE FROM visit_companion_devices WHERE companion_id IN (SELECT companion_id FROM visit_companions WHERE application_id IN (${idList}))` },
+      { name: 'visit_electronic_devices', sql: `DELETE FROM visit_electronic_devices WHERE application_id IN (${idList})` },
+      { name: 'visit_attachments', sql: `DELETE FROM visit_attachments WHERE application_id IN (${idList})` },
+      { name: 'visit_companions', sql: `DELETE FROM visit_companions WHERE application_id IN (${idList})` },
+    ]
+    for (const step of steps) {
+      try {
+        await dbPool.request().query(step.sql)
+        console.log(`[privacy] ✅ ${step.name} 삭제 완료`)
+      } catch (e: any) {
+        console.error(`[privacy] ❌ ${step.name} 삭제 실패:`, e.message)
+        throw new Error(`${step.name} 삭제 실패: ${e.message}`)
+      }
+    }
 
     // 4) 신청자 개인정보 마스킹 (통계 유지 목적으로 행 자체는 보존)
     await dbPool.request().query(`
