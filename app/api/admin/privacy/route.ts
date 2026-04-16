@@ -43,11 +43,13 @@ export async function POST(request: NextRequest) {
     }
 
     const adminName = (auth as any).name || "unknown"
-    const result = await AzureSqlDB.maskExpiredApplications(adminName)
+    const result = await AzureSqlDB.purgeExpiredApplications(adminName)
 
     return NextResponse.json({
-      message: `${result.affected}건의 개인정보가 마스킹 처리되었습니다.`,
+      message: `${result.affected}건 처리 완료 (Blob 삭제: ${result.blobsDeleted}건, 실패: ${result.blobsFailed}건)`,
       affected: result.affected,
+      blobsDeleted: result.blobsDeleted,
+      blobsFailed: result.blobsFailed,
     })
   } catch (error) {
     console.error("[privacy] Failed to mask expired data:", error)

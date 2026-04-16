@@ -2410,7 +2410,16 @@ export class AzureSqlDB {
       `)
   }
 
-  /** 3년 경과 개인정보 데이터 조회 (마스킹 안 된 건만) */
+  // ★ 테스트용: true이면 3/26 기준, false이면 3년 경과 기준
+  private static readonly PRIVACY_TEST_MODE = true
+  private static readonly PRIVACY_TEST_DATE = "'2026-03-26'"  // 이 날짜 이전 데이터가 대상
+  private static get privacyDateCondition(): string {
+    return this.PRIVACY_TEST_MODE
+      ? `created_at < ${this.PRIVACY_TEST_DATE}`
+      : 'created_at < DATEADD(YEAR, -3, GETDATE())'
+  }
+
+  /** 보유기간 경과 개인정보 데이터 조회 (삭제 안 된 건만) */
   static async getExpiredApplications(): Promise<{ count: number; data: any[] }> {
     const dbPool = await getPool()
     const result = await dbPool.request().query(`
@@ -2418,27 +2427,49 @@ export class AzureSqlDB {
              visitor_organization, created_at,
              DATEDIFF(DAY, created_at, GETDATE()) as days_elapsed
       FROM visit_applications WITH (NOLOCK)
-      WHERE created_at < DATEADD(YEAR, -3, GETDATE())
+      WHERE ${this.privacyDateCondition}
         AND visitor_name != '***'
       ORDER BY created_at ASC
     `)
     return { count: result.recordset.length, data: result.recordset }
   }
 
-  /** 3년 경과 개인정보 마스킹 처리 (일괄) */
-  static async maskExpiredApplications(adminName: string): Promise<{ affected: number }> {
+  /** 보유기간 경과 개인정보 완전 삭제 (모든 관련 테이블 + Blob) */
+  static async purgeExpiredApplications(adminName: string): Promise<{ affected: number; blobsDeleted: number; blobsFailed: number }> {
     const dbPool = await getPool()
 
-    // 1) 대상 application_id 목록 추출
+    // 1) 대상 application_id 목록
     const targetResult = await dbPool.request().query(`
       SELECT application_id FROM visit_applications
-      WHERE created_at < DATEADD(YEAR, -3, GETDATE())
+      WHERE ${this.privacyDateCondition}
         AND visitor_name != '***'
     `)
     const targetIds = targetResult.recordset.map((r: any) => r.application_id)
-    if (targetIds.length === 0) return { affected: 0 }
+    if (targetIds.length === 0) return { affected: 0, blobsDeleted: 0, blobsFailed: 0 }
+    const idList = targetIds.join(',')
 
-    // 2) 신청자 개인정보 마스킹
+    // 2) Blob Storage 파일 키 수집 (삭제 전에 추출해야 함)
+    const blobKeys: string[] = []
+    const attachResult = await dbPool.request().query(
+      `SELECT file_key FROM visit_attachments WHERE application_id IN (${idList}) AND file_key IS NOT NULL`
+    )
+    attachResult.recordset.forEach((r: any) => { if (r.file_key) blobKeys.push(r.file_key) })
+
+    const compAttachResult = await dbPool.request().query(
+      `SELECT file_key FROM visit_companion_attachments WHERE application_id IN (${idList}) AND file_key IS NOT NULL`
+    )
+    compAttachResult.recordset.forEach((r: any) => { if (r.file_key) blobKeys.push(r.file_key) })
+
+    // 3) 자식 테이블 삭제 (순서: FK 제약 고려)
+    await dbPool.request().query(`DELETE FROM visit_pass_scans WHERE application_id IN (${idList})`)
+    await dbPool.request().query(`DELETE FROM visit_passes WHERE application_id IN (${idList})`)
+    await dbPool.request().query(`DELETE FROM visit_companion_attachments WHERE application_id IN (${idList})`)
+    await dbPool.request().query(`DELETE FROM visit_companion_devices WHERE companion_id IN (SELECT companion_id FROM visit_companions WHERE application_id IN (${idList}))`)
+    await dbPool.request().query(`DELETE FROM visit_electronic_devices WHERE application_id IN (${idList})`)
+    await dbPool.request().query(`DELETE FROM visit_attachments WHERE application_id IN (${idList})`)
+    await dbPool.request().query(`DELETE FROM visit_companions WHERE application_id IN (${idList})`)
+
+    // 4) 신청자 개인정보 마스킹 (통계 유지 목적으로 행 자체는 보존)
     await dbPool.request().query(`
       UPDATE visit_applications
       SET visitor_name = '***',
@@ -2448,32 +2479,25 @@ export class AzureSqlDB {
           visitor_email = NULL,
           visitor_position = '***',
           updated_at = GETDATE()
-      WHERE created_at < DATEADD(YEAR, -3, GETDATE())
-        AND visitor_name != '***'
-    `)
-
-    // 3) 동행인 개인정보 마스킹
-    const idList = targetIds.join(',')
-    await dbPool.request().query(`
-      UPDATE visit_companions
-      SET name = '***', phone = '***', birth_date = NULL
       WHERE application_id IN (${idList})
-        AND name != '***'
     `)
 
-    // 4) 첨부파일 레코드 삭제 (Blob은 별도 정리 필요)
-    await dbPool.request().query(`
-      DELETE FROM visit_attachments WHERE application_id IN (${idList})
-    `)
-    await dbPool.request().query(`
-      DELETE FROM visit_companion_attachments WHERE application_id IN (${idList})
-    `)
+    // 5) Azure Blob Storage 파일 삭제
+    let blobsDeleted = 0, blobsFailed = 0
+    if (blobKeys.length > 0) {
+      const { deleteFile } = await import("@/lib/storage/azure-blob")
+      for (const key of blobKeys) {
+        try {
+          await deleteFile(key)
+          blobsDeleted++
+        } catch {
+          blobsFailed++
+        }
+      }
+    }
 
-    // 5) QR pass 무효화
-    await dbPool.request().query(`
-      UPDATE visit_passes SET status = 'REVOKED'
-      WHERE application_id IN (${idList}) AND status != 'REVOKED'
-    `)
+    console.log(`[privacy] Purged ${targetIds.length} expired applications (${blobsDeleted} blobs deleted, ${blobsFailed} failed) by ${adminName}`)
+    return { affected: targetIds.length, blobsDeleted, blobsFailed }
 
     console.log(`[privacy] Masked ${targetIds.length} expired applications by ${adminName}`)
     return { affected: targetIds.length }

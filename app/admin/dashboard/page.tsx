@@ -566,11 +566,15 @@ export default function AdminDashboardPage() {
               )}
 
               <div className="mt-6 bg-amber-500/10 border border-amber-500/20 rounded-xl p-4 text-xs text-amber-300/80 space-y-1">
-                <p className="font-bold text-amber-300">마스킹 처리 시 변경 내용:</p>
-                <p>• 신청자 이름, 연락처, 생년월일, 주소, 이메일, 직책 → *** 처리</p>
-                <p>• 동행인 이름, 연락처, 생년월일 → *** 처리</p>
-                <p>• 첨부파일 레코드 삭제 (접수번호, 소속, 신청일 등 통계 데이터는 유지)</p>
-                <p>• QR 출입권 무효화 (REVOKED)</p>
+                <p className="font-bold text-amber-300">삭제 처리 시 변경 내용:</p>
+                <p>• 신청자 이름, 연락처, 생년월일, 주소, 이메일, 직책 → *** 마스킹</p>
+                <p>• 동행인 정보 전체 삭제 (visit_companions)</p>
+                <p>• 전자기기 정보 삭제 (visit_electronic_devices, visit_companion_devices)</p>
+                <p>• 첨부파일 삭제 (visit_attachments, visit_companion_attachments)</p>
+                <p>• Azure Blob Storage 파일 삭제 (항만이수증 등)</p>
+                <p>• 출입 스캔 기록 삭제 (visit_pass_scans)</p>
+                <p>• QR 출입권 삭제 (visit_passes)</p>
+                <p>• 접수번호, 소속, 신청일 등 통계 데이터는 유지</p>
                 <p className="text-red-400 font-bold pt-1">⚠ 이 작업은 되돌릴 수 없습니다.</p>
               </div>
             </div>
