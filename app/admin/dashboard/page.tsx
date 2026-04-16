@@ -16,6 +16,9 @@ import {
   CalendarDays,
   Trophy,
   ArrowUpRight,
+  ShieldAlert,
+  Trash2,
+  Loader2,
 } from "lucide-react"
 import { useAdminAuth } from "@/hooks/use-admin-auth"
 
@@ -66,15 +69,23 @@ const STATUS_COLORS: Record<string, { text: string; bg: string; border: string; 
 }
 
 export default function AdminDashboardPage() {
-  const { token } = useAdminAuth()
+  const { token, user } = useAdminAuth()
   const [stats, setStats] = useState<DashboardStats | null>(null)
   const [selectedMonth, setSelectedMonth] = useState<string>("")
   const [isLoading, setIsLoading] = useState(true)
   const [isRefreshing, setIsRefreshing] = useState(false)
 
+  // 개인정보 3년 경과 데이터
+  const [expiredCount, setExpiredCount] = useState(0)
+  const [expiredData, setExpiredData] = useState<any[]>([])
+  const [showExpiredModal, setShowExpiredModal] = useState(false)
+  const [isMasking, setIsMasking] = useState(false)
+  const [confirmMask, setConfirmMask] = useState(false)
+
   useEffect(() => {
     fetchStats()
-  }, [])
+    if (user?.role === "super_admin") fetchExpiredCount()
+  }, [user])
 
   const fetchStats = async () => {
     setIsRefreshing(true)
@@ -94,6 +105,44 @@ export default function AdminDashboardPage() {
     } finally {
       setIsLoading(false)
       setIsRefreshing(false)
+    }
+  }
+
+  const fetchExpiredCount = async () => {
+    try {
+      const res = await fetch("/api/admin/privacy", {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      if (res.ok) {
+        const data = await res.json()
+        setExpiredCount(data.count || 0)
+        setExpiredData(data.data || [])
+      }
+    } catch {}
+  }
+
+  const handleMaskExpired = async () => {
+    setIsMasking(true)
+    try {
+      const res = await fetch("/api/admin/privacy", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      if (res.ok) {
+        const data = await res.json()
+        alert(`${data.affected}건의 개인정보가 마스킹 처리되었습니다.`)
+        setExpiredCount(0)
+        setExpiredData([])
+        setShowExpiredModal(false)
+        setConfirmMask(false)
+      } else {
+        const err = await res.json()
+        alert(`처리 실패: ${err.message}`)
+      }
+    } catch {
+      alert("마스킹 처리 중 오류가 발생했습니다.")
+    } finally {
+      setIsMasking(false)
     }
   }
 
@@ -141,6 +190,33 @@ export default function AdminDashboardPage() {
 
   return (
     <div className="max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10 space-y-8">
+
+      {/* 개인정보 3년 경과 알림 배너 */}
+      {user?.role === "super_admin" && expiredCount > 0 && (
+        <div
+          className="bg-red-500/10 border-2 border-red-500/30 rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 cursor-pointer hover:bg-red-500/15 transition-colors"
+          onClick={() => setShowExpiredModal(true)}
+        >
+          <div className="flex items-center gap-3">
+            <ShieldAlert size={24} className="text-red-400 shrink-0" />
+            <div>
+              <p className="text-sm sm:text-base font-black text-red-300">
+                개인정보 보유기간(3년) 경과 데이터 {expiredCount}건
+              </p>
+              <p className="text-xs text-red-400/60 mt-0.5">
+                개인정보보호법에 따라 마스킹 처리가 필요합니다. 클릭하여 상세 확인
+              </p>
+            </div>
+          </div>
+          <Button
+            onClick={(e) => { e.stopPropagation(); setShowExpiredModal(true) }}
+            className="bg-red-500/20 hover:bg-red-500/30 border border-red-500/50 text-red-300 font-bold rounded-xl text-xs sm:text-sm px-4 py-2 shrink-0"
+          >
+            <Trash2 size={14} className="mr-1.5" />
+            확인 및 처리
+          </Button>
+        </div>
+      )}
 
       {/* Header */}
       <div className="flex items-center justify-between">
@@ -441,6 +517,89 @@ export default function AdminDashboardPage() {
           </div>
         </div>
       </div>
+
+      {/* 개인정보 만료 데이터 처리 모달 */}
+      {showExpiredModal && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/80 backdrop-blur-sm px-4" onClick={() => { setShowExpiredModal(false); setConfirmMask(false) }}>
+          <div className="bg-zinc-900 border border-white/10 rounded-3xl w-full max-w-3xl max-h-[85vh] flex flex-col" onClick={(e) => e.stopPropagation()}>
+            <div className="p-6 pb-4 flex items-center justify-between border-b border-white/10">
+              <div className="flex items-center gap-3">
+                <ShieldAlert size={22} className="text-red-400" />
+                <div>
+                  <h3 className="text-lg font-black text-white">개인정보 보유기간 경과 데이터</h3>
+                  <p className="text-xs text-white/40 mt-0.5">3년(1,095일) 경과 · {expiredCount}건</p>
+                </div>
+              </div>
+              <button type="button" onClick={() => { setShowExpiredModal(false); setConfirmMask(false) }} className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white/60 hover:text-white transition-all">✕</button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-6">
+              {expiredData.length > 0 ? (
+                <div className="overflow-x-auto rounded-xl border border-white/10">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="bg-white/5 border-b border-white/10">
+                        <th className="text-left p-3 text-white/60 font-bold">접수번호</th>
+                        <th className="text-left p-3 text-white/60 font-bold">신청자</th>
+                        <th className="text-left p-3 text-white/60 font-bold">연락처</th>
+                        <th className="text-left p-3 text-white/60 font-bold">소속</th>
+                        <th className="text-left p-3 text-white/60 font-bold">신청일</th>
+                        <th className="text-right p-3 text-white/60 font-bold">경과일</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {expiredData.map((row: any, idx: number) => (
+                        <tr key={idx} className="border-b border-white/5 hover:bg-white/5">
+                          <td className="p-3 text-white/80 font-mono text-xs">{row.application_number}</td>
+                          <td className="p-3 text-white/80">{row.visitor_name}</td>
+                          <td className="p-3 text-white/60">{row.visitor_phone}</td>
+                          <td className="p-3 text-white/60">{row.visitor_organization || "-"}</td>
+                          <td className="p-3 text-white/60">{new Date(row.created_at).toLocaleDateString("ko-KR")}</td>
+                          <td className="p-3 text-right text-red-400 font-bold">{row.days_elapsed}일</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <p className="text-center text-white/40 py-12">경과 데이터가 없습니다.</p>
+              )}
+
+              <div className="mt-6 bg-amber-500/10 border border-amber-500/20 rounded-xl p-4 text-xs text-amber-300/80 space-y-1">
+                <p className="font-bold text-amber-300">마스킹 처리 시 변경 내용:</p>
+                <p>• 신청자 이름, 연락처, 생년월일, 주소, 이메일, 직책 → *** 처리</p>
+                <p>• 동행인 이름, 연락처, 생년월일 → *** 처리</p>
+                <p>• 첨부파일 레코드 삭제 (접수번호, 소속, 신청일 등 통계 데이터는 유지)</p>
+                <p>• QR 출입권 무효화 (REVOKED)</p>
+                <p className="text-red-400 font-bold pt-1">⚠ 이 작업은 되돌릴 수 없습니다.</p>
+              </div>
+            </div>
+
+            <div className="p-6 pt-4 border-t border-white/10 flex items-center justify-between">
+              <Button onClick={() => { setShowExpiredModal(false); setConfirmMask(false) }} className="bg-white/10 hover:bg-white/20 text-white/70 font-bold rounded-xl px-6">
+                닫기
+              </Button>
+              {!confirmMask ? (
+                <Button onClick={() => setConfirmMask(true)} disabled={expiredCount === 0} className="bg-red-500/20 hover:bg-red-500/30 border border-red-500/50 text-red-300 font-bold rounded-xl px-6">
+                  <Trash2 size={16} className="mr-2" />
+                  {expiredCount}건 일괄 마스킹
+                </Button>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-red-400 font-bold">정말 실행하시겠습니까?</span>
+                  <Button onClick={() => setConfirmMask(false)} className="bg-white/10 hover:bg-white/20 text-white/70 font-bold rounded-xl px-4 text-sm">
+                    취소
+                  </Button>
+                  <Button onClick={handleMaskExpired} disabled={isMasking} className="bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl px-6 text-sm">
+                    {isMasking ? <Loader2 size={14} className="mr-1.5 animate-spin" /> : <Trash2 size={14} className="mr-1.5" />}
+                    {isMasking ? "처리중..." : "확인, 실행"}
+                  </Button>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

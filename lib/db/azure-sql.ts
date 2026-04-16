@@ -2410,6 +2410,75 @@ export class AzureSqlDB {
       `)
   }
 
+  /** 3년 경과 개인정보 데이터 조회 (마스킹 안 된 건만) */
+  static async getExpiredApplications(): Promise<{ count: number; data: any[] }> {
+    const dbPool = await getPool()
+    const result = await dbPool.request().query(`
+      SELECT application_id, application_number, visitor_name, visitor_phone,
+             visitor_organization, created_at,
+             DATEDIFF(DAY, created_at, GETDATE()) as days_elapsed
+      FROM visit_applications WITH (NOLOCK)
+      WHERE created_at < DATEADD(YEAR, -3, GETDATE())
+        AND visitor_name != '***'
+      ORDER BY created_at ASC
+    `)
+    return { count: result.recordset.length, data: result.recordset }
+  }
+
+  /** 3년 경과 개인정보 마스킹 처리 (일괄) */
+  static async maskExpiredApplications(adminName: string): Promise<{ affected: number }> {
+    const dbPool = await getPool()
+
+    // 1) 대상 application_id 목록 추출
+    const targetResult = await dbPool.request().query(`
+      SELECT application_id FROM visit_applications
+      WHERE created_at < DATEADD(YEAR, -3, GETDATE())
+        AND visitor_name != '***'
+    `)
+    const targetIds = targetResult.recordset.map((r: any) => r.application_id)
+    if (targetIds.length === 0) return { affected: 0 }
+
+    // 2) 신청자 개인정보 마스킹
+    await dbPool.request().query(`
+      UPDATE visit_applications
+      SET visitor_name = '***',
+          visitor_phone = '***',
+          visitor_birth_date = NULL,
+          visitor_address = '***',
+          visitor_email = NULL,
+          visitor_position = '***',
+          updated_at = GETDATE()
+      WHERE created_at < DATEADD(YEAR, -3, GETDATE())
+        AND visitor_name != '***'
+    `)
+
+    // 3) 동행인 개인정보 마스킹
+    const idList = targetIds.join(',')
+    await dbPool.request().query(`
+      UPDATE visit_companions
+      SET name = '***', phone = '***', birth_date = NULL
+      WHERE application_id IN (${idList})
+        AND name != '***'
+    `)
+
+    // 4) 첨부파일 레코드 삭제 (Blob은 별도 정리 필요)
+    await dbPool.request().query(`
+      DELETE FROM visit_attachments WHERE application_id IN (${idList})
+    `)
+    await dbPool.request().query(`
+      DELETE FROM visit_companion_attachments WHERE application_id IN (${idList})
+    `)
+
+    // 5) QR pass 무효화
+    await dbPool.request().query(`
+      UPDATE visit_passes SET status = 'REVOKED'
+      WHERE application_id IN (${idList}) AND status != 'REVOKED'
+    `)
+
+    console.log(`[privacy] Masked ${targetIds.length} expired applications by ${adminName}`)
+    return { affected: targetIds.length }
+  }
+
   /** 여러 application_id에 대한 항만이수증 파일 조회 (신청자 본인 항만이수증만) */
   static async getPortCertFilesByApplicationIds(applicationIds: number[]): Promise<Array<{ application_id: number; file_url: string; file_name: string }>> {
     if (applicationIds.length === 0) return []
