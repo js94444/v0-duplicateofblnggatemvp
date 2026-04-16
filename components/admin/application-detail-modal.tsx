@@ -692,35 +692,43 @@ export function ApplicationDetailModal({ application, open, loading = false, sca
                     {app.companions.map((companion: any, idx: number) => {
                       const companionPortCerts = companion.portCertFiles || []
                       return (
-                        <div key={idx} className="bg-black/40 border border-white/10 rounded-2xl sm:rounded-3xl p-4 sm:p-6">
-                          <div className="flex flex-col md:flex-row gap-4 md:gap-6 items-start">
-                            <div className="flex-1 min-w-0 w-full space-y-4 sm:space-y-5">
-                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 sm:gap-x-6 gap-y-4 sm:gap-y-5">
-                                <InfoField label="이름" value={companion.name} />
-                                <InfoField label="연락처" value={companion.phone} />
-                                <InfoField label="생년월일" value={formatDate(companion.birth_date)} />
-                                <InfoField label="소속" value={companion.organization} />
-                                <InfoField label="직책" value={companion.position} />
-                              </div>
-                              {companion.electronicDevices && companion.electronicDevices.length > 0 && (
-                                <div className="pt-4 border-t border-white/10">
-                                  <p className="text-[10px] font-black text-white/40 mb-3 uppercase tracking-widest">Device List</p>
-                                  {companion.electronicDevices.map((d: any, dIdx: number) => (
-                                    <div key={dIdx} className="bg-white/5 rounded-xl p-3 grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm mb-2">
-                                      <span className="text-white/60">{d.item_name} ({d.model_name})</span>
-                                      <span className="text-white/40 sm:text-right font-mono">{d.serial_number}</span>
-                                    </div>
-                                  ))}
-                                </div>
-                              )}
-                            </div>
-                            {companionPortCerts.length > 0 && (
-                              <div className="w-full md:w-auto flex-shrink-0 space-y-3">
-                                <p className="text-xs font-black text-amber-500/80 uppercase tracking-widest">항만이수증</p>
-                                <PortCertThumbnails files={companionPortCerts} authToken={token} />
-                              </div>
-                            )}
+                        <div key={idx} className="bg-black/40 border border-white/10 rounded-2xl sm:rounded-3xl p-4 sm:p-6 space-y-4">
+                          {/* 동행인 기본 정보 */}
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="w-6 h-6 rounded-full bg-purple-500/20 text-purple-400 text-xs font-black flex items-center justify-center">{idx + 1}</span>
+                            <span className="text-sm font-black text-white">{companion.name || "-"}</span>
+                            {companion.organization && <span className="text-xs text-white/40">({companion.organization})</span>}
                           </div>
+                          <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-4 sm:gap-x-6 gap-y-3 sm:gap-y-4">
+                            <InfoField label="연락처" value={companion.phone} />
+                            <InfoField label="생년월일" value={formatDate(companion.birth_date)} />
+                            <InfoField label="직책" value={companion.position} />
+                          </div>
+
+                          {/* 동행인 전자기기 */}
+                          {companion.electronicDevices && companion.electronicDevices.length > 0 && (
+                            <div className="pt-3 border-t border-white/10">
+                              <p className="text-[10px] font-black text-white/40 mb-2 uppercase tracking-widest">반입기기 ({companion.electronicDevices.length}건)</p>
+                              <div className="grid grid-cols-1 gap-2">
+                                {companion.electronicDevices.map((d: any, dIdx: number) => (
+                                  <div key={dIdx} className="bg-white/5 rounded-xl p-3 grid grid-cols-2 lg:grid-cols-4 gap-2">
+                                    <InfoField label="품명" value={d.item_name} />
+                                    <InfoField label="모델명" value={d.model_name} />
+                                    <InfoField label="시리얼" value={d.serial_number} />
+                                    <InfoField label="사유" value={d.reason} />
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+
+                          {/* 동행인 항만이수증 */}
+                          {companionPortCerts.length > 0 && (
+                            <div className="pt-3 border-t border-white/10 space-y-2">
+                              <p className="text-xs font-black text-amber-500/80 uppercase tracking-widest">항만이수증</p>
+                              <PortCertThumbnails files={companionPortCerts} authToken={token} />
+                            </div>
+                          )}
                         </div>
                       )
                     })}
