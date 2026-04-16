@@ -543,7 +543,7 @@ export default function AdminDashboardPage() {
                         <th className="text-left p-3 text-white/60 font-bold">신청자</th>
                         <th className="text-left p-3 text-white/60 font-bold">연락처</th>
                         <th className="text-left p-3 text-white/60 font-bold">소속</th>
-                        <th className="text-left p-3 text-white/60 font-bold">신청일</th>
+                        <th className="text-left p-3 text-white/60 font-bold">방문종료일</th>
                         <th className="text-right p-3 text-white/60 font-bold">경과일</th>
                       </tr>
                     </thead>
@@ -554,7 +554,7 @@ export default function AdminDashboardPage() {
                           <td className="p-3 text-white/80">{row.visitor_name}</td>
                           <td className="p-3 text-white/60">{row.visitor_phone}</td>
                           <td className="p-3 text-white/60">{row.visitor_organization || "-"}</td>
-                          <td className="p-3 text-white/60">{new Date(row.created_at).toLocaleDateString("ko-KR")}</td>
+                          <td className="p-3 text-white/60">{row.visit_end_date ? new Date(row.visit_end_date).toLocaleDateString("ko-KR") : "-"}</td>
                           <td className="p-3 text-right text-red-400 font-bold">{row.days_elapsed}일</td>
                         </tr>
                       ))}
@@ -566,8 +566,10 @@ export default function AdminDashboardPage() {
               )}
 
               <div className="mt-6 bg-amber-500/10 border border-amber-500/20 rounded-xl p-4 text-xs text-amber-300/80 space-y-1">
-                <p className="font-bold text-amber-300">삭제 처리 시 변경 내용:</p>
-                <p>• 신청자 이름, 연락처, 생년월일, 주소, 이메일, 직책 → *** 마스킹</p>
+                <p className="font-bold text-amber-300">삭제 처리 시 변경 내용 (방문종료일 기준):</p>
+                <p>• 기본 인적사항: 이름, 연락처, 생년월일, 주소, 이메일, 소속, 직책 → *** 마스킹</p>
+                <p>• 방문·출입 정보: 방문목적, 방문일자, 출입구역 → NULL 처리</p>
+                <p>• 차량 정보: 차량번호, 차종 → NULL 처리</p>
                 <p>• 동행인 정보 전체 삭제 (visit_companions)</p>
                 <p>• 전자기기 정보 삭제 (visit_electronic_devices, visit_companion_devices)</p>
                 <p>• 첨부파일 삭제 (visit_attachments, visit_companion_attachments)</p>

@@ -2410,13 +2410,13 @@ export class AzureSqlDB {
       `)
   }
 
-  // ★ 테스트용: true이면 3/26 기준, false이면 3년 경과 기준
+  // ★ 테스트용: true이면 테스트 날짜 기준, false이면 방문종료일로부터 3년 경과 기준
   private static readonly PRIVACY_TEST_MODE = true
-  private static readonly PRIVACY_TEST_DATE = "'2026-03-30'"  // 이 날짜 이전 데이터가 대상
+  private static readonly PRIVACY_TEST_DATE = "'2026-03-30'"  // 이 날짜 이전 방문종료 데이터가 대상
   private static get privacyDateCondition(): string {
     return this.PRIVACY_TEST_MODE
-      ? `created_at < ${this.PRIVACY_TEST_DATE}`
-      : 'created_at < DATEADD(YEAR, -3, GETDATE())'
+      ? `visit_end_date < ${this.PRIVACY_TEST_DATE}`
+      : 'visit_end_date < DATEADD(YEAR, -3, GETDATE())'
   }
 
   /** 보유기간 경과 개인정보 데이터 조회 (삭제 안 된 건만) */
@@ -2424,12 +2424,12 @@ export class AzureSqlDB {
     const dbPool = await getPool()
     const result = await dbPool.request().query(`
       SELECT application_id, application_number, visitor_name, visitor_phone,
-             visitor_organization, created_at,
-             DATEDIFF(DAY, created_at, GETDATE()) as days_elapsed
+             visitor_organization, visit_end_date, created_at,
+             DATEDIFF(DAY, visit_end_date, GETDATE()) as days_elapsed
       FROM visit_applications WITH (NOLOCK)
       WHERE ${this.privacyDateCondition}
         AND visitor_name != '***'
-      ORDER BY created_at ASC
+      ORDER BY visit_end_date ASC
     `)
     return { count: result.recordset.length, data: result.recordset }
   }
@@ -2479,11 +2479,15 @@ export class AzureSqlDB {
           visitor_email = NULL,
           visitor_position = '***',
           visitor_organization = '***',
+          visit_purpose = NULL,
+          visit_start_date = NULL,
+          visit_end_date = NULL,
+          access_area = NULL,
+          detailed_purpose = NULL,
           vehicle_number = NULL,
           vehicle_model = NULL,
           contact_mobile = '***',
           submission_ip = NULL,
-          detailed_purpose = NULL,
           spark_arrestor = NULL,
           updated_at = GETDATE()
       WHERE application_id IN (${idList})
