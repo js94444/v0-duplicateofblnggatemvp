@@ -2478,6 +2478,13 @@ export class AzureSqlDB {
           visitor_address = '***',
           visitor_email = NULL,
           visitor_position = '***',
+          visitor_organization = '***',
+          vehicle_number = NULL,
+          vehicle_model = NULL,
+          contact_mobile = '***',
+          submission_ip = NULL,
+          detailed_purpose = NULL,
+          spark_arrestor = NULL,
           updated_at = GETDATE()
       WHERE application_id IN (${idList})
     `)
