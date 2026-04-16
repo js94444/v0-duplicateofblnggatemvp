@@ -1309,7 +1309,7 @@ export default function VisitFormPage() {
           onClick={() => setShowAreaMapModal(false)}
         >
           <div
-            className="bg-zinc-900 border border-white/10 rounded-3xl w-full max-w-2xl max-h-[90vh] overflow-y-auto"
+            className="bg-zinc-900 border border-white/10 rounded-3xl w-full max-w-4xl max-h-[90vh] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="p-6 pb-3 flex items-center justify-between">
