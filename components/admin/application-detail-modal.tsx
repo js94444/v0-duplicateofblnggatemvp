@@ -303,15 +303,11 @@ function EditableSelect({ label, value, onChange, options }: {
 
 const ACCESS_AREA_OPTIONS = [
   { value: "전체지역", label: "전체지역" },
-  { value: "정문", label: "정문" },
-  { value: "본관동(1층)", label: "본관동(1층)" },
-  { value: "본관동(3층)", label: "본관동(3층)" },
+  { value: "일반지역", label: "일반지역" },
   { value: "공정지역", label: "공정지역" },
   { value: "제1부두", label: "제1부두" },
   { value: "제2부두", label: "제2부두" },
   { value: "제1,2부두", label: "제1,2부두" },
-  { value: "정비동 앞", label: "정비동 앞" },
-  { value: "정비동 뒤", label: "정비동 뒤" },
 ]
 
 const VEHICLE_MODEL_OPTIONS = [

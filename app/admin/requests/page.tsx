@@ -439,15 +439,11 @@ export default function AdminRequestsPage() {
                   <SelectContent className="bg-black/95 border-white/20 text-white">
                     <SelectItem value="ALL">전체</SelectItem>
                     <SelectItem value="전체지역">전체지역</SelectItem>
-                    <SelectItem value="정문">정문</SelectItem>
-                    <SelectItem value="본관동(1층)">본관동(1층)</SelectItem>
-                    <SelectItem value="본관동(3층)">본관동(3층)</SelectItem>
+                    <SelectItem value="일반지역">일반지역</SelectItem>
                     <SelectItem value="공정지역">공정지역</SelectItem>
                     <SelectItem value="제1부두">제1부두</SelectItem>
                     <SelectItem value="제2부두">제2부두</SelectItem>
                     <SelectItem value="제1,2부두">제1,2부두</SelectItem>
-                    <SelectItem value="정비동 앞">정비동 앞</SelectItem>
-                    <SelectItem value="정비동 뒤">정비동 뒤</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

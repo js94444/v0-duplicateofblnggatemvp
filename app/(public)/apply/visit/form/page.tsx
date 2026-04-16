@@ -142,6 +142,7 @@ export default function VisitFormPage() {
   const [companionErrors, setCompanionErrors] = useState<CompanionErrors>({})
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFileData[]>([])
   const [portCertFiles, setPortCertFiles] = useState<UploadedFileData[]>([])
+  const [showAreaMapModal, setShowAreaMapModal] = useState(false)
   const { toast } = useToast()
   const router = useRouter()
 
@@ -213,15 +214,11 @@ export default function VisitFormPage() {
 
   const accessAreaOptions = [
     { value: "전체지역", label: t("전체지역", "All areas") },
-    { value: "정문", label: t("정문", "Main Gate") },
-    { value: "본관동(1층)", label: t("본관동(1층)", "Main Building (1F)") },
-    { value: "본관동(3층)", label: t("본관동(3층)", "Main Building (3F)") },
+    { value: "일반지역", label: t("일반지역", "General Area") },
     { value: "공정지역", label: t("공정지역", "Process Area") },
     { value: "제1부두", label: t("제1부두", "Berth No.1") },
     { value: "제2부두", label: t("제2부두", "Berth No.2") },
     { value: "제1,2부두", label: t("제1,2부두", "Berth No.1 & 2") },
-    { value: "정비동 앞", label: t("정비동 앞", "Front of maintenance building") },
-    { value: "정비동 뒤", label: t("정비동 뒤", "Rear of maintenance building") },
   ]
 
   const vehicleTypeOptions = [
@@ -942,16 +939,28 @@ export default function VisitFormPage() {
                     error={errors.visit_purpose}
                     className="h-14 w-full"
                   />
-                  <FormSelect
-                    label={t("출입지역", "Access Area")}
-                    placeholder={t("출입지역을 선택하세요", "Select access area")}
-                    required
-                    options={accessAreaOptions}
-                    value={formData.access_area}
-                    onValueChange={(value) => updateField("access_area", value)}
-                    error={errors.access_area}
-                    className="h-14 w-full"
-                  />
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <label className="text-sm font-bold text-white/80">
+                        {t("출입지역", "Access Area")} <span className="text-red-400">*</span>
+                      </label>
+                      <button
+                        type="button"
+                        onClick={() => setShowAreaMapModal(true)}
+                        className="text-xs text-amber-500 hover:text-amber-400 underline underline-offset-2 font-bold transition-colors"
+                      >
+                        {t("출입지역약도", "Area Map")}
+                      </button>
+                    </div>
+                    <FormSelect
+                      placeholder={t("출입지역을 선택하세요", "Select access area")}
+                      options={accessAreaOptions}
+                      value={formData.access_area}
+                      onValueChange={(value) => updateField("access_area", value)}
+                      error={errors.access_area}
+                      className="h-14 w-full"
+                    />
+                  </div>
                 </div>
 
                 {/* 상세 방문 사유 */}
@@ -1293,7 +1302,57 @@ export default function VisitFormPage() {
 
       <PublicFooter />
 
-
+      {/* 출입지역 약도 모달 */}
+      {showAreaMapModal && (
+        <div
+          className="fixed inset-0 z-[200] flex items-center justify-center bg-black/80 backdrop-blur-sm px-4"
+          onClick={() => setShowAreaMapModal(false)}
+        >
+          <div
+            className="bg-zinc-900 border border-white/10 rounded-3xl w-full max-w-2xl max-h-[90vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="p-6 pb-3 flex items-center justify-between">
+              <h3 className="text-lg font-black text-white">{t("출입지역 약도", "Access Area Map")}</h3>
+              <button
+                type="button"
+                onClick={() => setShowAreaMapModal(false)}
+                className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white/60 hover:text-white transition-all"
+              >
+                ✕
+              </button>
+            </div>
+            <div className="px-6">
+              <Image
+                src="/images/visit-area-map.png"
+                alt={t("출입지역 약도", "Access Area Map")}
+                width={800}
+                height={600}
+                className="w-full h-auto rounded-2xl border border-white/10"
+              />
+            </div>
+            <div className="p-6 pt-4">
+              <p className="text-xs text-white/40 mb-3 font-bold">{t("지역을 선택하면 자동으로 입력됩니다", "Click a region to auto-fill")}</p>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                {accessAreaOptions.map((opt) => (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    onClick={() => { updateField("access_area", opt.value); setShowAreaMapModal(false) }}
+                    className={`px-4 py-3 rounded-xl text-sm font-bold border transition-all ${
+                      formData.access_area === opt.value
+                        ? "bg-amber-500 text-black border-amber-500"
+                        : "bg-white/5 text-white/70 border-white/10 hover:bg-white/10 hover:text-white"
+                    }`}
+                  >
+                    {opt.value}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
     </div>
   )
