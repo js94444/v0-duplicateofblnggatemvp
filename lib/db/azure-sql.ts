@@ -2410,9 +2410,9 @@ export class AzureSqlDB {
       `)
   }
 
-  // ★ 테스트용: true이면 테스트 날짜 기준, false이면 방문종료일로부터 3년 경과 기준
-  private static readonly PRIVACY_TEST_MODE = true
-  private static readonly PRIVACY_TEST_DATE = "'2026-04-01'"  // 이 날짜 이전 방문종료 데이터가 대상
+  // 테스트 시 true + 날짜 변경, 운영 시 false
+  private static readonly PRIVACY_TEST_MODE = false
+  private static readonly PRIVACY_TEST_DATE = "'2026-04-01'"
   private static get privacyDateCondition(): string {
     return this.PRIVACY_TEST_MODE
       ? `visit_end_date < ${this.PRIVACY_TEST_DATE}`
