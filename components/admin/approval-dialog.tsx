@@ -80,7 +80,7 @@ export function ApprovalDialog({ application, action, open, onClose, onConfirm }
         {action === "approve" && (
           <div className="text-xs text-white/60 bg-amber-500/10 border border-amber-500/20 rounded-lg p-3 space-y-1">
             <p className="font-bold text-amber-300">💡 프리패스 승인이란?</p>
-            <p>차량 출입 시 <span className="font-bold text-amber-200">FREE PASS</span> 뱃지가 표시되어 현장에서 쉽게 식별할 수 있습니다. (유조차, 정비업체 등 우선 통과 차량)</p>
+            <p>차량 번호에 <span className="font-bold text-amber-200">FREE PASS</span> 뱃지 표시</p>
           </div>
         )}
 
