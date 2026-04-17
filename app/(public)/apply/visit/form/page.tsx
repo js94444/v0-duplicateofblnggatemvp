@@ -260,6 +260,7 @@ export default function VisitFormPage() {
     }
 
     if (!formData.visit_purpose.trim()) newErrors.visit_purpose = t("방문 목적을 입력해주세요", "Please select a visit purpose")
+    if (!formData.detailed_purpose.trim()) newErrors.detailed_purpose = t("상세 방문 사유를 입력해주세요", "Please enter detailed visit reason")
 
     // 방문기간 14일 이내 체크
     if (formData.visit_start_date && formData.visit_end_date) {
@@ -966,7 +967,7 @@ export default function VisitFormPage() {
                 {/* 상세 방문 사유 */}
                 <div className="space-y-2">
                   <label className="text-sm font-bold text-white/80">
-                    {t("상세 방문 사유", "Detailed Visit Reason")} <span className="text-amber-400"> {t("부두 작업 및 현장 공사/작업의 내용", "Details for berth / construction work")} </span>
+                    {t("상세 방문 사유", "Detailed Visit Reason")} <span className="text-red-400">*</span> <span className="text-amber-400"> {t("부두 작업 및 현장 공사/작업의 내용", "Details for berth / construction work")} </span>
                   </label>
                   <textarea
                     value={formData.detailed_purpose}

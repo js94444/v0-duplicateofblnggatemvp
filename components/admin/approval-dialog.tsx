@@ -19,20 +19,20 @@ interface ApprovalDialogProps {
   action: "approve" | "reject"
   open: boolean
   onClose: () => void
-  onConfirm: (application: Application, action: "approve" | "reject", reason?: string) => void
+  onConfirm: (application: Application, action: "approve" | "reject", reason?: string, isFreePass?: boolean) => void
 }
 
 export function ApprovalDialog({ application, action, open, onClose, onConfirm }: ApprovalDialogProps) {
   const [reason, setReason] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
 
-  const handleConfirm = async () => {
+  const handleConfirm = async (isFreePass = false) => {
     if (action === "reject" && !reason.trim()) {
       return
     }
 
     setIsSubmitting(true)
-    await onConfirm(application, action, reason.trim() || undefined)
+    await onConfirm(application, action, reason.trim() || undefined, isFreePass)
     setIsSubmitting(false)
     setReason("")
   }
@@ -76,17 +76,44 @@ export function ApprovalDialog({ application, action, open, onClose, onConfirm }
           </div>
         )}
 
-        <DialogFooter>
-          <Button variant="outline" onClick={handleClose} disabled={isSubmitting}>
+        {action === "approve" && (
+          <div className="text-xs text-white/60 bg-amber-500/10 border border-amber-500/20 rounded-lg p-3 space-y-1">
+            <p className="font-bold text-amber-300">💡 프리패스 승인이란?</p>
+            <p>차량 출입 시 <span className="font-bold text-amber-200">FREE PASS</span> 뱃지가 표시되어 현장에서 쉽게 식별할 수 있습니다. (유조차, 정비업체 등 우선 통과 차량)</p>
+          </div>
+        )}
+
+        <DialogFooter className="flex-col sm:flex-row gap-2">
+          <Button variant="outline" onClick={handleClose} disabled={isSubmitting} className="w-full sm:w-auto">
             취소
           </Button>
-          <Button
-            onClick={handleConfirm}
-            disabled={isSubmitting || (action === "reject" && !reason.trim())}
-            variant={action === "approve" ? "default" : "destructive"}
-          >
-            {isSubmitting ? "처리중..." : action === "approve" ? "승인" : "반려"}
-          </Button>
+          {action === "approve" ? (
+            <>
+              <Button
+                onClick={() => handleConfirm(false)}
+                disabled={isSubmitting}
+                className="w-full sm:w-auto bg-green-600 hover:bg-green-700 text-white"
+              >
+                {isSubmitting ? "처리중..." : "승인"}
+              </Button>
+              <Button
+                onClick={() => handleConfirm(true)}
+                disabled={isSubmitting}
+                className="w-full sm:w-auto bg-amber-500 hover:bg-amber-600 text-black font-bold"
+              >
+                {isSubmitting ? "처리중..." : "⚡ 프리패스 승인"}
+              </Button>
+            </>
+          ) : (
+            <Button
+              onClick={() => handleConfirm(false)}
+              disabled={isSubmitting || !reason.trim()}
+              variant="destructive"
+              className="w-full sm:w-auto"
+            >
+              {isSubmitting ? "처리중..." : "반려"}
+            </Button>
+          )}
         </DialogFooter>
       </DialogContent>
     </Dialog>

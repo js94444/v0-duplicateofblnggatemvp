@@ -207,20 +207,20 @@ export default function AdminRequestsPage() {
     }
   }
 
-  const handleApproval = async (application: Application, action: "approve" | "reject", reason?: string) => {
+  const handleApproval = async (application: Application, action: "approve" | "reject", reason?: string, isFreePass?: boolean) => {
     try {
       const response = await fetch("/api/admin/requests/approve", {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ id: application.id, action, reason }),
+        body: JSON.stringify({ id: application.id, action, reason, isFreePass: !!isFreePass }),
       })
 
       const responseData = await response.json()
 
       if (response.ok) {
         toast({
-          title: action === "approve" ? "승인 완료" : "반려 완료",
-          description: `신청이 ${action === "approve" ? "승인" : "반려"}되었습니다`,
+          title: action === "approve" ? (isFreePass ? "프리패스 승인 완료" : "승인 완료") : "반려 완료",
+          description: `신청이 ${action === "approve" ? (isFreePass ? "프리패스 승인" : "승인") : "반려"}되었습니다`,
         })
         refreshApplications()
       } else {
@@ -525,6 +525,11 @@ export default function AdminRequestsPage() {
                               <span className={`inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-bold border ${getStatusBadgeStyle(application.status)}`}>
                                 {getStatusLabel(application.status)}
                               </span>
+                              {(application as any).is_free_pass && (
+                                <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-black bg-amber-500 text-black">
+                                  ⚡ FREE PASS
+                                </span>
+                              )}
                             </div>
                             <Button
                               size="sm"
@@ -691,9 +696,16 @@ export default function AdminRequestsPage() {
                               </TableCell>
                               <TableCell className="max-w-[100px] truncate text-white/80">{(application as any).access_area || "-"}</TableCell>
                               <TableCell>
-                                <span className={`inline-flex items-center px-3 py-1 rounded-lg text-xs font-bold border ${getStatusBadgeStyle(application.status)}`}>
-                                  {getStatusLabel(application.status)}
-                                </span>
+                                <div className="flex flex-col items-start gap-1">
+                                  <span className={`inline-flex items-center px-3 py-1 rounded-lg text-xs font-bold border ${getStatusBadgeStyle(application.status)}`}>
+                                    {getStatusLabel(application.status)}
+                                  </span>
+                                  {(application as any).is_free_pass && (
+                                    <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-black bg-amber-500 text-black">
+                                      ⚡ FREE PASS
+                                    </span>
+                                  )}
+                                </div>
                               </TableCell>
                               <TableCell className={`${user?.name && contactInfo.name && user.name === contactInfo.name ? "bg-amber-500/10 backdrop-blur-sm" : ""}`}>
                                 <div className="flex items-center justify-center">

@@ -34,6 +34,7 @@ interface ScanRow {
   vehicle_number: string | null
   vehicle_model: string | null
   spark_arrestor: string | null
+  is_free_pass?: boolean | number | null
   visit_start_date: string | null
   visit_end_date: string | null
   portCertFiles: Array<{ file_url: string; file_name: string }>
@@ -381,6 +382,7 @@ export default function AdminQrScanPage() {
       vehicle_model: row.vehicle_model,
       visitor_birth_date: row.visitor_birth_date,
       spark_arrestor: row.spark_arrestor,
+      is_free_pass: row.is_free_pass,
       contact_mobile: row.contact_mobile,
       portCertFiles: row.portCertFiles || [],
       lastEntryAt: row.entry_at,
@@ -981,10 +983,17 @@ export default function AdminQrScanPage() {
                           <TableCell className="text-sm text-white/80">
                             {formatDateTime(row.lastExitAt)}
                           </TableCell>
-                          <TableCell className="text-sm text-white/80">
-                            <div className="flex flex-col gap-0.5 items-center">
-                              <span>{row.vehicle_number || "-"}</span>
-                              {row.vehicle_model && <span className="text-xs text-white/40">{row.vehicle_model}</span>}
+                          <TableCell className="text-sm">
+                            <div className="flex items-center justify-center gap-2">
+                              {row.is_free_pass && (
+                                <span className="text-[9px] leading-tight font-black px-1.5 py-0.5 rounded bg-amber-500 text-black shrink-0 text-center">
+                                  FREE<br />PASS
+                                </span>
+                              )}
+                              <div className="flex flex-col gap-0.5 items-center">
+                                <span className={row.is_free_pass ? "text-amber-400 font-bold" : "text-white/80"}>{row.vehicle_number || "-"}</span>
+                                {row.vehicle_model && <span className="text-xs text-white/40">{row.vehicle_model}</span>}
+                              </div>
                             </div>
                           </TableCell>
                           <TableCell className="text-sm text-center text-white/80">
@@ -1224,10 +1233,17 @@ export default function AdminQrScanPage() {
                           <TableCell className="text-sm text-white/80">
                             {formatDateTime(row.lastExitAt)}
                           </TableCell>
-                          <TableCell className="text-sm text-white/80">
-                            <div className="flex flex-col gap-0.5 items-center">
-                              <span>{row.vehicle_number || "-"}</span>
-                              {row.vehicle_model && <span className="text-xs text-white/40">{row.vehicle_model}</span>}
+                          <TableCell className="text-sm">
+                            <div className="flex items-center justify-center gap-2">
+                              {row.is_free_pass && (
+                                <span className="text-[9px] leading-tight font-black px-1.5 py-0.5 rounded bg-amber-500 text-black shrink-0 text-center">
+                                  FREE<br />PASS
+                                </span>
+                              )}
+                              <div className="flex flex-col gap-0.5 items-center">
+                                <span className={row.is_free_pass ? "text-amber-400 font-bold" : "text-white/80"}>{row.vehicle_number || "-"}</span>
+                                {row.vehicle_model && <span className="text-xs text-white/40">{row.vehicle_model}</span>}
+                              </div>
                             </div>
                           </TableCell>
                           <TableCell className="text-sm text-center text-white/80">

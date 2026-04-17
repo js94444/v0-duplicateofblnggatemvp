@@ -84,8 +84,11 @@ async function createIndexesIfNotExists(p: sql.ConnectionPool): Promise<void> {
     `IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_visit_electronic_devices_application_id') 
      CREATE NONCLUSTERED INDEX IX_visit_electronic_devices_application_id ON visit_electronic_devices(application_id)`,
     // visit_attachments - application_id로 JOIN 최적화
-    `IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_visit_attachments_application_id') 
+    `IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_visit_attachments_application_id')
      CREATE NONCLUSTERED INDEX IX_visit_attachments_application_id ON visit_attachments(application_id)`,
+    // 프리패스 승인 플래그 추가
+    `IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('visit_applications') AND name = 'is_free_pass')
+     ALTER TABLE visit_applications ADD is_free_pass BIT DEFAULT 0`,
   ]
 
   for (const sql_str of indexes) {
@@ -1039,7 +1042,7 @@ export class AzureSqlDB {
                visitor_organization, visitor_position, visitor_email, visitor_birth_date,
                visitor_address, visit_start_date, visit_end_date,
                visit_purpose, detailed_purpose, contact_name, contact_mobile, access_area,
-               vehicle_number, vehicle_model, spark_arrestor, rejection_reason, created_at, updated_at
+               vehicle_number, vehicle_model, spark_arrestor, is_free_pass, rejection_reason, created_at, updated_at
         FROM visit_applications a WITH (NOLOCK)
         ${whereClause}
         ${orderByClause}
@@ -1161,6 +1164,7 @@ export class AzureSqlDB {
         vehicle_number: row.vehicle_number,
         vehicle_model: row.vehicle_model,
         spark_arrestor: row.spark_arrestor,
+        is_free_pass: !!row.is_free_pass,
         visit_start_time: "09:00",
         visit_end_time: "18:00",
         created_at: new Date(row.created_at),
@@ -1186,7 +1190,7 @@ export class AzureSqlDB {
                visitor_organization, visitor_position, visitor_email, visitor_birth_date,
                visitor_address, visit_start_date, visit_end_date,
                visit_purpose, detailed_purpose, contact_name, contact_mobile, access_area,
-               vehicle_number, vehicle_model, spark_arrestor, rejection_reason, created_at, updated_at
+               vehicle_number, vehicle_model, spark_arrestor, is_free_pass, rejection_reason, created_at, updated_at
         FROM visit_applications WITH (NOLOCK) WHERE application_id = @id
       `),
       dbPool.request().input('id', sql.BigInt, id).query(`SELECT application_id, file_name, file_key, blob_url, file_type, file_size, attachment_type FROM visit_attachments WITH (NOLOCK) WHERE application_id = @id`),
@@ -1253,7 +1257,7 @@ export class AzureSqlDB {
       visit_purpose: row.visit_purpose, detailed_purpose: row.detailed_purpose,
       contact_name: row.contact_name, contact_mobile: row.contact_mobile, contact_email: row.visitor_email,
       access_area: row.access_area as AccessArea, vehicle_number: row.vehicle_number, vehicle_model: row.vehicle_model,
-      spark_arrestor: row.spark_arrestor, visit_start_time: "09:00", visit_end_time: "18:00",
+      spark_arrestor: row.spark_arrestor, is_free_pass: !!row.is_free_pass, visit_start_time: "09:00", visit_end_time: "18:00",
       created_at: new Date(row.created_at), updated_at: new Date(row.updated_at), rejection_reason: row.rejection_reason,
       files, portCertFiles, companions, electronicDevices,
     } as any
@@ -2041,6 +2045,7 @@ export class AzureSqlDB {
             a.vehicle_number,
             a.vehicle_model,
             a.spark_arrestor,
+            a.is_free_pass,
             a.visit_start_date,
             a.visit_end_date,
             a.access_area,
@@ -2156,6 +2161,7 @@ export class AzureSqlDB {
           ap.vehicle_number,
           ap.vehicle_model,
           ap.spark_arrestor,
+          ap.is_free_pass,
           ap.visit_start_date,
           ap.visit_end_date,
           ap.access_area,
@@ -2194,6 +2200,7 @@ export class AzureSqlDB {
           ap.vehicle_number,
           ap.vehicle_model,
           ap.spark_arrestor,
+          ap.is_free_pass,
           ap.visit_start_date,
           ap.visit_end_date,
           ap.access_area,
@@ -2398,6 +2405,15 @@ export class AzureSqlDB {
       `)
   }
 
+  /** 프리패스 플래그 설정 */
+  static async setFreePassFlag(applicationId: string, isFreePass: boolean): Promise<void> {
+    const dbPool = await getPool()
+    await dbPool.request()
+      .input('application_id', sql.BigInt, applicationId)
+      .input('is_free_pass', sql.Bit, isFreePass ? 1 : 0)
+      .query(`UPDATE visit_applications SET is_free_pass = @is_free_pass WHERE application_id = @application_id`)
+  }
+
   /** 승인 취소 시 해당 application의 모든 visit_passes를 REVOKED로 무효화 */
   static async revokePassesByApplicationId(applicationId: string): Promise<void> {
     const dbPool = await getPool()
@@ -2520,9 +2536,6 @@ export class AzureSqlDB {
 
     console.log(`[privacy] Purged ${targetIds.length} expired applications (${blobsDeleted} blobs deleted, ${blobsFailed} failed) by ${adminName}`)
     return { affected: targetIds.length, blobsDeleted, blobsFailed }
-
-    console.log(`[privacy] Masked ${targetIds.length} expired applications by ${adminName}`)
-    return { affected: targetIds.length }
   }
 
   /** 여러 application_id에 대한 항만이수증 파일 조회 (신청자 본인 항만이수증만) */

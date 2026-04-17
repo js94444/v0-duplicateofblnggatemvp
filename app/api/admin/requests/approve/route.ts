@@ -13,9 +13,9 @@ export async function POST(request: NextRequest) {
   try {
     const auth = getAuthenticatedAdmin(request)
     if (isAuthError(auth)) return auth
-    const { id, action, reason } = await request.json()
+    const { id, action, reason, isFreePass } = await request.json()
 
-    console.log("[v0] Approval API called with:", { id, action, reason })
+    console.log("[v0] Approval API called with:", { id, action, reason, isFreePass })
 
     if (!id || !action) {
       console.error("[v0] Missing parameters:", { id, action })
@@ -49,6 +49,9 @@ export async function POST(request: NextRequest) {
       // 2) QR pass 무효화 (REVOKED)
       await AzureSqlDB.revokePassesByApplicationId(id)
       console.log("[v0] Revoked passes for application:", id)
+
+      // 2-1) 프리패스 플래그 리셋 (재승인 시 다시 선택하도록)
+      await AzureSqlDB.setFreePassFlag(id, false)
 
       // 3) SMS 발송 (신청자 + 담당자)
       try {
@@ -93,6 +96,12 @@ export async function POST(request: NextRequest) {
     let companionPasses: { companion_id: number; name: string; phone: string; pass_receipt: string }[] = []
 
     if (action === "approve") {
+      // 프리패스 플래그 저장
+      if (isFreePass) {
+        await AzureSqlDB.setFreePassFlag(id, true)
+        console.log("[v0] Marked as FREE PASS:", id)
+      }
+
       // 신청자 QR 생성 - application_number 사용
       const applicationNumber = updatedApplication.application_number || updatedApplication.receipt || AzureSqlDB.generatePassReceipt()
       pass_receipt = applicationNumber
