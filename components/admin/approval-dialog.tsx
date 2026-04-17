@@ -44,18 +44,18 @@ export function ApprovalDialog({ application, action, open, onClose, onConfirm }
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent>
+      <DialogContent className="bg-zinc-900 border border-white/10 text-white">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
+          <DialogTitle className="flex items-center gap-2 text-white">
             {action === "approve" ? (
-              <span className="text-green-600">✅</span>
+              <span className="text-green-400">✅</span>
             ) : (
-              <span className="text-red-600">❌</span>
+              <span className="text-red-400">❌</span>
             )}
             {action === "approve" ? "신청 승인" : "신청 반려"}
           </DialogTitle>
-          <DialogDescription>
-            접수번호: {application.receipt}
+          <DialogDescription className="text-white/70">
+            접수번호: <span className="text-white font-mono font-bold">{application.receipt}</span>
             <br />
             {action === "approve"
               ? "이 신청을 승인하시겠습니까?"
@@ -65,13 +65,14 @@ export function ApprovalDialog({ application, action, open, onClose, onConfirm }
 
         {action === "reject" && (
           <div className="space-y-2">
-            <Label htmlFor="reason">반려 사유 *</Label>
+            <Label htmlFor="reason" className="text-white/80 font-bold">반려 사유 <span className="text-red-400">*</span></Label>
             <Textarea
               id="reason"
               placeholder="반려 사유를 상세히 입력해주세요"
               value={reason}
               onChange={(e) => setReason(e.target.value)}
               rows={4}
+              className="bg-white/5 border-white/10 text-white placeholder:text-white/30"
             />
           </div>
         )}
@@ -84,7 +85,7 @@ export function ApprovalDialog({ application, action, open, onClose, onConfirm }
         )}
 
         <DialogFooter className="flex-col sm:flex-row gap-2">
-          <Button variant="outline" onClick={handleClose} disabled={isSubmitting} className="w-full sm:w-auto">
+          <Button onClick={handleClose} disabled={isSubmitting} className="w-full sm:w-auto bg-white/10 hover:bg-white/20 border border-white/20 text-white/80">
             취소
           </Button>
           {action === "approve" ? (
