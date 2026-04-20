@@ -2497,28 +2497,31 @@ export class AzureSqlDB {
     }
 
     // 4) 신청자 개인정보 마스킹 (통계 유지 목적으로 행 자체는 보존)
-    await dbPool.request().query(`
-      UPDATE visit_applications
-      SET visitor_name = '***',
-          visitor_phone = '***',
-          visitor_birth_date = NULL,
-          visitor_address = '***',
-          visitor_email = NULL,
-          visitor_position = '***',
-          visitor_organization = '***',
-          visit_purpose = NULL,
-          visit_start_date = '1900-01-01',
-          visit_end_date = '1900-01-01',
-          access_area = '***',
-          detailed_purpose = NULL,
-          vehicle_number = NULL,
-          vehicle_model = NULL,
-          contact_mobile = '***',
-          submission_ip = NULL,
-          spark_arrestor = NULL,
-          updated_at = GETDATE()
-      WHERE application_id IN (${idList})
-    `)
+    // updated_at은 다른 UPDATE들과 일관성 위해 KST 값 사용
+    await dbPool.request()
+      .input('updated_at', sql.DateTime, getKoreaTime())
+      .query(`
+        UPDATE visit_applications
+        SET visitor_name = '***',
+            visitor_phone = '***',
+            visitor_birth_date = NULL,
+            visitor_address = '***',
+            visitor_email = NULL,
+            visitor_position = '***',
+            visitor_organization = '***',
+            visit_purpose = NULL,
+            visit_start_date = '1900-01-01',
+            visit_end_date = '1900-01-01',
+            access_area = '***',
+            detailed_purpose = NULL,
+            vehicle_number = NULL,
+            vehicle_model = NULL,
+            contact_mobile = '***',
+            submission_ip = NULL,
+            spark_arrestor = NULL,
+            updated_at = @updated_at
+        WHERE application_id IN (${idList})
+      `)
 
     // 5) Azure Blob Storage 파일 삭제
     let blobsDeleted = 0, blobsFailed = 0
