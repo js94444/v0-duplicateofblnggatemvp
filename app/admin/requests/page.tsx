@@ -601,7 +601,7 @@ export default function AdminRequestsPage() {
                             {/* 날짜 */}
                             <div className="flex items-center gap-2">
                               <span className="text-white/40 w-12 shrink-0">신청일</span>
-                              <span className="text-white/60">{new Date(application.created_at).toLocaleDateString("ko-KR")}</span>
+                              <span className="text-white/60">{new Date(application.created_at).toLocaleDateString("ko-KR", { timeZone: "UTC" })}</span>
                             </div>
                             <div className="flex items-center gap-2">
                               <span className="text-white/40 w-12 shrink-0">방문일</span>
@@ -681,7 +681,7 @@ export default function AdminRequestsPage() {
                                 </div>
                               </TableCell>
                               <TableCell className="text-sm text-white/80">{(application as any).visitor_phone || "-"}</TableCell>
-                              <TableCell className="text-white/80">{new Date(application.created_at).toLocaleDateString("ko-KR")}</TableCell>
+                              <TableCell className="text-white/80">{new Date(application.created_at).toLocaleDateString("ko-KR", { timeZone: "UTC" })}</TableCell>
                               <TableCell className="text-sm text-white/80">{getVisitDateRange(application)}</TableCell>
                               <TableCell className="max-w-[150px] truncate text-sm text-white/80">
                                 {(application as any).visitor_name || "-"}/{(application as any).visitor_organization || (application as any).organization || (application as any).company || "-"}
