@@ -13,9 +13,9 @@ export async function POST(request: NextRequest) {
   try {
     const auth = getAuthenticatedAdmin(request)
     if (isAuthError(auth)) return auth
-    const { id, action, reason, isFreePass } = await request.json()
+    const { id, action, reason, isFreePass, approvalNote } = await request.json()
 
-    console.log("[v0] Approval API called with:", { id, action, reason, isFreePass })
+    console.log("[v0] Approval API called with:", { id, action, reason, isFreePass, approvalNote })
 
     if (!id || !action) {
       console.error("[v0] Missing parameters:", { id, action })
@@ -100,6 +100,11 @@ export async function POST(request: NextRequest) {
       if (isFreePass) {
         await AzureSqlDB.setFreePassFlag(id, true)
         console.log("[v0] Marked as FREE PASS:", id)
+      }
+
+      // 관리자 승인 의견 저장
+      if (approvalNote && approvalNote.trim()) {
+        await AzureSqlDB.setApprovalNote(id, approvalNote.trim())
       }
 
       // 신청자 QR 생성 - application_number 사용

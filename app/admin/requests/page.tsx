@@ -36,6 +36,11 @@ export default function AdminRequestsPage() {
   } | null>(null)
   const [checkStates, setCheckStates] = useState<Record<string, boolean>>({})
   const [checkLoading, setCheckLoading] = useState<Record<string, boolean>>({})
+  const [checkDecisions, setCheckDecisions] = useState<Record<string, 'approve' | 'reject' | null>>({})
+  const [checkNotes, setCheckNotes] = useState<Record<string, string>>({})
+  // 담당자 의견 입력 모달 상태
+  const [decisionDialog, setDecisionDialog] = useState<{ application: Application; decision: 'approve' | 'reject' } | null>(null)
+  const [decisionNote, setDecisionNote] = useState("")
   const [filterOpen, setFilterOpen] = useState(false)
 
   // Filters
@@ -153,7 +158,10 @@ export default function AdminRequestsPage() {
           .then((r) => r.json())
           .then((data) => {
             if (data.my_check) {
-              setCheckStates((prev) => ({ ...prev, [String(app.id)]: !!data.my_check.checked }))
+              const id = String(app.id)
+              setCheckStates((prev) => ({ ...prev, [id]: !!data.my_check.checked }))
+              setCheckDecisions((prev) => ({ ...prev, [id]: data.my_check.decision || null }))
+              setCheckNotes((prev) => ({ ...prev, [id]: data.my_check.note || "" }))
             }
           })
           .catch(() => { })
@@ -161,21 +169,31 @@ export default function AdminRequestsPage() {
     }
   }, [applications, token])
 
-  const handleCheck = async (applicationId: string, checked: boolean) => {
+  const handleCheck = async (applicationId: string, checked: boolean, decision?: 'approve' | 'reject' | null, note?: string) => {
     if (!token) return
     setCheckLoading((prev) => ({ ...prev, [applicationId]: true }))
     try {
       await fetch("/api/admin/requests/check", {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ application_id: Number(applicationId), checked }),
+        body: JSON.stringify({ application_id: Number(applicationId), checked, decision, note }),
       })
       setCheckStates((prev) => ({ ...prev, [applicationId]: checked }))
+      if (decision !== undefined) setCheckDecisions((prev) => ({ ...prev, [applicationId]: decision }))
+      if (note !== undefined) setCheckNotes((prev) => ({ ...prev, [applicationId]: note || "" }))
     } catch {
       toast({ title: "오류", description: "확인 처리 중 오류가 발생했습니다", variant: "destructive" })
     } finally {
       setCheckLoading((prev) => ({ ...prev, [applicationId]: false }))
     }
+  }
+
+  // 담당자 결정 모달 확정
+  const handleDecisionConfirm = async () => {
+    if (!decisionDialog) return
+    await handleCheck(String(decisionDialog.application.id), true, decisionDialog.decision, decisionNote.trim() || undefined)
+    setDecisionDialog(null)
+    setDecisionNote("")
   }
 
   // 서버 페이지네이션: 모든 필터/정렬/페이지네이션은 서버에서 처리
@@ -207,12 +225,12 @@ export default function AdminRequestsPage() {
     }
   }
 
-  const handleApproval = async (application: Application, action: "approve" | "reject", reason?: string, isFreePass?: boolean) => {
+  const handleApproval = async (application: Application, action: "approve" | "reject", reason?: string, isFreePass?: boolean, approvalNote?: string) => {
     try {
       const response = await fetch("/api/admin/requests/approve", {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ id: application.id, action, reason, isFreePass: !!isFreePass }),
+        body: JSON.stringify({ id: application.id, action, reason, isFreePass: !!isFreePass, approvalNote }),
       })
 
       const responseData = await response.json()
@@ -540,31 +558,30 @@ export default function AdminRequestsPage() {
                             </Button>
                           </div>
 
-                          {/* 담당자 확인 체크 — 별도 강조 영역 */}
+                          {/* 담당자 확인 — 승인/반려 결정 + 의견 */}
                           <div
-                            className={`flex items-center justify-between px-4 py-2.5 transition-all ${checkStates[String(application.id)]
+                            className={`flex items-center justify-between px-4 py-2.5 gap-2 transition-all ${checkStates[String(application.id)]
                               ? "bg-amber-500/15 border-b border-amber-500/20"
                               : "bg-white/[0.02] border-b border-white/5"
                               }`}
                           >
-                            <div className="flex items-center gap-2">
-                              <Checkbox
-                                checked={!!checkStates[String(application.id)]}
-                                disabled={!!checkLoading[String(application.id)]}
-                                onCheckedChange={(checked) => handleCheck(String(application.id), !!checked)}
-                                className="w-6 h-6 border-2 border-amber-500/50 data-[state=checked]:bg-amber-500 data-[state=checked]:border-amber-500 rounded-md"
-                              />
-                              <span className={`text-sm font-bold ${checkStates[String(application.id)] ? "text-amber-400" : "text-amber-500/70"
-                                }`}>
-                                담당자 확인
+                            <div className="flex flex-col gap-0.5 flex-1 min-w-0">
+                              <span className={`text-xs font-bold ${checkStates[String(application.id)] ? "text-amber-400" : "text-amber-500/70"}`}>
+                                담당자 확인 의견
+                                {checkDecisions[String(application.id)] === 'approve' && <span className="ml-2 text-emerald-400">✓ 승인</span>}
+                                {checkDecisions[String(application.id)] === 'reject' && <span className="ml-2 text-red-400">✕ 반려</span>}
                               </span>
+                              {checkNotes[String(application.id)] && (
+                                <span className="text-[11px] text-white/50 truncate">{checkNotes[String(application.id)]}</span>
+                              )}
+                              {!checkStates[String(application.id)] && isMyTask && (
+                                <span className="text-[10px] text-amber-400 font-bold animate-pulse">확인 필요</span>
+                              )}
                             </div>
-                            {checkStates[String(application.id)] && (
-                              <span className="text-[11px] text-amber-400/60 font-medium">확인 완료</span>
-                            )}
-                            {!checkStates[String(application.id)] && isMyTask && (
-                              <span className="text-[11px] text-amber-400 font-bold animate-pulse">확인 필요</span>
-                            )}
+                            <div className="flex gap-1 shrink-0">
+                              <Button size="sm" disabled={!!checkLoading[String(application.id)]} onClick={() => { setDecisionDialog({ application, decision: 'approve' }); setDecisionNote(checkNotes[String(application.id)] || "") }} className="bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-500/50 text-emerald-300 rounded-lg text-xs px-2 py-1 h-7">승인</Button>
+                              <Button size="sm" disabled={!!checkLoading[String(application.id)]} onClick={() => { setDecisionDialog({ application, decision: 'reject' }); setDecisionNote(checkNotes[String(application.id)] || "") }} className="bg-red-500/20 hover:bg-red-500/30 border border-red-500/50 text-red-300 rounded-lg text-xs px-2 py-1 h-7">반려</Button>
+                            </div>
                           </div>
 
 
@@ -708,13 +725,14 @@ export default function AdminRequestsPage() {
                                 </div>
                               </TableCell>
                               <TableCell className={`${user?.name && contactInfo.name && user.name === contactInfo.name ? "bg-amber-500/10 backdrop-blur-sm" : ""}`}>
-                                <div className="flex items-center justify-center">
-                                  <Checkbox
-                                    checked={!!checkStates[String(application.id)]}
-                                    disabled={!!checkLoading[String(application.id)]}
-                                    onCheckedChange={(checked) => handleCheck(String(application.id), !!checked)}
-                                    className="w-5 h-5 border-white/30 data-[state=checked]:bg-amber-500 data-[state=checked]:border-amber-500"
-                                  />
+                                <div className="flex flex-col items-center gap-1.5">
+                                  <div className="flex gap-1">
+                                    <Button size="sm" disabled={!!checkLoading[String(application.id)]} onClick={() => { setDecisionDialog({ application, decision: 'approve' }); setDecisionNote(checkNotes[String(application.id)] || "") }} className={`rounded-md text-[10px] px-2 py-1 h-6 border ${checkDecisions[String(application.id)] === 'approve' ? 'bg-emerald-500 text-black border-emerald-500 font-bold' : 'bg-emerald-500/20 hover:bg-emerald-500/30 border-emerald-500/50 text-emerald-300'}`}>승인</Button>
+                                    <Button size="sm" disabled={!!checkLoading[String(application.id)]} onClick={() => { setDecisionDialog({ application, decision: 'reject' }); setDecisionNote(checkNotes[String(application.id)] || "") }} className={`rounded-md text-[10px] px-2 py-1 h-6 border ${checkDecisions[String(application.id)] === 'reject' ? 'bg-red-500 text-white border-red-500 font-bold' : 'bg-red-500/20 hover:bg-red-500/30 border-red-500/50 text-red-300'}`}>반려</Button>
+                                  </div>
+                                  {checkNotes[String(application.id)] && (
+                                    <span className="text-[10px] text-white/50 truncate max-w-[120px]" title={checkNotes[String(application.id)]}>{checkNotes[String(application.id)]}</span>
+                                  )}
                                 </div>
                               </TableCell>
                               <TableCell>
@@ -856,6 +874,42 @@ export default function AdminRequestsPage() {
           onClose={() => setApprovalDialog(null)}
           onConfirm={handleApproval}
         />
+      )}
+
+      {/* 담당자 결정 입력 모달 */}
+      {decisionDialog && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/80 backdrop-blur-sm px-4" onClick={() => { setDecisionDialog(null); setDecisionNote("") }}>
+          <div className="bg-zinc-900 border border-white/10 rounded-3xl w-full max-w-md" onClick={(e) => e.stopPropagation()}>
+            <div className="p-5 pb-3 flex items-center justify-between border-b border-white/10">
+              <div>
+                <h3 className="text-base font-black text-white flex items-center gap-2">
+                  {decisionDialog.decision === 'approve' ? <span className="text-emerald-400">✓ 담당자 승인 의견</span> : <span className="text-red-400">✕ 담당자 반려 의견</span>}
+                </h3>
+                <p className="text-xs text-white/40 mt-0.5">접수번호: <span className="font-mono">{decisionDialog.application.receipt}</span></p>
+              </div>
+              <button type="button" onClick={() => { setDecisionDialog(null); setDecisionNote("") }} className="w-7 h-7 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white/60 text-xs">✕</button>
+            </div>
+            <div className="p-5 space-y-3">
+              <p className="text-xs text-white/60">담당자 결정은 <span className="text-amber-300 font-bold">참고용 의견</span>이며 최종 결정은 관리자가 진행합니다.</p>
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-white/70">의견 <span className="text-white/40 font-normal">(선택)</span></label>
+                <textarea
+                  value={decisionNote}
+                  onChange={(e) => setDecisionNote(e.target.value)}
+                  rows={3}
+                  placeholder="예: 일정 확인됨, 안전교육 이수자"
+                  className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-amber-500/50 text-sm resize-none"
+                />
+              </div>
+            </div>
+            <div className="p-5 pt-0 flex justify-end gap-2">
+              <Button onClick={() => { setDecisionDialog(null); setDecisionNote("") }} className="bg-white/10 hover:bg-white/20 border border-white/20 text-white/80 text-sm px-4 py-2">취소</Button>
+              <Button onClick={handleDecisionConfirm} className={`text-sm px-4 py-2 font-bold ${decisionDialog.decision === 'approve' ? 'bg-emerald-500 hover:bg-emerald-600 text-black' : 'bg-red-500 hover:bg-red-600 text-white'}`}>
+                {decisionDialog.decision === 'approve' ? '승인 의견 저장' : '반려 의견 저장'}
+              </Button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   )

@@ -344,6 +344,21 @@ export function ApplicationDetailModal({ application, open, loading = false, sca
   const [isSaving, setIsSaving] = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
   const [isCancellingApproval, setIsCancellingApproval] = useState(false)
+  const [managerCheck, setManagerCheck] = useState<{ decision: string | null; note: string | null; checked_by?: string; checked_at?: string } | null>(null)
+
+  // 담당자 확인 의견 조회
+  useEffect(() => {
+    if (!open || !app?.id || !token) return
+    fetch(`/api/admin/requests/check?application_id=${app.id}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.my_check) setManagerCheck(data.my_check)
+        else setManagerCheck(null)
+      })
+      .catch(() => setManagerCheck(null))
+  }, [open, app?.id, token])
 
   // 수정 모드 진입 시 현재 데이터로 초기화
   const startEditing = () => {
@@ -788,6 +803,34 @@ export function ApplicationDetailModal({ application, open, loading = false, sca
                       </tbody>
                     </table>
                   </div>
+                </div>
+              )}
+
+              {/* 담당자 확인 의견 (참고용) */}
+              {managerCheck && (managerCheck.decision || managerCheck.note) && (
+                <div className="bg-amber-500/5 border border-amber-500/20 rounded-2xl sm:rounded-[32px] p-4 sm:p-6">
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="text-base sm:text-lg font-black text-amber-300">담당자 확인 의견 <span className="text-xs font-normal text-white/40">(참고용)</span></h3>
+                    <div className="flex items-center gap-2 text-xs">
+                      {managerCheck.decision === 'approve' && <span className="px-2 py-1 rounded-md bg-emerald-500/20 text-emerald-300 font-bold">✓ 승인</span>}
+                      {managerCheck.decision === 'reject' && <span className="px-2 py-1 rounded-md bg-red-500/20 text-red-300 font-bold">✕ 반려</span>}
+                    </div>
+                  </div>
+                  {managerCheck.note && (
+                    <div className="bg-black/20 p-3 sm:p-4 rounded-xl text-white/80 text-sm whitespace-pre-wrap">{managerCheck.note}</div>
+                  )}
+                  <div className="mt-2 text-xs text-white/40">
+                    {managerCheck.checked_by && <>담당자: {managerCheck.checked_by}</>}
+                    {managerCheck.checked_at && <span className="ml-3">{new Date(managerCheck.checked_at).toLocaleString("ko-KR", { timeZone: "UTC" })}</span>}
+                  </div>
+                </div>
+              )}
+
+              {/* 관리자 승인 의견 */}
+              {(app as any).approval_note && (
+                <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-2xl sm:rounded-[32px] p-4 sm:p-6">
+                  <h3 className="text-base sm:text-lg font-black text-emerald-300 mb-3">관리자 승인 의견</h3>
+                  <div className="bg-black/20 p-3 sm:p-4 rounded-xl text-white/90 text-sm whitespace-pre-wrap">{(app as any).approval_note}</div>
                 </div>
               )}
 

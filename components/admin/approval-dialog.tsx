@@ -19,11 +19,12 @@ interface ApprovalDialogProps {
   action: "approve" | "reject"
   open: boolean
   onClose: () => void
-  onConfirm: (application: Application, action: "approve" | "reject", reason?: string, isFreePass?: boolean) => void
+  onConfirm: (application: Application, action: "approve" | "reject", reason?: string, isFreePass?: boolean, approvalNote?: string) => void
 }
 
 export function ApprovalDialog({ application, action, open, onClose, onConfirm }: ApprovalDialogProps) {
   const [reason, setReason] = useState("")
+  const [approvalNote, setApprovalNote] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   const handleConfirm = async (isFreePass = false) => {
@@ -32,13 +33,15 @@ export function ApprovalDialog({ application, action, open, onClose, onConfirm }
     }
 
     setIsSubmitting(true)
-    await onConfirm(application, action, reason.trim() || undefined, isFreePass)
+    await onConfirm(application, action, reason.trim() || undefined, isFreePass, approvalNote.trim() || undefined)
     setIsSubmitting(false)
     setReason("")
+    setApprovalNote("")
   }
 
   const handleClose = () => {
     setReason("")
+    setApprovalNote("")
     onClose()
   }
 
@@ -78,10 +81,23 @@ export function ApprovalDialog({ application, action, open, onClose, onConfirm }
         )}
 
         {action === "approve" && (
-          <div className="text-xs text-white/60 bg-amber-500/10 border border-amber-500/20 rounded-lg p-3 space-y-1">
-            <p className="font-bold text-amber-300">💡 프리패스 승인이란?</p>
-            <p>차량 번호에 <span className="font-bold text-amber-200">FREE PASS</span> 뱃지 표시</p>
-          </div>
+          <>
+            <div className="space-y-2">
+              <Label htmlFor="approval_note" className="text-white/80 font-bold">승인 의견 <span className="text-white/40 font-normal">(선택)</span></Label>
+              <Textarea
+                id="approval_note"
+                placeholder="예: VIP 방문, 우선 처리 등 (선택 입력)"
+                value={approvalNote}
+                onChange={(e) => setApprovalNote(e.target.value)}
+                rows={2}
+                className="bg-white/5 border-white/10 text-white placeholder:text-white/30"
+              />
+            </div>
+            <div className="text-xs text-white/60 bg-amber-500/10 border border-amber-500/20 rounded-lg p-3 space-y-1">
+              <p className="font-bold text-amber-300">💡 프리패스 승인이란?</p>
+              <p>차량 번호에 <span className="font-bold text-amber-200">FREE PASS</span> 뱃지 표시</p>
+            </div>
+          </>
         )}
 
         <DialogFooter className="flex-col sm:flex-row gap-2">

@@ -17,12 +17,14 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ code: "UNAUTHORIZED", message: "인증이 필요합니다" }, { status: 401 })
   }
 
-  const { application_id, checked, note } = await request.json()
+  const { application_id, checked, note, decision } = await request.json()
   if (application_id === undefined || checked === undefined) {
     return NextResponse.json({ code: "MISSING_FIELDS", message: "필수 값이 누락되었습니다" }, { status: 400 })
   }
 
-  await AzureSqlDB.setApplicationCheck(Number(application_id), Number(user.id), checked, note)
+  // decision: 'approve' | 'reject' | null (참고용 의견)
+  const normalizedDecision = decision === 'approve' || decision === 'reject' ? decision : null
+  await AzureSqlDB.setApplicationCheck(Number(application_id), Number(user.id), checked, note, normalizedDecision)
   return NextResponse.json({ message: checked ? "확인 완료" : "확인 취소" })
 }
 

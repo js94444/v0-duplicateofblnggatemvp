@@ -89,6 +89,12 @@ async function createIndexesIfNotExists(p: sql.ConnectionPool): Promise<void> {
     // 프리패스 승인 플래그 추가
     `IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('visit_applications') AND name = 'is_free_pass')
      ALTER TABLE visit_applications ADD is_free_pass BIT DEFAULT 0`,
+    // 관리자 승인 의견 컬럼 추가
+    `IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('visit_applications') AND name = 'approval_note')
+     ALTER TABLE visit_applications ADD approval_note NVARCHAR(1000) NULL`,
+    // 담당자 결정 컬럼 추가 (참고용 의견)
+    `IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('application_checks') AND name = 'decision')
+     ALTER TABLE application_checks ADD decision NVARCHAR(20) NULL`,
   ]
 
   for (const sql_str of indexes) {
@@ -1042,7 +1048,7 @@ export class AzureSqlDB {
                visitor_organization, visitor_position, visitor_email, visitor_birth_date,
                visitor_address, visit_start_date, visit_end_date,
                visit_purpose, detailed_purpose, contact_name, contact_mobile, access_area,
-               vehicle_number, vehicle_model, spark_arrestor, is_free_pass, rejection_reason, created_at, updated_at
+               vehicle_number, vehicle_model, spark_arrestor, is_free_pass, rejection_reason, approval_note, created_at, updated_at
         FROM visit_applications a WITH (NOLOCK)
         ${whereClause}
         ${orderByClause}
@@ -1170,6 +1176,7 @@ export class AzureSqlDB {
         created_at: new Date(row.created_at),
         updated_at: new Date(row.updated_at),
         rejection_reason: row.rejection_reason,
+        approval_note: row.approval_note,
         files: attachMap.get(appId) || [],
         portCertFiles: portCertMap.get(appId) || [],
         companions,
@@ -1190,7 +1197,7 @@ export class AzureSqlDB {
                visitor_organization, visitor_position, visitor_email, visitor_birth_date,
                visitor_address, visit_start_date, visit_end_date,
                visit_purpose, detailed_purpose, contact_name, contact_mobile, access_area,
-               vehicle_number, vehicle_model, spark_arrestor, is_free_pass, rejection_reason, created_at, updated_at
+               vehicle_number, vehicle_model, spark_arrestor, is_free_pass, rejection_reason, approval_note, created_at, updated_at
         FROM visit_applications WITH (NOLOCK) WHERE application_id = @id
       `),
       dbPool.request().input('id', sql.BigInt, id).query(`SELECT application_id, file_name, file_key, blob_url, file_type, file_size, attachment_type FROM visit_attachments WITH (NOLOCK) WHERE application_id = @id`),
@@ -1259,6 +1266,7 @@ export class AzureSqlDB {
       access_area: row.access_area as AccessArea, vehicle_number: row.vehicle_number, vehicle_model: row.vehicle_model,
       spark_arrestor: row.spark_arrestor, is_free_pass: !!row.is_free_pass, visit_start_time: "09:00", visit_end_time: "18:00",
       created_at: new Date(row.created_at), updated_at: new Date(row.updated_at), rejection_reason: row.rejection_reason,
+      approval_note: row.approval_note,
       files, portCertFiles, companions, electronicDevices,
     } as any
   }
@@ -1484,12 +1492,12 @@ export class AzureSqlDB {
   // ─── 신청서 확인 체크──────────────
 
   /** 확인 체크 조회 (application_id 기준, 모든 계정 공유) */
-  static async getApplicationCheck(applicationId: number): Promise<{ checked: boolean; checked_at: Date | null; note: string | null; checked_by?: string } | null> {
+  static async getApplicationCheck(applicationId: number): Promise<{ checked: boolean; checked_at: Date | null; note: string | null; decision: string | null; checked_by?: string } | null> {
     const dbPool = await getPool()
     const result = await dbPool.request()
       .input('application_id', sql.BigInt, applicationId)
       .query(`
-        SELECT TOP 1 ac.checked, ac.checked_at, ac.note, aa.name as checked_by
+        SELECT TOP 1 ac.checked, ac.checked_at, ac.note, ac.decision, aa.name as checked_by
         FROM application_checks ac
         LEFT JOIN admin_accounts aa ON ac.account_id = aa.account_id
         WHERE ac.application_id = @application_id
@@ -1504,7 +1512,7 @@ export class AzureSqlDB {
     const result = await dbPool.request()
       .input('application_id', sql.BigInt, applicationId)
       .query(`
-        SELECT ac.checked, ac.checked_at, ac.note, aa.name, aa.role
+        SELECT ac.checked, ac.checked_at, ac.note, ac.decision, aa.name, aa.role
         FROM application_checks ac
         JOIN admin_accounts aa ON ac.account_id = aa.account_id
         WHERE ac.application_id = @application_id
@@ -1513,7 +1521,7 @@ export class AzureSqlDB {
   }
 
   /** 확인 체크 저장/업데이트 (UPSERT) */
-  static async setApplicationCheck(applicationId: number, accountId: number, checked: boolean, note?: string): Promise<void> {
+  static async setApplicationCheck(applicationId: number, accountId: number, checked: boolean, note?: string, decision?: 'approve' | 'reject' | null): Promise<void> {
     const dbPool = await getPool()
     const now = getKoreaTime()
     await dbPool.request()
@@ -1522,15 +1530,16 @@ export class AzureSqlDB {
       .input('checked', sql.Bit, checked ? 1 : 0)
       .input('checked_at', sql.DateTime, checked ? now : null)
       .input('note', sql.NVarChar(500), note || null)
+      .input('decision', sql.NVarChar(20), decision || null)
       .query(`
         MERGE application_checks AS target
         USING (SELECT @application_id AS application_id, @account_id AS account_id) AS source
         ON target.application_id = source.application_id AND target.account_id = source.account_id
         WHEN MATCHED THEN
-          UPDATE SET checked = @checked, checked_at = @checked_at, note = @note
+          UPDATE SET checked = @checked, checked_at = @checked_at, note = @note, decision = @decision
         WHEN NOT MATCHED THEN
-          INSERT (application_id, account_id, checked, checked_at, note)
-          VALUES (@application_id, @account_id, @checked, @checked_at, @note);
+          INSERT (application_id, account_id, checked, checked_at, note, decision)
+          VALUES (@application_id, @account_id, @checked, @checked_at, @note, @decision);
       `)
   }
 
@@ -2403,6 +2412,15 @@ export class AzureSqlDB {
         INSERT INTO visit_passes (application_id, companion_id, pass_receipt, token, status, valid_from, valid_to)
         VALUES (@application_id, @companion_id, @pass_receipt, @token, 'active', @valid_from, @valid_to)
       `)
+  }
+
+  /** 관리자 승인 의견 저장 */
+  static async setApprovalNote(applicationId: string, note: string): Promise<void> {
+    const dbPool = await getPool()
+    await dbPool.request()
+      .input('application_id', sql.BigInt, applicationId)
+      .input('approval_note', sql.NVarChar(1000), note)
+      .query(`UPDATE visit_applications SET approval_note = @approval_note WHERE application_id = @application_id`)
   }
 
   /** 프리패스 플래그 설정 */
