@@ -921,40 +921,70 @@ export default function AdminRequestsPage() {
       )}
 
       {/* 담당자 결정 입력 모달 */}
-      {decisionDialog && (
-        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/80 backdrop-blur-sm px-4" onClick={() => { setDecisionDialog(null); setDecisionNote("") }}>
-          <div className="bg-zinc-900 border border-white/10 rounded-3xl w-full max-w-md" onClick={(e) => e.stopPropagation()}>
-            <div className="p-5 pb-3 flex items-center justify-between border-b border-white/10">
-              <div>
-                <h3 className="text-base font-black text-white flex items-center gap-2">
-                  {decisionDialog.decision === 'approve' ? <span className="text-emerald-400">✓ 담당자 승인 의견</span> : <span className="text-red-400">✕ 담당자 반려 의견</span>}
-                </h3>
-                <p className="text-xs text-white/40 mt-0.5">접수번호: <span className="font-mono">{decisionDialog.application.receipt}</span></p>
+      {decisionDialog && (() => {
+        const id = String(decisionDialog.application.id)
+        const currentDecision = checkDecisions[id]
+        const hasDecision = currentDecision === 'approve' || currentDecision === 'reject'
+        const saveDecision = async (newDecision: 'approve' | 'reject') => {
+          await handleCheck(id, true, newDecision, decisionNote.trim() || undefined)
+          setDecisionDialog(null)
+          setDecisionNote("")
+        }
+        const clearDecision = async () => {
+          await handleCheck(id, false, null, "")
+          setDecisionDialog(null)
+          setDecisionNote("")
+        }
+        return (
+          <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/80 backdrop-blur-sm px-4" onClick={() => { setDecisionDialog(null); setDecisionNote("") }}>
+            <div className="bg-zinc-900 border border-white/10 rounded-3xl w-full max-w-md" onClick={(e) => e.stopPropagation()}>
+              <div className="p-5 pb-3 flex items-center justify-between border-b border-white/10">
+                <div>
+                  <h3 className="text-base font-black text-white">담당자 확인 의견</h3>
+                  <p className="text-xs text-white/40 mt-0.5">
+                    접수번호: <span className="font-mono">{decisionDialog.application.receipt}</span>
+                    {hasDecision && (
+                      <span className="ml-2">
+                        현재: {currentDecision === 'approve' ? <span className="text-emerald-400 font-bold">✓ 승인</span> : <span className="text-red-400 font-bold">✕ 반려</span>}
+                      </span>
+                    )}
+                  </p>
+                </div>
+                <button type="button" onClick={() => { setDecisionDialog(null); setDecisionNote("") }} className="w-7 h-7 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white/60 text-xs">✕</button>
               </div>
-              <button type="button" onClick={() => { setDecisionDialog(null); setDecisionNote("") }} className="w-7 h-7 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white/60 text-xs">✕</button>
-            </div>
-            <div className="p-5 space-y-3">
-              <p className="text-xs text-white/60">담당자 결정은 <span className="text-amber-300 font-bold">참고용 의견</span>이며 최종 결정은 관리자가 진행합니다.</p>
-              <div className="space-y-2">
-                <label className="text-xs font-bold text-white/70">의견 <span className="text-white/40 font-normal">(선택)</span></label>
-                <textarea
-                  value={decisionNote}
-                  onChange={(e) => setDecisionNote(e.target.value)}
-                  rows={3}
-                  placeholder="예: 일정 확인됨, 안전교육 이수자"
-                  className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-amber-500/50 text-sm resize-none"
-                />
+              <div className="p-5 space-y-3">
+                <p className="text-xs text-white/60">담당자 결정은 <span className="text-amber-300 font-bold">참고용 의견</span>이며 최종 결정은 관리자가 진행합니다.</p>
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-white/70">의견 <span className="text-white/40 font-normal">(선택)</span></label>
+                  <textarea
+                    value={decisionNote}
+                    onChange={(e) => setDecisionNote(e.target.value)}
+                    rows={3}
+                    placeholder="예: 일정 확인됨, 안전교육 이수자"
+                    className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-amber-500/50 text-sm resize-none"
+                  />
+                </div>
               </div>
-            </div>
-            <div className="p-5 pt-0 flex justify-end gap-2">
-              <Button onClick={() => { setDecisionDialog(null); setDecisionNote("") }} className="bg-white/10 hover:bg-white/20 border border-white/20 text-white/80 text-sm px-4 py-2">취소</Button>
-              <Button onClick={handleDecisionConfirm} className={`text-sm px-4 py-2 font-bold ${decisionDialog.decision === 'approve' ? 'bg-emerald-500 hover:bg-emerald-600 text-black' : 'bg-red-500 hover:bg-red-600 text-white'}`}>
-                {decisionDialog.decision === 'approve' ? '승인 의견 저장' : '반려 의견 저장'}
-              </Button>
+              <div className="p-5 pt-0 flex flex-col gap-2">
+                <div className="flex justify-end gap-2">
+                  <Button onClick={() => saveDecision('approve')} className={`text-sm px-4 py-2 font-bold flex-1 ${currentDecision === 'approve' ? 'bg-emerald-500 hover:bg-emerald-600 text-black' : 'bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-500/50 text-emerald-300'}`}>
+                    {currentDecision === 'approve' ? '✓ 승인 저장' : '✓ 승인으로 저장'}
+                  </Button>
+                  <Button onClick={() => saveDecision('reject')} className={`text-sm px-4 py-2 font-bold flex-1 ${currentDecision === 'reject' ? 'bg-red-500 hover:bg-red-600 text-white' : 'bg-red-500/20 hover:bg-red-500/30 border border-red-500/50 text-red-300'}`}>
+                    {currentDecision === 'reject' ? '✕ 반려 저장' : '✕ 반려로 저장'}
+                  </Button>
+                </div>
+                <div className="flex justify-between items-center pt-1">
+                  <Button onClick={() => { setDecisionDialog(null); setDecisionNote("") }} className="bg-transparent hover:bg-white/5 text-white/50 text-xs px-3 py-1.5">닫기</Button>
+                  {hasDecision && (
+                    <Button onClick={clearDecision} className="bg-transparent hover:bg-white/5 text-white/40 hover:text-white/70 text-xs px-3 py-1.5">결정 취소</Button>
+                  )}
+                </div>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )
+      })()}
     </div>
   )
 }

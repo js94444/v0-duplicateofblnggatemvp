@@ -75,10 +75,10 @@ export const FormInput = forwardRef<HTMLInputElement, FormInputProps>(
           />
           <label
             className={cn(
-              "absolute left-3 transition-all duration-200 pointer-events-none bg-transparent px-1",
+              "absolute left-3 transition-all duration-200 pointer-events-none",
               isFloating
-                ? "-top-2.5 text-xs text-amber-500 font-bold"
-                : "top-1/2 -translate-y-1/2 text-base text-white/40"
+                ? "-top-2.5 px-1.5 text-xs text-amber-500 font-bold bg-zinc-950 rounded"
+                : "top-1/2 -translate-y-1/2 px-1 text-base text-white/40 bg-transparent"
             )}
           >
             {required && <span className="text-destructive mr-0.5">*</span>}
