@@ -20,7 +20,7 @@ import {
   APPLICATION_STATUS_LABELS,
 } from "@/lib/types"
 import { useToast } from "@/hooks/use-toast"
-import { RefreshCw, ChevronDown, ChevronUp, X } from "lucide-react"
+import { RefreshCw, ChevronDown, ChevronUp, X, Pencil } from "lucide-react"
 import { useAdminAuth } from "@/hooks/use-admin-auth"
 
 export default function AdminRequestsPage() {
@@ -159,8 +159,11 @@ export default function AdminRequestsPage() {
           .then((data) => {
             if (data.my_check) {
               const id = String(app.id)
-              setCheckStates((prev) => ({ ...prev, [id]: !!data.my_check.checked }))
-              setCheckDecisions((prev) => ({ ...prev, [id]: data.my_check.decision || null }))
+              const checked = !!data.my_check.checked
+              // 레거시: checked=true & decision=null인 경우 'approve'로 표시
+              const decision = data.my_check.decision || (checked ? 'approve' : null)
+              setCheckStates((prev) => ({ ...prev, [id]: checked }))
+              setCheckDecisions((prev) => ({ ...prev, [id]: decision }))
               setCheckNotes((prev) => ({ ...prev, [id]: data.my_check.note || "" }))
             }
           })
@@ -558,31 +561,51 @@ export default function AdminRequestsPage() {
                             </Button>
                           </div>
 
-                          {/* 담당자 확인 — 승인/반려 결정 + 의견 */}
-                          <div
-                            className={`flex items-center justify-between px-4 py-2.5 gap-2 transition-all ${checkStates[String(application.id)]
-                              ? "bg-amber-500/15 border-b border-amber-500/20"
-                              : "bg-white/[0.02] border-b border-white/5"
-                              }`}
-                          >
-                            <div className="flex flex-col gap-0.5 flex-1 min-w-0">
-                              <span className={`text-xs font-bold ${checkStates[String(application.id)] ? "text-amber-400" : "text-amber-500/70"}`}>
-                                담당자 확인 의견
-                                {checkDecisions[String(application.id)] === 'approve' && <span className="ml-2 text-emerald-400">✓ 승인</span>}
-                                {checkDecisions[String(application.id)] === 'reject' && <span className="ml-2 text-red-400">✕ 반려</span>}
-                              </span>
-                              {checkNotes[String(application.id)] && (
-                                <span className="text-[11px] text-white/50 truncate">{checkNotes[String(application.id)]}</span>
-                              )}
-                              {!checkStates[String(application.id)] && isMyTask && (
-                                <span className="text-[10px] text-amber-400 font-bold animate-pulse">확인 필요</span>
-                              )}
-                            </div>
-                            <div className="flex gap-1 shrink-0">
-                              <Button size="sm" disabled={!!checkLoading[String(application.id)]} onClick={() => { setDecisionDialog({ application, decision: 'approve' }); setDecisionNote(checkNotes[String(application.id)] || "") }} className="bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-500/50 text-emerald-300 rounded-lg text-xs px-2 py-1 h-7">승인</Button>
-                              <Button size="sm" disabled={!!checkLoading[String(application.id)]} onClick={() => { setDecisionDialog({ application, decision: 'reject' }); setDecisionNote(checkNotes[String(application.id)] || "") }} className="bg-red-500/20 hover:bg-red-500/30 border border-red-500/50 text-red-300 rounded-lg text-xs px-2 py-1 h-7">반려</Button>
-                            </div>
-                          </div>
+                          {/* 담당자 확인 — 상태별 분기 */}
+                          {(() => {
+                            const id = String(application.id)
+                            const decision = checkDecisions[id]
+                            const note = checkNotes[id]
+                            const isApproved = decision === 'approve'
+                            const isRejected = decision === 'reject'
+                            const hasDecision = isApproved || isRejected
+
+                            return (
+                              <div className={`flex items-center justify-between px-4 py-2.5 gap-2 border-b ${
+                                isApproved ? "bg-emerald-500/10 border-emerald-500/20" :
+                                isRejected ? "bg-red-500/10 border-red-500/20" :
+                                "bg-white/[0.02] border-white/5"
+                              }`}>
+                                <div className="flex flex-col gap-0.5 flex-1 min-w-0">
+                                  {hasDecision ? (
+                                    <>
+                                      <span className={`text-xs font-black ${isApproved ? "text-emerald-400" : "text-red-400"}`}>
+                                        {isApproved ? "✓ 담당자 승인" : "✕ 담당자 반려"}
+                                      </span>
+                                      {note && <span className="text-[11px] text-white/60 truncate">{note}</span>}
+                                    </>
+                                  ) : (
+                                    <>
+                                      <span className="text-xs font-bold text-amber-500/70">담당자 확인 필요</span>
+                                      {isMyTask && <span className="text-[10px] text-amber-400 font-bold animate-pulse">내 담당</span>}
+                                    </>
+                                  )}
+                                </div>
+                                <div className="flex gap-1 shrink-0">
+                                  {hasDecision ? (
+                                    <Button size="sm" disabled={!!checkLoading[id]} onClick={() => { setDecisionDialog({ application, decision: isApproved ? 'approve' : 'reject' }); setDecisionNote(note || "") }} className="bg-white/10 hover:bg-white/20 border border-white/20 text-white/70 rounded-lg text-xs px-2 py-1 h-7" aria-label="수정">
+                                      <Pencil size={11} />
+                                    </Button>
+                                  ) : (
+                                    <>
+                                      <Button size="sm" disabled={!!checkLoading[id]} onClick={() => { setDecisionDialog({ application, decision: 'approve' }); setDecisionNote(note || "") }} className="bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-500/50 text-emerald-300 rounded-lg text-xs px-2 py-1 h-7">승인</Button>
+                                      <Button size="sm" disabled={!!checkLoading[id]} onClick={() => { setDecisionDialog({ application, decision: 'reject' }); setDecisionNote(note || "") }} className="bg-red-500/20 hover:bg-red-500/30 border border-red-500/50 text-red-300 rounded-lg text-xs px-2 py-1 h-7">반려</Button>
+                                    </>
+                                  )}
+                                </div>
+                              </div>
+                            )
+                          })()}
 
 
                           {/* 카드 본문 */}
@@ -725,15 +748,36 @@ export default function AdminRequestsPage() {
                                 </div>
                               </TableCell>
                               <TableCell className={`${user?.name && contactInfo.name && user.name === contactInfo.name ? "bg-amber-500/10 backdrop-blur-sm" : ""}`}>
-                                <div className="flex flex-col items-center gap-1.5">
-                                  <div className="flex gap-1">
-                                    <Button size="sm" disabled={!!checkLoading[String(application.id)]} onClick={() => { setDecisionDialog({ application, decision: 'approve' }); setDecisionNote(checkNotes[String(application.id)] || "") }} className={`rounded-md text-[10px] px-2 py-1 h-6 border ${checkDecisions[String(application.id)] === 'approve' ? 'bg-emerald-500 text-black border-emerald-500 font-bold' : 'bg-emerald-500/20 hover:bg-emerald-500/30 border-emerald-500/50 text-emerald-300'}`}>승인</Button>
-                                    <Button size="sm" disabled={!!checkLoading[String(application.id)]} onClick={() => { setDecisionDialog({ application, decision: 'reject' }); setDecisionNote(checkNotes[String(application.id)] || "") }} className={`rounded-md text-[10px] px-2 py-1 h-6 border ${checkDecisions[String(application.id)] === 'reject' ? 'bg-red-500 text-white border-red-500 font-bold' : 'bg-red-500/20 hover:bg-red-500/30 border-red-500/50 text-red-300'}`}>반려</Button>
-                                  </div>
-                                  {checkNotes[String(application.id)] && (
-                                    <span className="text-[10px] text-white/50 truncate max-w-[120px]" title={checkNotes[String(application.id)]}>{checkNotes[String(application.id)]}</span>
-                                  )}
-                                </div>
+                                {(() => {
+                                  const id = String(application.id)
+                                  const decision = checkDecisions[id]
+                                  const note = checkNotes[id]
+                                  const isApproved = decision === 'approve'
+                                  const isRejected = decision === 'reject'
+                                  const hasDecision = isApproved || isRejected
+                                  return (
+                                    <div className="flex flex-col items-center gap-1">
+                                      {hasDecision ? (
+                                        <div className="flex items-center gap-1.5">
+                                          <span className={`inline-flex items-center px-2 py-1 rounded-md text-[10px] font-black ${isApproved ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40' : 'bg-red-500/20 text-red-300 border border-red-500/40'}`}>
+                                            {isApproved ? '✓ 승인' : '✕ 반려'}
+                                          </span>
+                                          <button type="button" disabled={!!checkLoading[id]} onClick={() => { setDecisionDialog({ application, decision: isApproved ? 'approve' : 'reject' }); setDecisionNote(note || "") }} className="p-1 rounded-md text-white/40 hover:text-white hover:bg-white/10 transition-colors" aria-label="수정">
+                                            <Pencil size={11} />
+                                          </button>
+                                        </div>
+                                      ) : (
+                                        <div className="flex gap-1">
+                                          <Button size="sm" disabled={!!checkLoading[id]} onClick={() => { setDecisionDialog({ application, decision: 'approve' }); setDecisionNote(note || "") }} className="bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-500/50 text-emerald-300 rounded-md text-[10px] px-2 py-1 h-6">승인</Button>
+                                          <Button size="sm" disabled={!!checkLoading[id]} onClick={() => { setDecisionDialog({ application, decision: 'reject' }); setDecisionNote(note || "") }} className="bg-red-500/20 hover:bg-red-500/30 border border-red-500/50 text-red-300 rounded-md text-[10px] px-2 py-1 h-6">반려</Button>
+                                        </div>
+                                      )}
+                                      {note && (
+                                        <span className="text-[10px] text-white/50 truncate max-w-[140px]" title={note}>{note}</span>
+                                      )}
+                                    </div>
+                                  )
+                                })()}
                               </TableCell>
                               <TableCell>
                                 <div className="flex items-center gap-2">
