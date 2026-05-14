@@ -35,6 +35,9 @@ interface ScanRow {
   vehicle_model: string | null
   spark_arrestor: string | null
   is_free_pass?: boolean | number | null
+  approval_note?: string | null
+  manager_note?: string | null
+  manager_decision?: string | null
   visit_start_date: string | null
   visit_end_date: string | null
   portCertFiles: Array<{ file_url: string; file_name: string }>
@@ -383,6 +386,9 @@ export default function AdminQrScanPage() {
       visitor_birth_date: row.visitor_birth_date,
       spark_arrestor: row.spark_arrestor,
       is_free_pass: row.is_free_pass,
+      approval_note: row.approval_note,
+      manager_note: row.manager_note,
+      manager_decision: row.manager_decision,
       contact_mobile: row.contact_mobile,
       portCertFiles: row.portCertFiles || [],
       lastEntryAt: row.entry_at,
@@ -935,7 +941,7 @@ export default function AdminQrScanPage() {
                             }}
                           >
                             <div className="flex flex-col gap-0.5">
-                              <div className="flex items-center gap-1.5">
+                              <div className="flex items-center gap-1.5 flex-wrap">
                                 {statusStyle.badge && <span className={`text-[9px] font-black px-1.5 py-0.5 rounded-full border shrink-0 ${statusStyle.badge.color}`}>{statusStyle.badge.text}</span>}
                                 <span>{row.visitor_name || "-"}</span>
                                 {row.cycleNum && row.cycleNum > 1 && (
@@ -943,10 +949,23 @@ export default function AdminQrScanPage() {
                                     {row.cycleNum}회차
                                   </span>
                                 )}
+                                {(row.approval_note || row.manager_note) && (
+                                  <span className="text-[9px] font-black px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40">💬 의견</span>
+                                )}
                               </div>
                               <span className="text-xs text-white/40">
                                 {formatPhone(row.visitor_phone)}
                               </span>
+                              {row.approval_note && (
+                                <span className="text-[11px] text-emerald-300 italic truncate max-w-[200px]" title={`관리자: ${row.approval_note}`}>
+                                  <span className="text-emerald-400 font-bold">관리자:</span> {row.approval_note}
+                                </span>
+                              )}
+                              {row.manager_note && (
+                                <span className="text-[11px] text-amber-300/80 italic truncate max-w-[200px]" title={`담당자: ${row.manager_note}`}>
+                                  <span className="text-amber-400 font-bold">담당자{row.manager_decision === 'approve' ? '(승인)' : row.manager_decision === 'reject' ? '(반려)' : ''}:</span> {row.manager_note}
+                                </span>
+                              )}
                             </div>
                           </TableCell>
                           <TableCell className="text-sm text-white/80">

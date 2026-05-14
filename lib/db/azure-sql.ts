@@ -2055,12 +2055,15 @@ export class AzureSqlDB {
             a.vehicle_model,
             a.spark_arrestor,
             a.is_free_pass,
+            a.approval_note,
             a.visit_start_date,
             a.visit_end_date,
             a.access_area,
             c.name as companion_name,
             c.birth_date as companion_birth_date,
-            c.phone as companion_phone
+            c.phone as companion_phone,
+            (SELECT TOP 1 ac.note FROM application_checks ac WHERE ac.application_id = a.application_id ORDER BY ac.checked_at DESC) as manager_note,
+            (SELECT TOP 1 ac.decision FROM application_checks ac WHERE ac.application_id = a.application_id ORDER BY ac.checked_at DESC) as manager_decision
           FROM visit_passes p
           LEFT JOIN visit_applications a ON p.application_id = a.application_id
           LEFT JOIN visit_companions c ON p.companion_id = c.companion_id
@@ -2171,6 +2174,9 @@ export class AzureSqlDB {
           ap.vehicle_model,
           ap.spark_arrestor,
           ap.is_free_pass,
+          ap.approval_note,
+          ap.manager_note,
+          ap.manager_decision,
           ap.visit_start_date,
           ap.visit_end_date,
           ap.access_area,
@@ -2210,6 +2216,9 @@ export class AzureSqlDB {
           ap.vehicle_model,
           ap.spark_arrestor,
           ap.is_free_pass,
+          ap.approval_note,
+          ap.manager_note,
+          ap.manager_decision,
           ap.visit_start_date,
           ap.visit_end_date,
           ap.access_area,
