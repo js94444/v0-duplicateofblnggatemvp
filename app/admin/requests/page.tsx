@@ -41,6 +41,7 @@ export default function AdminRequestsPage() {
   // 담당자 의견 입력 모달 상태
   const [decisionDialog, setDecisionDialog] = useState<{ application: Application; decision: 'approve' | 'reject' } | null>(null)
   const [decisionNote, setDecisionNote] = useState("")
+  const [decisionSaving, setDecisionSaving] = useState<'approve' | 'reject' | 'clear' | null>(null)
   const [filterOpen, setFilterOpen] = useState(false)
 
   // Filters
@@ -925,18 +926,31 @@ export default function AdminRequestsPage() {
         const id = String(decisionDialog.application.id)
         const currentDecision = checkDecisions[id]
         const hasDecision = currentDecision === 'approve' || currentDecision === 'reject'
+        const busy = decisionSaving !== null
         const saveDecision = async (newDecision: 'approve' | 'reject') => {
-          await handleCheck(id, true, newDecision, decisionNote.trim() || undefined)
-          setDecisionDialog(null)
-          setDecisionNote("")
+          if (busy) return
+          setDecisionSaving(newDecision)
+          try {
+            await handleCheck(id, true, newDecision, decisionNote.trim() || undefined)
+            setDecisionDialog(null)
+            setDecisionNote("")
+          } finally {
+            setDecisionSaving(null)
+          }
         }
         const clearDecision = async () => {
-          await handleCheck(id, false, null, "")
-          setDecisionDialog(null)
-          setDecisionNote("")
+          if (busy) return
+          setDecisionSaving('clear')
+          try {
+            await handleCheck(id, false, null, "")
+            setDecisionDialog(null)
+            setDecisionNote("")
+          } finally {
+            setDecisionSaving(null)
+          }
         }
         return (
-          <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/80 backdrop-blur-sm px-4" onClick={() => { setDecisionDialog(null); setDecisionNote("") }}>
+          <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/80 backdrop-blur-sm px-4" onClick={() => { if (!busy) { setDecisionDialog(null); setDecisionNote("") } }}>
             <div className="bg-zinc-900 border border-white/10 rounded-3xl w-full max-w-md" onClick={(e) => e.stopPropagation()}>
               <div className="p-5 pb-3 flex items-center justify-between border-b border-white/10">
                 <div>
@@ -950,7 +964,7 @@ export default function AdminRequestsPage() {
                     )}
                   </p>
                 </div>
-                <button type="button" onClick={() => { setDecisionDialog(null); setDecisionNote("") }} className="w-7 h-7 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white/60 text-xs">✕</button>
+                <button type="button" disabled={busy} onClick={() => { setDecisionDialog(null); setDecisionNote("") }} className="w-7 h-7 rounded-full bg-white/10 hover:bg-white/20 disabled:opacity-40 flex items-center justify-center text-white/60 text-xs">✕</button>
               </div>
               <div className="p-5 space-y-3">
                 <p className="text-xs text-white/60">담당자 결정은 <span className="text-amber-300 font-bold">참고용 의견</span>이며 최종 결정은 관리자가 진행합니다.</p>
@@ -960,24 +974,33 @@ export default function AdminRequestsPage() {
                     value={decisionNote}
                     onChange={(e) => setDecisionNote(e.target.value)}
                     rows={3}
+                    disabled={busy}
                     placeholder="예: 일정 확인됨, 안전교육 이수자"
-                    className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-amber-500/50 text-sm resize-none"
+                    className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-amber-500/50 text-sm resize-none disabled:opacity-60"
                   />
                 </div>
               </div>
               <div className="p-5 pt-0 flex flex-col gap-2">
                 <div className="flex justify-end gap-2">
-                  <Button onClick={() => saveDecision('approve')} className={`text-sm px-4 py-2 font-bold flex-1 ${currentDecision === 'approve' ? 'bg-emerald-500 hover:bg-emerald-600 text-black' : 'bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-500/50 text-emerald-300'}`}>
-                    {currentDecision === 'approve' ? '✓ 승인 저장' : '✓ 승인으로 저장'}
+                  <Button disabled={busy} onClick={() => saveDecision('approve')} className={`text-sm px-4 py-2 font-bold flex-1 disabled:opacity-60 ${currentDecision === 'approve' ? 'bg-emerald-500 hover:bg-emerald-600 text-black' : 'bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-500/50 text-emerald-300'}`}>
+                    {decisionSaving === 'approve' ? (
+                      <span className="flex items-center justify-center gap-1.5"><RefreshCw size={13} className="animate-spin" />처리 중...</span>
+                    ) : (currentDecision === 'approve' ? '✓ 승인 저장' : '✓ 승인으로 저장')}
                   </Button>
-                  <Button onClick={() => saveDecision('reject')} className={`text-sm px-4 py-2 font-bold flex-1 ${currentDecision === 'reject' ? 'bg-red-500 hover:bg-red-600 text-white' : 'bg-red-500/20 hover:bg-red-500/30 border border-red-500/50 text-red-300'}`}>
-                    {currentDecision === 'reject' ? '✕ 반려 저장' : '✕ 반려로 저장'}
+                  <Button disabled={busy} onClick={() => saveDecision('reject')} className={`text-sm px-4 py-2 font-bold flex-1 disabled:opacity-60 ${currentDecision === 'reject' ? 'bg-red-500 hover:bg-red-600 text-white' : 'bg-red-500/20 hover:bg-red-500/30 border border-red-500/50 text-red-300'}`}>
+                    {decisionSaving === 'reject' ? (
+                      <span className="flex items-center justify-center gap-1.5"><RefreshCw size={13} className="animate-spin" />처리 중...</span>
+                    ) : (currentDecision === 'reject' ? '✕ 반려 저장' : '✕ 반려로 저장')}
                   </Button>
                 </div>
                 <div className="flex justify-between items-center pt-1">
-                  <Button onClick={() => { setDecisionDialog(null); setDecisionNote("") }} className="bg-transparent hover:bg-white/5 text-white/50 text-xs px-3 py-1.5">닫기</Button>
+                  <Button disabled={busy} onClick={() => { setDecisionDialog(null); setDecisionNote("") }} className="bg-transparent hover:bg-white/5 text-white/50 text-xs px-3 py-1.5 disabled:opacity-40">닫기</Button>
                   {hasDecision && (
-                    <Button onClick={clearDecision} className="bg-transparent hover:bg-white/5 text-white/40 hover:text-white/70 text-xs px-3 py-1.5">결정 취소</Button>
+                    <Button disabled={busy} onClick={clearDecision} className="bg-transparent hover:bg-white/5 text-white/40 hover:text-white/70 text-xs px-3 py-1.5 disabled:opacity-40">
+                      {decisionSaving === 'clear' ? (
+                        <span className="flex items-center gap-1.5"><RefreshCw size={11} className="animate-spin" />처리 중...</span>
+                      ) : '결정 취소'}
+                    </Button>
                   )}
                 </div>
               </div>
