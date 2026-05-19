@@ -213,12 +213,10 @@ export default function VisitFormPage() {
   }, [])
 
   const accessAreaOptions = [
-    { value: "전체지역", label: t("전체지역", "All areas") },
     { value: "일반지역", label: t("일반지역", "General Area") },
     { value: "공정지역", label: t("공정지역", "Process Area") },
     { value: "제1부두", label: t("제1부두", "Berth No.1") },
     { value: "제2부두", label: t("제2부두", "Berth No.2") },
-    { value: "제1,2부두", label: t("제1,2부두", "Berth No.1 & 2") },
   ]
 
   const vehicleTypeOptions = [
