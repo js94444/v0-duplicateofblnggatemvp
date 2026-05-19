@@ -1331,7 +1331,17 @@ export default function VisitFormPage() {
               />
             </div>
             <div className="p-6 pt-4">
-              <p className="text-xs text-white/40 mb-3 font-bold">{t("지역을 선택하면 자동으로 입력됩니다", "Click a region to auto-fill")}</p>
+              <div className="mb-4 rounded-xl border border-blue-400/20 bg-blue-500/10 p-4 text-sm text-blue-100 leading-relaxed">
+  <p className="font-bold text-blue-300 mb-2">출입 가능지역 안내</p>
+  <ul className="space-y-1">
+    <li>- 일반지역: 일반지역 출입 가능</li>
+    <li>- 공정지역: 일반지역 + 공정지역 출입 가능</li>
+    <li>- 제1부두/제2부두: 일반지역 + 공정지역 + 선택한 부두 출입 가능</li>
+  </ul>
+  <p className="mt-2 text-blue-200">
+    ※ 제1·2부두 동시 방문 시 주 방문 부두 1곳으로 신청하고, 상세 방문 사유에 동시 방문 내용을 기재해 주세요.
+  </p>
+</div>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                 {accessAreaOptions.map((opt) => (
                   <button
