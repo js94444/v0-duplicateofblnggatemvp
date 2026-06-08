@@ -20,7 +20,7 @@ export async function GET(request: NextRequest) {
     const dateParam = startDate && endDate ? { startDate, endDate } : { date: filterDate }
     
     // 정문(main), 1부두(pier_1), 2부두(pier_2) 각각 해당 scan_site로 필터링
-    const data = await AzureSqlDB.getQrScanLogs(scanSite, 100, dateParam)
+    const data = await AzureSqlDB.getQrScanLogs(scanSite, 500, dateParam)
     const stats = await AzureSqlDB.getQrScanStats(scanSite, dateParam)
 
     // 신청자(companion_id가 null 또는 0)와 동행인(companion_id가 있음) 분리
