@@ -597,7 +597,7 @@ export function ApplicationDetailModal({ application, open, loading = false, sca
                           <EditableField label="소속" value={editData.visitor_organization} onChange={(v) => updateEdit("visitor_organization", v)} />
                           <EditableField label="직책" value={editData.visitor_position} onChange={(v) => updateEdit("visitor_position", v)} />
                           <EditableField label="이메일" value={editData.visitor_email} onChange={(v) => updateEdit("visitor_email", v)} type="email" />
-                          <EditableField label="회사주소" value={editData.visitor_address} onChange={(v) => updateEdit("visitor_address", v)} />
+                          <EditableField label="주소" value={editData.visitor_address} onChange={(v) => updateEdit("visitor_address", v)} />
                           <EditableField label="차량번호" value={editData.vehicle_number} onChange={(v) => updateEdit("vehicle_number", v)} />
                           <EditableSelect label="차량유종" value={editData.vehicle_model} onChange={(v) => updateEdit("vehicle_model", v)} options={VEHICLE_MODEL_OPTIONS} />
                           <EditableSelect label="불꽃방지망보유" value={editData.spark_arrestor} onChange={(v) => updateEdit("spark_arrestor", v)} options={SPARK_ARRESTOR_OPTIONS} />
@@ -610,7 +610,7 @@ export function ApplicationDetailModal({ application, open, loading = false, sca
                           <InfoField label="소속" value={app.visitor_organization} />
                           <InfoField label="직책" value={app.visitor_position} />
                           <InfoField label="이메일" value={app.visitor_email || app.contact_email} />
-                          <InfoField label="회사주소" value={app.visitor_address} />
+                          <InfoField label="주소" value={app.visitor_address} />
                           <InfoField label="차량번호" value={app.vehicle_number} />
                           <InfoField label="차량유종" value={app.vehicle_model} />
                           <InfoField
