@@ -148,7 +148,7 @@ export default function VisitAgreementPage() {
               content={
                 <div className="space-y-4">
                   <p><strong>{t("1. 수집･이용 목적", "1. Purpose of Collection")}</strong><br />{t("보안사고, 테러예방, 안전교육 이수 확인, 사건(사고) 발생 시 경위 등 파악", "Security incident prevention, terrorism prevention, safety training verification, incident investigation")}</p>
-                  <p><strong>{t("2. 수집･이용 항목", "2. Items Collected")}</strong><br />{t("성명, 생년월일, 직책, 회사주소, 휴대전화번호, 소속, 이메일, 차량번호", "Name, date of birth, position, company address, mobile phone number, affiliation, email, vehicle number")}</p>
+                  <p><strong>{t("2. 수집･이용 항목", "2. Items Collected")}</strong><br />{t("성명, 생년월일, 직책, 주소, 휴대전화번호, 소속, 이메일, 차량번호", "Name, date of birth, position, address, mobile phone number, affiliation, email, vehicle number")}</p>
                   <p><strong>{t("3. 보유기간", "3. Retention Period")}</strong><br />{t("3년 (보유기간 경과 시 파기)", "3 years (destroyed after retention period)")}</p>
                   <p><strong>{t("4. 동의하지 않을 권리 및 미동의시 불이익", "4. Right to Refuse and Disadvantages")}</strong><br />{t("출입증 발급신청자는 개인정보 수집 및 이용에 대한 동의를 거부할 권리가 있으나, 미동의 시 『보안업무규정』제34조 제4항의 규정에 따라 보령 LNG 터미널 출입이 제한됨", "Applicants have the right to refuse consent to personal information collection and use, but refusal will result in restricted access to Boryeong LNG Terminal pursuant to Article 34(4) of the Security Work Regulations")}</p>
                 </div>
