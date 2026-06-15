@@ -67,23 +67,23 @@ export default function HomePage() {
         </div>
 
         {/* Menu Cards */}
-        <div className="relative z-10 grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-3xl">
+        <div className="relative z-10 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 max-w-7xl">
           {menuItems.map((item, index) => (
             <Link 
               key={index}
               href={item.href}
-              className="group flex items-center justify-between p-6 bg-white/5 backdrop-blur-2xl border border-white/10 rounded-2xl transition-all duration-300 hover:bg-white/10 hover:border-amber-500/50 hover:-translate-y-1"
+              className="group flex items-center justify-between p-5 bg-white/5 backdrop-blur-2xl border border-white/10 rounded-2xl transition-all duration-300 hover:bg-white/10 hover:border-amber-500/50 hover:-translate-y-1"
             >
-              <div className="flex items-center gap-5">
-                <div className="p-3 bg-amber-500/10 text-amber-500 rounded-xl group-hover:bg-amber-500 group-hover:text-black transition-all">
+              <div className="flex items-center gap-4 min-w-0">
+                <div className="p-3 bg-amber-500/10 text-amber-500 rounded-xl group-hover:bg-amber-500 group-hover:text-black transition-all shrink-0">
                   {item.icon}
                 </div>
-                <div className="text-left">
-                  <h3 className="text-lg font-bold text-white group-hover:text-amber-500 transition-colors">{item.title}</h3>
+                <div className="text-left min-w-0">
+                  <h3 className="text-base font-bold text-white group-hover:text-amber-500 transition-colors whitespace-nowrap">{item.title}</h3>
                   <p className="text-[10px] text-white/40 font-bold uppercase tracking-wider">{item.sub}</p>
                 </div>
               </div>
-              <ChevronRight size={20} className="text-white/20 group-hover:text-amber-500 group-hover:translate-x-1 transition-all" />
+              <ChevronRight size={20} className="text-white/20 group-hover:text-amber-500 group-hover:translate-x-1 transition-all shrink-0" />
             </Link>
           ))}
         </div>
