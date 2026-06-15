@@ -244,7 +244,7 @@ export default function VisitFormPage() {
     if (!formData.visitor_birth_date) newErrors.visitor_birth_date = t("생년월일을 입력해주세요", "Please enter your date of birth")
     if (!formData.visitor_organization.trim()) newErrors.visitor_organization = t("소속을 입력해주세요", "Please enter your organization")
     if (!formData.visitor_position.trim()) newErrors.visitor_position = t("직책을 입력해주세요", "Please enter your position")
-    if (!formData.visitor_address.trim()) newErrors.visitor_address = t("회사 주소를 입력해주세요", "Please enter your company address")
+    if (!formData.visitor_address.trim()) newErrors.visitor_address = t("주소를 입력해주세요", "Please enter your address")
     if (!formData.contact_name.trim()) newErrors.contact_name = t("담당자를 입력해주세요", "Please select a contact person")
     if (!formData.visit_start_date) newErrors.visit_start_date = t("방문시작일을 선택해주세요", "Please select a visit start date")
     if (!formData.visit_end_date) newErrors.visit_end_date = t("방문종료일을 선택해주세요", "Please select a visit end date")
@@ -722,7 +722,7 @@ export default function VisitFormPage() {
                   />
                 </div>
                 <FormInput
-                  label={t("회사주소", "Company Address")}
+                  label={t("주소", "Address")}
                   required
                   value={formData.visitor_address}
                   onChange={(e) => updateField("visitor_address", e.target.value)}
