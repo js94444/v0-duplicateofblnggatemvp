@@ -43,6 +43,7 @@
 
     html {
       scroll-behavior: smooth;
+      scroll-padding-top: 80px;
       font-size: 16px;
     }
 
@@ -153,6 +154,11 @@
       color: var(--txt);
     }
 
+    .nav-menu a.active {
+      color: var(--lime);
+      font-weight: 700;
+    }
+
     .nav-cta {
       background: var(--lime);
       color: #0a0a0a;
@@ -172,8 +178,36 @@
     }
 
     @media(max-width:640px) {
+      nav {
+        height: 56px;
+        padding: 0 14px;
+        gap: 10px;
+      }
+
+      .nav-logo-img {
+        height: 28px;
+      }
+
       .nav-menu {
+        flex: 1;
+        min-width: 0;
+        gap: 16px;
+        overflow-x: auto;
+        flex-wrap: nowrap;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+        mask-image: linear-gradient(to right, transparent 0, #000 12px, #000 calc(100% - 12px), transparent 100%);
+      }
+
+      .nav-menu::-webkit-scrollbar {
         display: none;
+      }
+
+      .nav-menu a {
+        font-size: .8rem;
+        white-space: nowrap;
+        flex-shrink: 0;
       }
     }
 
@@ -719,9 +753,28 @@
     @media(max-width:768px) {
       .vtab-bar {
         flex-direction: row;
-        flex-wrap: wrap;
-        position: static;
-        margin-bottom: 32px;
+        flex-wrap: nowrap;
+        position: sticky;
+        top: 56px;
+        z-index: 60;
+        margin: 0 calc(-1 * clamp(20px, 5vw, 80px)) 24px;
+        padding: 10px clamp(20px, 5vw, 80px);
+        gap: 8px;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        background: rgba(10, 10, 10, .92);
+        backdrop-filter: blur(12px);
+        border-bottom: 1px solid var(--border);
+      }
+
+      .vtab-bar::-webkit-scrollbar {
+        display: none;
+      }
+
+      .vtab {
+        flex-shrink: 0;
+        white-space: nowrap;
       }
     }
 
@@ -1534,6 +1587,10 @@
     <div class="container">
       <p class="section-kicker reveal">단계별 사용 가이드</p>
       <h2 class="section-h reveal d1">역할을 선택하면<br>해당 가이드가 나옵니다</h2>
+      <p class="section-sub reveal d2" style="margin-top:20px;">
+        방문하시는 분은 <strong style="color:var(--lime);">방문자</strong> 가이드만 보시면 신청부터 현장 출입까지 순서대로 따라 할 수 있습니다.
+        사내 담당자는 <strong style="color:#fbbf24;">담당자</strong> 탭을 확인하세요.
+      </p>
 
       <div class="guide-layout">
         <!-- Vertical tab bar -->
@@ -2005,6 +2062,41 @@
     window.addEventListener('scroll', () => {
       nav.classList.toggle('scrolled', window.scrollY > 80);
     }, { passive: true });
+
+
+    /* ════════════════════════════════════════
+       SCROLL SPY — 현재 섹션 강조 + 모바일 메뉴 자동 스크롤
+    ════════════════════════════════════════ */
+    (function scrollSpy() {
+      var links = Array.prototype.slice.call(document.querySelectorAll('.nav-menu a[href^="#"]'));
+      if (!links.length) return;
+      var map = {};
+      links.forEach(function (a) {
+        var id = a.getAttribute('href').slice(1);
+        var sec = document.getElementById(id);
+        if (sec) map[id] = a;
+      });
+      var sections = Object.keys(map).map(function (id) { return document.getElementById(id); });
+
+      function setActive(id) {
+        links.forEach(function (a) { a.classList.remove('active'); });
+        var active = map[id];
+        if (!active) return;
+        active.classList.add('active');
+        var menu = active.parentElement;
+        if (menu && menu.scrollWidth > menu.clientWidth) {
+          var left = active.offsetLeft - (menu.clientWidth - active.offsetWidth) / 2;
+          menu.scrollTo({ left: left, behavior: 'smooth' });
+        }
+      }
+
+      var spy = new IntersectionObserver(function (entries) {
+        entries.forEach(function (e) {
+          if (e.isIntersecting) setActive(e.target.id);
+        });
+      }, { rootMargin: '-45% 0px -50% 0px', threshold: 0 });
+      sections.forEach(function (s) { spy.observe(s); });
+    })();
 
 
     /* ════════════════════════════════════════
