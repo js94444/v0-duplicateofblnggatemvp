@@ -39,12 +39,6 @@ export default function HomePage() {
 
         {/* Text Content */}
         <div className="relative z-10 max-w-2xl mb-12 animate-in fade-in slide-in-from-left-2 duration-1000">
-          <div className="flex items-center gap-4 mb-4">
-            <div className="w-16 h-[2px] bg-amber-500 shadow-[0_0_10px_rgba(245,158,11,0.5)]" />
-            <span className="text-amber-500 text-sm md:text-lg font-black tracking-[0.45em] uppercase drop-shadow-md">
-              {t("방문객 예약 시스템", "Visitor Reservation System")}
-            </span>
-          </div>
           <h1 className="text-4xl md:text-6xl font-black mb-6 leading-[1.1]" style={{ letterSpacing: "normal" }}>
             Value No.1,<br />
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-white to-white/40">Energy Global Partnership</span>
