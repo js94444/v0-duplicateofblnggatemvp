@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { FileText, Search, ShieldCheck, ChevronRight } from "lucide-react"
+import { FileText, Search, ShieldCheck, BookOpen, ChevronRight } from "lucide-react"
 import { PublicHeader } from "@/components/public/public-header"
 import { PublicFooter } from "@/components/public/public-footer"
 import { useLang } from "@/lib/language-context"
@@ -12,7 +12,8 @@ export default function HomePage() {
   const menuItems = [
     { title: t("방문신청", "Visit Apply"), sub: "New Visit", icon: <FileText size={24} />, href: "/apply/visit" },
     { title: t("신청현황", "My Status"), sub: "Check Status", icon: <Search size={24} />, href: "/status" },
-    { title: t("안전보건환경안내서", "SHE Guidelines"), sub: "SHE Flyer", icon: <ShieldCheck size={24} />, href: "/guidelines" }
+    { title: t("안전보건환경안내서", "SHE Guidelines"), sub: "SHE Flyer", icon: <ShieldCheck size={24} />, href: "/guidelines" },
+    { title: t("이용안내", "User Guide"), sub: "How to Use", icon: <BookOpen size={24} />, href: "/manual" }
   ]
 
   return (
@@ -66,7 +67,7 @@ export default function HomePage() {
         </div>
 
         {/* Menu Cards */}
-        <div className="relative z-10 grid grid-cols-1 md:grid-cols-3 gap-4 max-w-5xl">
+        <div className="relative z-10 grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-3xl">
           {menuItems.map((item, index) => (
             <Link 
               key={index}
