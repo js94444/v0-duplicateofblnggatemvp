@@ -56,15 +56,6 @@ export function PublicHeader({ initialScrolled = false }: PublicHeaderProps) {
             </Link>
           ))}
 
-          {/* 이용안내 */}
-          <Link
-            href="/manual"
-            className="text-white/70 hover:text-white transition-colors font-normal"
-            style={{ fontSize: "15px" }}
-          >
-            {lang === "ko" ? "이용안내" : "User Guide"}
-          </Link>
-
           {/* 게시판 */}
           <Link
             href="/board"
@@ -142,16 +133,6 @@ export function PublicHeader({ initialScrolled = false }: PublicHeaderProps) {
                 {link.label}
               </Link>
             ))}
-
-            {/* 이용안내 */}
-            <Link
-              href="/manual"
-              onClick={() => setIsMenuOpen(false)}
-              className="text-white/70 hover:text-white transition-colors mt-2 font-normal"
-              style={{ fontSize: "15px" }}
-            >
-              {lang === "ko" ? "이용안내" : "User Guide"}
-            </Link>
 
             {/* 게시판 */}
             <Link
