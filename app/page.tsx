@@ -13,7 +13,7 @@ export default function HomePage() {
     { title: t("방문신청", "Visit Apply"), sub: "New Visit", icon: <FileText size={24} />, href: "/apply/visit" },
     { title: t("신청현황", "My Status"), sub: "Check Status", icon: <Search size={24} />, href: "/status" },
     { title: t("안전보건환경안내서", "SHE Guidelines"), sub: "SHE Flyer", icon: <ShieldCheck size={24} />, href: "/guidelines" },
-    { title: t("이용안내", "User Guide"), sub: "How to Use", icon: <BookOpen size={24} />, href: "/manual" }
+    { title: t("사용 가이드", "User Guide"), sub: "How to Use", icon: <BookOpen size={24} />, href: "/manual" }
   ]
 
   return (
