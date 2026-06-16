@@ -22,7 +22,7 @@ export default function HomePage() {
       <PublicHeader />
 
       {/* Main Section */}
-      <main className="relative flex-1 flex flex-col justify-end pt-28 pb-12 md:pb-24 px-6 md:px-12">
+      <main className="relative flex-1 flex flex-col justify-center pt-16 pb-8 md:pb-16 px-6 md:px-12">
         
         {/* Background Image */}
         <div className="absolute inset-0 z-0">
