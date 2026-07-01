@@ -1,11 +1,11 @@
 [
   {
-    "department": "대표",
+    "department": "대표이사",
     "name": "은종원",
     "mobile": "010-5523-4244"
   },
   {
-    "department": "부사장",
+    "department": "관리담당 부사장",
     "name": "한기옥",
     "mobile": "010-4156-2405"
   },
@@ -15,12 +15,12 @@
     "mobile": "010-3391-5405"
   },
   {
-    "department": "운영팀장",
+    "department": "항만팀장",
     "name": "성창기",
     "mobile": "010-6654-8586"
   },
   {
-    "department": "운영팀파트장",
+    "department": "운영팀 공무공정파트장",
     "name": "유영주",
     "mobile": "010-2509-3558"
   },
@@ -28,11 +28,6 @@
     "department": "운영팀 공무공정파트",
     "name": "김진희",
     "mobile": "010-3949-1406"
-  },
-  {
-    "department": "운영팀 공무공정파트",
-    "name": "천춘학",
-    "mobile": "010-7104-0815"
   },
   {
     "department": "운영팀 공무공정파트",
@@ -50,12 +45,12 @@
     "mobile": "010-4563-0205"
   },
   {
-    "department": "운영팀 공무공정파트",
+    "department": "항만팀",
     "name": "최일영",
     "mobile": "010-7322-6708"
   },
   {
-    "department": "운영팀 공무공정파트",
+    "department": "운영팀 교대 B파트",
     "name": "임현규",
     "mobile": "010-5356-4765"
   },
@@ -110,7 +105,7 @@
     "mobile": "010-3013-5318"
   },
   {
-    "department": "운영팀 교대 B파트",
+    "department": "운영팀 공무공정파트",
     "name": "김다은",
     "mobile": "010-5785-2895"
   },
@@ -245,7 +240,7 @@
     "mobile": "010-2742-8030"
   },
   {
-    "department": "항만팀장",
+    "department": "운영팀장",
     "name": "이병철",
     "mobile": "010-9094-5100"
   },
@@ -275,22 +270,22 @@
     "mobile": "010-2645-8846"
   },
   {
-    "department": "항만팀 실험실",
+    "department": "항만팀",
     "name": "김재식",
     "mobile": "010-6434-8463"
   },
   {
-    "department": "항만팀 실험실",
+    "department": "항만팀",
     "name": "이기현",
     "mobile": "010-9791-0171"
   },
   {
-    "department": "항만팀 실험실",
+    "department": "운영팀 공무공정파트",
     "name": "김현",
     "mobile": "010-5185-7178"
   },
   {
-    "department": "항만팀 실험실",
+    "department": "항만팀",
     "name": "강수훈",
     "mobile": "010-2216-9452"
   },
@@ -345,7 +340,7 @@
     "mobile": "010-7570-6500"
   },
   {
-    "department": "대외협력팀 구매파트장",
+    "department": "정비팀 기계파트",
     "name": "김경진",
     "mobile": "010-3625-7499"
   },
@@ -355,7 +350,7 @@
     "mobile": "010-6289-8383"
   },
   {
-    "department": "대외협력팀 구매파트",
+    "department": "기술혁신팀",
     "name": "박미화",
     "mobile": "010-9453-1739"
   },
@@ -410,7 +405,7 @@
     "mobile": "010-6484-6447"
   },
   {
-    "department": "기술혁신팀",
+    "department": "운영팀 공무공정파트",
     "name": "정재호",
     "mobile": "010-8704-2813"
   },
@@ -445,7 +440,7 @@
     "mobile": "010-9075-9905"
   },
   {
-    "department": "사업본부 O/H",
+    "department": "O/H",
     "name": "박재홍",
     "mobile": "010-5577-3482"
   },
@@ -568,6 +563,21 @@
     "department": "피플팀",
     "name": "장채윤",
     "mobile": "010-9287-9770"
+  },
+  {
+    "department": "피플팀",
+    "name": "권지훈",
+    "mobile": "010-2184-2186"
+  },
+  {
+    "department": "피플팀",
+    "name": "김민주",
+    "mobile": "010-7740-3291"
+  },
+  {
+    "department": "피플팀",
+    "name": "김윤주",
+    "mobile": "010-9941-2105"
   },
   {
     "department": "프로에스콤",
