@@ -20,6 +20,18 @@ const STATUS_LABELS: Record<string, string> = {
   under_review: "검토 중",
 }
 
+const LEGACY_APP_URL = "https://v0-lng-tml.vercel.app"
+const DEFAULT_APP_URL = "https://visit.lng-tml.com"
+
+function normalizeVisitUrl(url: string | null | undefined): string {
+  const value = (url || DEFAULT_APP_URL).trim()
+  return value.split(LEGACY_APP_URL).join(DEFAULT_APP_URL)
+}
+
+function getAppBaseUrl(): string {
+  return normalizeVisitUrl(process.env.NEXT_PUBLIC_APP_URL || DEFAULT_APP_URL).replace(/\/+$/, "")
+}
+
 function formatDate(value: string | Date | null | undefined): string {
   if (!value) return "-"
   const d = typeof value === "string" ? new Date(value) : value
@@ -84,7 +96,7 @@ export function getSubmissionSmsText(payload: SubmissionSmsPayload, recipientTyp
     `방문목적 : ${payload.visit_purpose || "-"}`,
     `접수번호 : ${payload.receipt}`,
     `접수상태 : ${statusLabel}`,
-    `URL : ${payload.statusUrl}`,
+    `URL : ${normalizeVisitUrl(payload.statusUrl)}`,
   ].join("\n")
 }
 
@@ -120,7 +132,7 @@ export function getCancelSmsText(payload: CancelSmsPayload): string {
     `방문목적 : ${payload.visit_purpose || "-"}`,
     `접수번호 : ${payload.receipt}`,
     `접수상태 : ${statusLabel}`,
-    `URL : ${payload.statusUrl}`,
+    `URL : ${normalizeVisitUrl(payload.statusUrl)}`,
   ].join("\n")
 }
 
@@ -151,7 +163,7 @@ export function getApprovalSmsText(payload: ApprovalSmsPayload, recipientType: '
     `접수번호 : ${payload.receipt}`,
   ]
   if (payload.qr_page_url?.trim()) {
-    lines.push("", `QR 출입권 : ${payload.qr_page_url.trim()}`)
+    lines.push("", `QR 출입권 : ${normalizeVisitUrl(payload.qr_page_url)}`)
   }
   lines.push("", "유의사항 :", ...APPROVAL_NOTES)
   return lines.join("\n")
@@ -174,14 +186,14 @@ export function getRejectionSmsText(payload: RejectionSmsPayload, recipientType:
   if (payload.rejection_reason?.trim()) {
     lines.push("", `반려 사유 : ${payload.rejection_reason.trim()}`)
   }
-  lines.push("", `URL : https://v0-lng-tml.vercel.app`)
+  lines.push("", `URL : ${DEFAULT_APP_URL}`)
   return lines.join("\n")
 }
 
 /** Approve API에서 호출용: pass_receipt와 application 객체로 SMS 메시지 생성 */
 export function getApprovalSMSMessage(pass_receipt: string | null, application: any, recipientType: 'applicant' | 'companion' = 'applicant'): string {
   const qrUrl = pass_receipt
-    ? `${process.env.NEXT_PUBLIC_APP_URL || 'https://v0-lng-tml.vercel.app'}/qr/${pass_receipt}`
+    ? `${getAppBaseUrl()}/qr/${pass_receipt}`
     : null
 
   // 동행인의 경우 pass_receipt를 접수번호로 사용 (PA-20260310-904-1 형식)
